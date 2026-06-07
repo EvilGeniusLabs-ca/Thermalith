@@ -6,7 +6,13 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Windows executable icon. macOS .icns is assembled into the .app at packaging (Phase 6). -->
+    <ApplicationIcon>Assets\thermalith.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
 
   <ItemGroup Label="Avalonia control set + theme + fonts">
     <PackageReference Include="Avalonia" />

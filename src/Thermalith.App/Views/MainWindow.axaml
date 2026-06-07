@@ -6,6 +6,7 @@
         x:Class="Thermalith.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
+        Icon="/Assets/thermalith-256.png"
         Width="1200" Height="780"
         WindowStartupLocation="CenterScreen">
 
