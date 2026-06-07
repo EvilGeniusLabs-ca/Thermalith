@@ -41,6 +41,11 @@
                 <MenuItem Name="MiUndo" Header="_Undo" Command="{Binding UndoCommand}" />
                 <MenuItem Name="MiRedo" Header="_Redo" Command="{Binding RedoCommand}" />
                 <Separator />
+                <MenuItem Name="MiCut" Header="Cu_t" Command="{Binding CutCommand}" />
+                <MenuItem Name="MiCopy" Header="_Copy" Command="{Binding CopyCommand}" />
+                <MenuItem Name="MiPaste" Header="_Paste" Command="{Binding PasteCommand}" />
+                <MenuItem Name="MiDuplicate" Header="Du_plicate" Command="{Binding DuplicateCommand}" />
+                <Separator />
                 <MenuItem Name="MiDelete" Header="_Delete" Command="{Binding DeleteCommand}" />
             </MenuItem>
             <MenuItem Header="_View">
@@ -63,6 +68,9 @@
                 <MenuItem Header="Ta_ble" Command="{Binding InsertCommand}" CommandParameter="table" />
             </MenuItem>
             <MenuItem Header="_Arrange">
+                <MenuItem Name="MiGroup" Header="_Group" Command="{Binding GroupCommand}" />
+                <MenuItem Name="MiUngroup" Header="_Ungroup" Command="{Binding UngroupCommand}" />
+                <Separator />
                 <MenuItem Header="Bring to _Front" Command="{Binding BringToFrontCommand}" />
                 <MenuItem Header="Bring _Forward" Command="{Binding BringForwardCommand}" />
                 <MenuItem Header="Send _Backward" Command="{Binding SendBackwardCommand}" />
@@ -163,9 +171,11 @@
                 <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:LayerItemViewModel">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Grid.Column="1" Text="{Binding TypeLabel, UpdateSourceTrigger=PropertyChanged}" Foreground="#777" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Text="⛓" FontSize="11" Margin="0,0,4,0" Foreground="#E0A030"
+                                           VerticalAlignment="Center" IsVisible="{Binding IsGrouped}" ToolTip.Tip="Grouped" />
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" />
+                                <TextBlock Grid.Column="2" Text="{Binding TypeLabel}" Foreground="#777" FontSize="11" />
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

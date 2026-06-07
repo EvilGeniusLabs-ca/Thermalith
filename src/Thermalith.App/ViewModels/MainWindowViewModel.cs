@@ -134,6 +134,16 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanUndo))] private void Undo() => Editor.Undo();
     [RelayCommand(CanExecute = nameof(CanRedo))] private void Redo() => Editor.Redo();
     [RelayCommand(CanExecute = nameof(CanDelete))] private void Delete() => Editor.DeleteSelected();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void Copy() => Editor.Copy();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void Cut() => Editor.Cut();
+    [RelayCommand(CanExecute = nameof(CanPaste))] private void Paste() => Editor.Paste();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void Duplicate() => Editor.Duplicate();
+    [RelayCommand(CanExecute = nameof(CanGroup))] private void Group() => Editor.Group();
+    [RelayCommand(CanExecute = nameof(CanUngroup))] private void Ungroup() => Editor.Ungroup();
+
+    private bool CanPaste() => Editor.HasClipboard;
+    private bool CanUngroup() => Editor.HasGroupInSelection;
+    private bool CanGroup() => Editor.SelectionCount >= 2;
     [RelayCommand] private void ZoomIn() => Editor.ZoomIn();
     [RelayCommand] private void ZoomOut() => Editor.ZoomOut();
     [RelayCommand] private void ZoomFit() => Editor.FitToWidth();
@@ -221,6 +231,9 @@ public partial class MainWindowViewModel : ViewModelBase
         if (e.PropertyName == nameof(EditorViewModel.SelectedEditor))
         {
             DeleteCommand.NotifyCanExecuteChanged();
+            CopyCommand.NotifyCanExecuteChanged();
+            CutCommand.NotifyCanExecuteChanged();
+            DuplicateCommand.NotifyCanExecuteChanged();
             BringToFrontCommand.NotifyCanExecuteChanged();
             SendToBackCommand.NotifyCanExecuteChanged();
             BringForwardCommand.NotifyCanExecuteChanged();
@@ -236,6 +249,15 @@ public partial class MainWindowViewModel : ViewModelBase
             AlignMiddleVCommand.NotifyCanExecuteChanged();
             DistributeHCommand.NotifyCanExecuteChanged();
             DistributeVCommand.NotifyCanExecuteChanged();
+            GroupCommand.NotifyCanExecuteChanged();
+        }
+        else if (e.PropertyName == nameof(EditorViewModel.HasGroupInSelection))
+        {
+            UngroupCommand.NotifyCanExecuteChanged();
+        }
+        else if (e.PropertyName == nameof(EditorViewModel.HasClipboard))
+        {
+            PasteCommand.NotifyCanExecuteChanged();
         }
     }
 

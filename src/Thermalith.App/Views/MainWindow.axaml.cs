@@ -238,6 +238,12 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         Bind(EditorAction.Undo, vm.UndoCommand, MiUndo);
         Bind(EditorAction.Redo, vm.RedoCommand, MiRedo);
         Bind(EditorAction.Delete, vm.DeleteCommand, MiDelete);
+        Bind(EditorAction.Cut, vm.CutCommand, MiCut);
+        Bind(EditorAction.Copy, vm.CopyCommand, MiCopy);
+        Bind(EditorAction.Paste, vm.PasteCommand, MiPaste);
+        Bind(EditorAction.Duplicate, vm.DuplicateCommand, MiDuplicate);
+        Bind(EditorAction.Group, vm.GroupCommand, MiGroup);
+        Bind(EditorAction.Ungroup, vm.UngroupCommand, MiUngroup);
         Bind(EditorAction.ZoomIn, vm.ZoomInCommand, MiZoomIn);
         Bind(EditorAction.ZoomOut, vm.ZoomOutCommand, MiZoomOut);
         Bind(EditorAction.ZoomFit, vm.ZoomFitCommand, MiZoomFit);

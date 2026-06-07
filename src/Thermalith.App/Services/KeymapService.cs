@@ -7,6 +7,8 @@ public enum EditorAction
 {
     New, Open, Save, SaveAs,
     Undo, Redo, Delete,
+    Cut, Copy, Paste, Duplicate,
+    Group, Ungroup,
     ZoomIn, ZoomOut, ZoomFit,
     Quit,
 }
@@ -36,6 +38,12 @@ public sealed class KeymapService
         EditorAction.Undo => new KeyGesture(Key.Z, _cmd),
         EditorAction.Redo => _isMac ? new KeyGesture(Key.Z, _cmd | KeyModifiers.Shift) : new KeyGesture(Key.Y, _cmd),
         EditorAction.Delete => new KeyGesture(Key.Delete),
+        EditorAction.Cut => new KeyGesture(Key.X, _cmd),
+        EditorAction.Copy => new KeyGesture(Key.C, _cmd),
+        EditorAction.Paste => new KeyGesture(Key.V, _cmd),
+        EditorAction.Duplicate => new KeyGesture(Key.D, _cmd),
+        EditorAction.Group => new KeyGesture(Key.G, _cmd),
+        EditorAction.Ungroup => new KeyGesture(Key.G, _cmd | KeyModifiers.Shift),
         EditorAction.ZoomIn => new KeyGesture(Key.OemPlus, _cmd),
         EditorAction.ZoomOut => new KeyGesture(Key.OemMinus, _cmd),
         EditorAction.ZoomFit => new KeyGesture(Key.D0, _cmd),

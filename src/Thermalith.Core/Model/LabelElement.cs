@@ -32,6 +32,9 @@ public abstract record LabelElement
     public Justify? Justify { get; init; }
     public ElementStyle? Style { get; init; }
 
+    /// <summary>Optional grouping key — elements sharing a non-null value select/move/copy as a unit (editor concept; round-trips).</summary>
+    public string? GroupId { get; init; }
+
     /// <summary>The schema <c>type</c> string. Serialized as the polymorphic discriminator, not here.</summary>
     [JsonIgnore] public abstract string Type { get; }
 

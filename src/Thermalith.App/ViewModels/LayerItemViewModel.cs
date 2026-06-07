@@ -12,10 +12,12 @@ public sealed partial class LayerItemViewModel : ObservableObject
         _name = el.Name ?? el.Type;
         TypeLabel = el.Type;
         _visible = el.Visible;
+        IsGrouped = el.GroupId is not null;
     }
 
     public string Id { get; }
     public string TypeLabel { get; }
+    public bool IsGrouped { get; }
 
     [ObservableProperty] private string _name;
     [ObservableProperty] private bool _visible;

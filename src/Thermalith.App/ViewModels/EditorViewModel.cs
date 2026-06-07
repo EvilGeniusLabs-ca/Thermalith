@@ -150,7 +150,9 @@ public sealed partial class EditorViewModel : ObservableObject
     private void OnElementEdited()
     {
         if (SelectedEditor is null) return;
+        var existing = _live.Elements.FirstOrDefault(e => e.Id == SelectedEditor.Id);
         var updated = SelectedEditor.ToElement();
+        if (existing is not null) updated = updated with { GroupId = existing.GroupId }; // editors don't carry grouping
         ReplaceElement(updated);
 
         var layer = Layers.FirstOrDefault(l => l.Id == updated.Id);
@@ -172,15 +174,95 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void DeleteSelected()
     {
-        if (SelectedEditor is not { } editor) return;
+        if (_selectedIds.Count == 0) return;
         FlushGesture();
-        _live = _live with { Elements = _live.Elements.Where(e => e.Id != editor.Id).ToList() };
+        var ids = new HashSet<string>(_selectedIds);
+        _live = _live with { Elements = _live.Elements.Where(e => !ids.Contains(e.Id)).ToList() };
         _history.Commit(_live);
         RebuildLayers();
-        SelectedLayer = null;
+        SetSelection([], null);
         MarkDirty();
         RenderNow();
         RaiseState();
+    }
+
+    // ── Grouping (§6.2) ─────────────────────────────────────────────────────────────────────────
+
+    /// <summary>True when the selection contains at least one grouped element (enables Ungroup).</summary>
+    public bool HasGroupInSelection =>
+        _selectedIds.Any(id => _live.Elements.FirstOrDefault(e => e.Id == id)?.GroupId is not null);
+
+    public void Group()
+    {
+        if (_selectedIds.Count < 2) return;
+        var gid = "grp_" + Guid.NewGuid().ToString("N")[..8];
+        var sel = new HashSet<string>(_selectedIds);
+        CommitTransform(e => sel.Contains(e.Id) ? e with { GroupId = gid } : e);
+    }
+
+    public void Ungroup()
+    {
+        var groups = new HashSet<string>(
+            _selectedIds.Select(id => _live.Elements.FirstOrDefault(e => e.Id == id)?.GroupId).OfType<string>());
+        if (groups.Count == 0) return;
+        CommitTransform(e => e.GroupId is { } g && groups.Contains(g) ? e with { GroupId = null } : e);
+    }
+
+    // ── Clipboard (Copy/Cut/Paste/Duplicate, §7.2) ──────────────────────────────────────────────
+
+    private readonly List<LabelElement> _clipboard = [];
+    public bool HasClipboard => _clipboard.Count > 0;
+
+    public void Copy()
+    {
+        _clipboard.Clear();
+        _clipboard.AddRange(_live.Elements.Where(e => _selectedIds.Contains(e.Id)));
+        OnPropertyChanged(nameof(HasClipboard));
+    }
+
+    public void Cut()
+    {
+        if (_selectedIds.Count == 0) return;
+        Copy();
+        DeleteSelected();
+    }
+
+    public void Paste() => AddClones(_clipboard);
+    public void Duplicate() => AddClones(_live.Elements.Where(e => _selectedIds.Contains(e.Id)).ToList());
+
+    private void AddClones(IReadOnlyList<LabelElement> source)
+    {
+        if (source.Count == 0) return;
+        FlushGesture();
+        var clones = CloneWithNewIds(source, offsetMm: 2);
+        _live = _live with { Elements = _live.Elements.Concat(clones).ToList() };
+        _history.Commit(_live);
+        RebuildLayers();
+        SetSelection(clones.Select(c => c.Id).ToList(), clones[^1].Id);
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
+    private static List<LabelElement> CloneWithNewIds(IReadOnlyList<LabelElement> source, double offsetMm)
+    {
+        var groupRemap = new Dictionary<string, string>();
+        var result = new List<LabelElement>(source.Count);
+        foreach (var e in source)
+        {
+            string? newGroup = null;
+            if (e.GroupId is { } g)
+            {
+                if (!groupRemap.TryGetValue(g, out var ng))
+                {
+                    ng = "grp_" + Guid.NewGuid().ToString("N")[..8];
+                    groupRemap[g] = ng;
+                }
+                newGroup = ng;
+            }
+            result.Add(e with { Id = DocumentFactory.NewId(), X = e.X + offsetMm, Y = e.Y + offsetMm, GroupId = newGroup });
+        }
+        return result;
     }
 
     public void AddElement(string type)
@@ -417,7 +499,7 @@ public sealed partial class EditorViewModel : ObservableObject
     private void SetSelection(IReadOnlyList<string> ids, string? primary)
     {
         _selectedIds.Clear();
-        foreach (var id in ids.Distinct()) _selectedIds.Add(id);
+        foreach (var id in ExpandToGroups(ids)) _selectedIds.Add(id);
 
         var primId = primary is not null && _selectedIds.Contains(primary) ? primary : _selectedIds.LastOrDefault();
         var el = primId is null ? null : _live.Elements.FirstOrDefault(e => e.Id == primId);
@@ -430,6 +512,21 @@ public sealed partial class EditorViewModel : ObservableObject
         if (SelectedEditor is null) OnPropertyChanged(nameof(InspectorTarget));
         UpdateSelectionVisuals();
         OnPropertyChanged(nameof(SelectionCount));
+        OnPropertyChanged(nameof(HasGroupInSelection));
+    }
+
+    /// <summary>Expand a selection so that selecting any group member selects the whole group (atomic groups).</summary>
+    private List<string> ExpandToGroups(IReadOnlyList<string> ids)
+    {
+        var groups = new HashSet<string>();
+        foreach (var id in ids)
+            if (_live.Elements.FirstOrDefault(e => e.Id == id)?.GroupId is { } g) groups.Add(g);
+        if (groups.Count == 0) return ids.Distinct().ToList();
+
+        var set = new HashSet<string>(ids);
+        foreach (var e in _live.Elements)
+            if (e.GroupId is { } g && groups.Contains(g)) set.Add(e.Id);
+        return _live.Elements.Where(e => set.Contains(e.Id)).Select(e => e.Id).ToList(); // element order
     }
 
     /// <summary>Topmost (frontmost) element id under a display point, or null.</summary>
