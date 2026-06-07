@@ -38,18 +38,28 @@
             <TextBox Grid.Column="1" Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
-        <Grid ColumnDefinitions="Auto,*,Auto,*" Margin="0,1">
-            <TextBlock Classes="lbl" Text="H" Margin="0,0,4,0" />
-            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
-                      ItemsSource="{x:Static ed:EditorOptions.JustifyH}" SelectedItem="{Binding JustifyH}" />
-            <TextBlock Classes="lbl" Grid.Column="2" Text="V" Margin="8,0,4,0" />
-            <ComboBox Grid.Column="3" HorizontalAlignment="Stretch"
-                      ItemsSource="{x:Static ed:EditorOptions.JustifyV}" SelectedItem="{Binding JustifyV}" />
+        <Grid ColumnDefinitions="20,*" Margin="0,2">
+            <TextBlock Classes="lbl" Text="H" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="3">
+                <ToggleButton Classes="icon" ToolTip.Tip="Left" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=left}"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></ToggleButton>
+                <ToggleButton Classes="icon" ToolTip.Tip="Center" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=center}"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></ToggleButton>
+                <ToggleButton Classes="icon" ToolTip.Tip="Right" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=right}"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></ToggleButton>
+                <ToggleButton Classes="icon" ToolTip.Tip="Justify" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=justify}"><Path Classes="icon" Data="{StaticResource IconAlignJustify}" /></ToggleButton>
+            </StackPanel>
         </Grid>
 
-        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4">
-            <CheckBox IsChecked="{Binding Visible}" Content="Visible" />
-            <CheckBox IsChecked="{Binding Locked}" Content="Locked" />
+        <Grid ColumnDefinitions="20,*" Margin="0,2">
+            <TextBlock Classes="lbl" Text="V" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="3">
+                <ToggleButton Classes="icon" ToolTip.Tip="Top" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=top}"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></ToggleButton>
+                <ToggleButton Classes="icon" ToolTip.Tip="Middle" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=middle}"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></ToggleButton>
+                <ToggleButton Classes="icon" ToolTip.Tip="Bottom" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4">
+            <ToggleButton Classes="icon" ToolTip.Tip="Visible" IsChecked="{Binding Visible}"><Path Classes="icon" Data="{StaticResource IconEye}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Locked" IsChecked="{Binding Locked}"><Path Classes="icon" Data="{StaticResource IconLock}" /></ToggleButton>
         </StackPanel>
 
         <Separator Margin="0,2" />
