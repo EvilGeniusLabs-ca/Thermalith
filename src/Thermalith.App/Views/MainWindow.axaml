@@ -49,6 +49,7 @@
                 <Separator />
                 <MenuItem Header="Show _Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.ShowGrid, Mode=TwoWay}" />
                 <MenuItem Header="_Snap to Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.SnapEnabled, Mode=TwoWay}" />
+                <MenuItem Header="Show _Printable Area" ToggleType="CheckBox" IsChecked="{Binding Editor.ShowSafeArea, Mode=TwoWay}" />
             </MenuItem>
             <MenuItem Header="_Insert">
                 <MenuItem Header="_Text" Command="{Binding InsertCommand}" CommandParameter="text" />
@@ -170,7 +171,8 @@
                     <Panel Name="CanvasHost"
                            Width="{Binding Editor.DisplayWidth}" Height="{Binding Editor.DisplayHeight}"
                            Background="White"
-                           PointerPressed="OnCanvasPressed" PointerMoved="OnCanvasMoved" PointerReleased="OnCanvasReleased">
+                           PointerPressed="OnCanvasPressed" PointerMoved="OnCanvasMoved" PointerReleased="OnCanvasReleased"
+                           PointerWheelChanged="OnCanvasWheel">
                         <Image Source="{Binding Editor.Preview}" Stretch="Fill"
                                RenderOptions.BitmapInterpolationMode="None" />
                         <views:GridOverlay Spacing="{Binding Editor.GridSpacingDisplay}"

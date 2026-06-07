@@ -79,6 +79,7 @@ public sealed partial class EditorViewModel : ObservableObject
     [ObservableProperty] private bool _dirty;
     [ObservableProperty] private bool _showGrid;
     [ObservableProperty] private bool _snapEnabled;
+    [ObservableProperty] private bool _showSafeArea = true;
 
     /// <summary>Grid pitch in mm (also the snap increment).</summary>
     public double GridMm { get; } = 2.0;
@@ -289,6 +290,28 @@ public sealed partial class EditorViewModel : ObservableObject
         if (_dragMoved) { _history.Commit(_live); RaiseState(); }
         _dragMode = DragMode.None;
         _dragGeoms = null;
+    }
+
+    /// <summary>Scale every selected element about its own centre (scroll-wheel resize, §7). Coalesced into one undo via the gesture settle.</summary>
+    public void ScaleSelection(double factor)
+    {
+        if (_selectedIds.Count == 0) return;
+        var list = new List<LabelElement>(_live.Elements);
+        foreach (var id in _selectedIds)
+        {
+            ReplaceIn(list, id, e =>
+            {
+                var nw = Math.Max(1, e.W * factor);
+                var nh = Math.Max(1, e.H * factor);
+                return e with { W = nw, H = nh, X = e.X + (e.W - nw) / 2, Y = e.Y + (e.H - nh) / 2 };
+            });
+        }
+        _live = _live with { Elements = list };
+        RefreshPrimaryEditorGeometry();
+        BeginGesture();
+        MarkDirty();
+        UpdateSelectionVisuals();
+        RequestRender();
     }
 
     private static (double X, double Y, double W, double H) ResizeGeom(Handle handle, GeomMm g, double dmx, double dmy)
@@ -609,9 +632,11 @@ public sealed partial class EditorViewModel : ObservableObject
         UpdateSafeArea();
     }
 
+    partial void OnShowSafeAreaChanged(bool value) => UpdateSafeArea();
+
     private void UpdateSafeArea()
     {
-        if (_live.Canvas.SafeAreaInsetMm is { } inset && inset > 0)
+        if (ShowSafeArea && _live.Canvas.SafeAreaInsetMm is { } inset && inset > 0)
         {
             var s = _live.Canvas.Dpi / 25.4 * Zoom;
             SafeAreaBounds = new Rect(

@@ -175,6 +175,22 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         }
     }
 
+    private void OnCanvasWheel(object? sender, PointerWheelEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+        var ed = vm.Editor;
+        var zoomOnly = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+
+        if (ed.HasSelection && !zoomOnly)
+            ed.ScaleSelection(e.Delta.Y > 0 ? 1.06 : 1 / 1.06);   // resize the selection
+        else if (e.Delta.Y > 0)
+            ed.ZoomIn();
+        else
+            ed.ZoomOut();
+
+        e.Handled = true; // don't let the ScrollViewer scroll instead
+    }
+
     private void ShowMarquee(Point a, Point b)
     {
         var r = RectFrom(a, b);

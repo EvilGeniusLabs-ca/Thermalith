@@ -14,7 +14,7 @@ public static class DocumentFactory
             ModifiedUtc = DateTimeOffset.UtcNow.ToString("o"),
             AppVersion = "0.1.0",
         },
-        Canvas = new Canvas { WidthMm = 50, HeightMm = 30, Dpi = 203, Shape = "rectangle" },
+        Canvas = new Canvas { WidthMm = 50, HeightMm = 30, Dpi = 203, Shape = "rectangle", SafeAreaInsetMm = 1.5 },
         Elements =
         [
             new TextElement
