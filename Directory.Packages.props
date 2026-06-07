@@ -30,8 +30,8 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
 
-  <!-- Planned stack (pinned but not yet referenced; wired in as each phase lands). -->
-  <ItemGroup Label="Planned: rendering / barcodes">
+  <!-- Core render stack (referenced by Thermalith.Core as of Phase 2). -->
+  <ItemGroup Label="Rendering / barcodes">
     <PackageVersion Include="SkiaSharp" Version="2.88.9" />
     <PackageVersion Include="ZXing.Net" Version="0.16.10" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
@@ -51,7 +51,7 @@
     <PackageVersion Include="ClosedXML" Version="0.104.2" />
   </ItemGroup>
 
-  <ItemGroup Label="Planned: snapshot tests">
+  <ItemGroup Label="Snapshot tests">
     <PackageVersion Include="Verify.Xunit" Version="28.11.0" />
   </ItemGroup>
 
