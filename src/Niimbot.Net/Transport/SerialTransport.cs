@@ -123,15 +123,28 @@ public sealed class SerialTransport : INiimbotTransport
 
         try
         {
-            // CRITICAL: use the synchronous Read, not BaseStream.ReadAsync. On Windows the async
-            // path ignores both the cancellation token AND ReadTimeout, so it blocks forever on an
-            // idle port and the client's read pump can never be cancelled (the cause of the hang on
-            // disconnect). The synchronous Read honors ReadTimeout, returning every ~500 ms so the
-            // pump checks cancellation; a quiet line surfaces as TimeoutException → 0.
+            // Poll BytesToRead instead of issuing a blocking Read that times out on an idle line.
+            // SerialPort.Read's internal TimeoutException is how it signals "no data yet"; firing it
+            // every poll floods first-chance exceptions under the debugger (and is just noise during
+            // discovery). Polling avoids it: we only Read once data is actually present, so Read
+            // returns immediately and never times out. We also honor cancellation every ~15 ms, which
+            // is more responsive than the old 500 ms ReadTimeout granularity. (BaseStream.ReadAsync is
+            // not an option — on Windows it ignores both the token and the timeout.)
             return await Task.Run(() =>
             {
                 try
                 {
+                    var waited = 0;
+                    while (port.BytesToRead == 0)
+                    {
+                        if (ct.IsCancellationRequested || !port.IsOpen)
+                            return 0;
+                        if (waited >= _readTimeoutMs)
+                            return 0; // idle line
+                        Thread.Sleep(15);
+                        waited += 15;
+                    }
+
                     if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer, out var segment) && segment.Array is not null)
                         return port.Read(segment.Array, segment.Offset, segment.Count);
 
@@ -142,7 +155,7 @@ public sealed class SerialTransport : INiimbotTransport
                 }
                 catch (TimeoutException)
                 {
-                    return 0; // idle line within ReadTimeout
+                    return 0; // safety net — shouldn't happen now that we only Read when data is present
                 }
             }, ct).ConfigureAwait(false);
         }
