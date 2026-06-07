@@ -68,33 +68,51 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     private void PersistWindowState()
     {
-        if (Vm is not { } vm) return;
-        var left = BodyGrid.ColumnDefinitions[0].ActualWidth;
-        var right = BodyGrid.ColumnDefinitions[4].ActualWidth;
-        if (WindowState == WindowState.Normal)
-            vm.SaveWindowState(Position.X, Position.Y, Width, Height, false, left, right);
-        else
-            vm.SaveWindowState(null, null, null, null, WindowState == WindowState.Maximized, left, right);
+        // Geometry persistence must never crash the app (this runs from a timer tick and the
+        // async-void close handler, where an unhandled throw would terminate the process).
+        try
+        {
+            if (Vm is not { } vm) return;
+            var left = BodyGrid.ColumnDefinitions[0].ActualWidth;
+            var right = BodyGrid.ColumnDefinitions[4].ActualWidth;
+            if (WindowState == WindowState.Normal)
+                vm.SaveWindowState(Position.X, Position.Y, Width, Height, false, left, right);
+            else
+                vm.SaveWindowState(null, null, null, null, WindowState == WindowState.Maximized, left, right);
+        }
+        catch
+        {
+            // best-effort
+        }
     }
 
     private async void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
-        if (Vm is not { } vm) return;
-
-        // Guard unsaved work: cancel the close, confirm, then close for real.
-        if (!_allowClose && vm.Editor.Dirty)
+        // This is an async-void handler: any unhandled exception here crashes the process, so guard
+        // the whole body.
+        try
         {
-            e.Cancel = true;
-            if (await ConfirmDiscardAsync())
-            {
-                _allowClose = true;
-                Close();
-            }
-            return;
-        }
+            if (Vm is not { } vm) return;
 
-        PersistWindowState();
-        vm.Printer.Shutdown();
+            // Guard unsaved work: cancel the close, confirm, then close for real.
+            if (!_allowClose && vm.Editor.Dirty)
+            {
+                e.Cancel = true;
+                if (await ConfirmDiscardAsync())
+                {
+                    _allowClose = true;
+                    Close();
+                }
+                return;
+            }
+
+            PersistWindowState();
+            vm.Printer.Shutdown();
+        }
+        catch
+        {
+            // Never let a close-time error crash the shutdown.
+        }
     }
 
     public Task<bool> ConfirmDiscardAsync() => new ConfirmDialog().ShowDialog<bool>(this);
