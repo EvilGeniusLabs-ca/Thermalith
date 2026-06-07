@@ -35,7 +35,9 @@ public static class PrinterProbe
 
     private static async Task<ProbeResult?> ProbeCoreAsync(string portName, TimeSpan deadline, CancellationToken ct)
     {
-        await using var transport = new SerialTransport(portName);
+        // Short write timeout so a powered-off printer (port opens, write never drains) fails fast
+        // within the probe deadline instead of blocking the full default write timeout.
+        await using var transport = new SerialTransport(portName, writeTimeoutMs: 400);
 
         try
         {
@@ -47,8 +49,6 @@ public static class PrinterProbe
         }
 
         var query = PacketGenerator.GetPrinterInfo(PrinterInfoType.PrinterModelId);
-        await transport.WriteAsync(query.ToBytes(), ct).ConfigureAwait(false);
-
         var accumulator = new PacketAccumulator();
         var buffer = new byte[256];
 
@@ -57,6 +57,8 @@ public static class PrinterProbe
 
         try
         {
+            await transport.WriteAsync(query.ToBytes(), deadlineCts.Token).ConfigureAwait(false);
+
             while (!deadlineCts.Token.IsCancellationRequested)
             {
                 var read = await transport.ReadAsync(buffer, deadlineCts.Token).ConfigureAwait(false);
@@ -80,6 +82,13 @@ public static class PrinterProbe
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
             // deadline hit — not a NIIMBOT (or too slow)
+        }
+        catch
+        {
+            // Port opened but the write/read failed — e.g. the printer is powered off, or the port
+            // belongs to some other device. Treat as "no NIIMBOT here" rather than surfacing the
+            // TimeoutException to the caller.
+            return null;
         }
 
         return null;
