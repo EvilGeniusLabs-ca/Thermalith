@@ -1,0 +1,10 @@
+{
+  "//": "Seed catalog of common NIIMBOT label stock (build spec §6.1.2). Start small; user-extensible. Full SKU mining is Open Decision #13.",
+  "stock": [
+    { "id": "rect-40x30", "name": "40 × 30 mm rectangle", "widthMm": 40, "heightMm": 30, "shape": "rectangle" },
+    { "id": "rect-50x30", "name": "50 × 30 mm rectangle", "widthMm": 50, "heightMm": 30, "shape": "rectangle" },
+    { "id": "rect-30x15", "name": "30 × 15 mm rectangle", "widthMm": 30, "heightMm": 15, "shape": "rectangle" },
+    { "id": "round-d40", "name": "Ø40 mm circle", "widthMm": 40, "heightMm": 40, "shape": "circle" },
+    { "id": "round-d25", "name": "Ø25 mm circle", "widthMm": 25, "heightMm": 25, "shape": "circle" }
+  ]
+}

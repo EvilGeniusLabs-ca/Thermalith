@@ -1,0 +1,10 @@
+Roboto-Regular.ttf is bundled as Thermalith.Core's guaranteed fallback font
+(build spec §6.3.4).
+
+Roboto is Copyright 2011 Google Inc. and is licensed under the Apache License,
+Version 2.0 — https://www.apache.org/licenses/LICENSE-2.0
+
+Apache-2.0 is compatible with the GPL-3.0-or-later license of Thermalith: the
+font is an embedded data asset, redistributed unmodified, with attribution
+preserved here. No font file is ever written into a .nlbl package — packages
+store the font family name only (§6.3.4).

@@ -8,4 +8,15 @@
     <ProjectReference Include="..\Niimbot.Net\Niimbot.Net.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="ZXing.Net" />
+    <PackageReference Include="QRCoder" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\Roboto-Regular.ttf" />
+    <EmbeddedResource Include="Catalog\label-stock.json" />
+  </ItemGroup>
+
 </Project>
