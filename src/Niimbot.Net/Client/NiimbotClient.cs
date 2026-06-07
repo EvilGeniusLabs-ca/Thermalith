@@ -136,8 +136,9 @@ public sealed class NiimbotClient : IAsyncDisposable
 
     /// <summary>
     /// Trigger the printer's built-in self-test page — a single command that exercises connect +
-    /// paper feed without touching the bitmap encoder, so it is the safest first live print. Throws
-    /// <see cref="PrintException"/> if the model reports the command unsupported.
+    /// paper feed without touching the bitmap encoder. Throws <see cref="PrintException"/> if the
+    /// model reports the command unsupported. (Observed: B1 firmware 13.02 answers In_NotSupported,
+    /// so the B1 path to a label is <see cref="PrintAsync"/>, not this.)
     /// </summary>
     public async Task PrintTestPageAsync(CancellationToken ct = default) =>
         await SendAsync(PacketGenerator.PrintTestPage(), TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);

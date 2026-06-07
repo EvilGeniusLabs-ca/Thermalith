@@ -59,6 +59,21 @@ catch (OperationCanceledException)
     Console.WriteLine("Cancelled.");
     return 130;
 }
+catch (PrintException ex)
+{
+    Console.WriteLine($"Printer error: {ex.Message}{(ex.Code is { } c ? $" (code {c})" : "")}");
+    return 1;
+}
+catch (NiimbotTimeoutException ex)
+{
+    Console.WriteLine($"Timeout: {ex.Message}");
+    return 1;
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.GetType().Name}: {ex.Message}");
+    return 1;
+}
 
 async Task<int> ProbeCommand(CancellationToken ct)
 {
@@ -117,8 +132,16 @@ async Task<int> ConnectCommand(PrintMode print, CancellationToken ct, bool statu
             if (!Confirm("Send the printer's built-in self-test page?"))
                 return 0;
             Console.WriteLine("Sending test page…");
-            await client.PrintTestPageAsync(ct);
-            Console.WriteLine("Test page sent — paper should feed.");
+            try
+            {
+                await client.PrintTestPageAsync(ct);
+                Console.WriteLine("Test page sent — paper should feed.");
+            }
+            catch (PrintException ex)
+            {
+                Console.WriteLine($"This printer didn't accept the self-test command ({ex.Message}).");
+                Console.WriteLine("That's expected on some B1 firmware. Use `print` to test the bitmap path instead.");
+            }
             break;
 
         case PrintMode.Bitmap:
