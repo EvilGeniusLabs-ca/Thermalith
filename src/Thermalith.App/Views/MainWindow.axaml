@@ -1,15 +1,244 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
+        xmlns:ed="clr-namespace:Thermalith.App.ViewModels.Editors"
+        xmlns:views="clr-namespace:Thermalith.App.Views"
         x:Class="Thermalith.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="Thermalith"
-        Width="900" Height="600"
+        Title="{Binding Title}"
+        Width="1200" Height="780"
         WindowStartupLocation="CenterScreen">
 
-    <TextBlock Text="{Binding Greeting}"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               FontSize="22" />
+    <Window.Styles>
+        <Style Selector="Grid.frow">
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+        <Style Selector="Grid.frow > TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#888" />
+        </Style>
+        <Style Selector="ComboBox.fld">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+
+        <!-- Menu (§7.1) -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Name="MiNew" Header="_New" Command="{Binding NewCommand}" />
+                <MenuItem Name="MiOpen" Header="_Open…" Command="{Binding OpenCommand}" />
+                <MenuItem Name="MiRecent" Header="Open _Recent" IsEnabled="{Binding HasRecentFiles}" />
+                <Separator />
+                <MenuItem Name="MiSave" Header="_Save" Command="{Binding SaveCommand}" />
+                <MenuItem Name="MiSaveAs" Header="Save _As…" Command="{Binding SaveAsCommand}" />
+                <Separator />
+                <MenuItem Name="MiQuit" Header="_Quit" Command="{Binding QuitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Name="MiUndo" Header="_Undo" Command="{Binding UndoCommand}" />
+                <MenuItem Name="MiRedo" Header="_Redo" Command="{Binding RedoCommand}" />
+                <Separator />
+                <MenuItem Name="MiDelete" Header="_Delete" Command="{Binding DeleteCommand}" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Name="MiZoomIn" Header="Zoom _In" Command="{Binding ZoomInCommand}" />
+                <MenuItem Name="MiZoomOut" Header="Zoom _Out" Command="{Binding ZoomOutCommand}" />
+                <MenuItem Name="MiZoomFit" Header="Zoom to _Fit" Command="{Binding ZoomFitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Insert" IsEnabled="False" ToolTip.Tip="Insert palette — next pass" />
+            <MenuItem Header="_Arrange" IsEnabled="False" ToolTip.Tip="Align / distribute / z-order — next pass" />
+            <MenuItem Header="_Printer" IsEnabled="False" ToolTip.Tip="Printer panel — deferred to a later pass" />
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About Thermalith" Command="{Binding AboutCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Background="#202020" Padding="6,4">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button Content="New" Command="{Binding NewCommand}" />
+                <Button Content="Open" Command="{Binding OpenCommand}" />
+                <Button Content="Save" Command="{Binding SaveCommand}" />
+                <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                <Button Content="Undo" Command="{Binding UndoCommand}" />
+                <Button Content="Redo" Command="{Binding RedoCommand}" />
+                <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                <Button Content="−" Command="{Binding ZoomOutCommand}" />
+                <Button Content="Fit" Command="{Binding ZoomFitCommand}" />
+                <Button Content="+" Command="{Binding ZoomInCommand}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Background="#202020" Padding="8,3">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Text="{Binding Editor.StatusText}" Foreground="#AAA" />
+                <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Foreground="#8AC" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{Binding Editor.Dirty, StringFormat='dirty: {0}'}" Foreground="#777" />
+            </Grid>
+        </Border>
+
+        <!-- Five-region body: layers | canvas | inspector -->
+        <Grid x:Name="BodyGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" MinWidth="120" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="200" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="300" MinWidth="200" />
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT: layers -->
+            <DockPanel Grid.Column="0" Background="#262626">
+                <TextBlock DockPanel.Dock="Top" Text="Layers" Margin="8,6" FontWeight="Bold" Foreground="#CCC" />
+                <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LayerItemViewModel">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="{Binding Name}" />
+                                <TextBlock Grid.Column="1" Text="{Binding TypeLabel}" Foreground="#777" FontSize="11" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <GridSplitter Grid.Column="1" Width="4" Background="#111" />
+
+            <!-- CENTER: WYSIWYG canvas -->
+            <ScrollViewer Grid.Column="2" Background="#3A3A3A"
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <Border Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Panel Name="CanvasHost"
+                           Width="{Binding Editor.DisplayWidth}" Height="{Binding Editor.DisplayHeight}"
+                           Background="White" PointerPressed="OnCanvasPressed">
+                        <Image Source="{Binding Editor.Preview}" Stretch="Fill"
+                               RenderOptions.BitmapInterpolationMode="None" />
+                        <Canvas>
+                            <Rectangle Canvas.Left="{Binding Editor.SelectionBounds.X}"
+                                       Canvas.Top="{Binding Editor.SelectionBounds.Y}"
+                                       Width="{Binding Editor.SelectionBounds.Width}"
+                                       Height="{Binding Editor.SelectionBounds.Height}"
+                                       Stroke="#2D7DF6" StrokeThickness="1.5" StrokeDashArray="3,2"
+                                       IsVisible="{Binding Editor.HasSelection}" IsHitTestVisible="False" />
+                        </Canvas>
+                    </Panel>
+                </Border>
+            </ScrollViewer>
+
+            <GridSplitter Grid.Column="3" Width="4" Background="#111" />
+
+            <!-- RIGHT: inspector -->
+            <DockPanel Grid.Column="4" Background="#262626">
+                <TextBlock DockPanel.Dock="Top" Text="Inspector" Margin="8,6" FontWeight="Bold" Foreground="#CCC" />
+                <ScrollViewer Padding="8">
+                    <ContentControl Content="{Binding Editor.SelectedEditor}">
+                        <ContentControl.DataTemplates>
+
+                            <DataTemplate DataType="ed:TextEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Content" /><TextBox Grid.Column="1" Text="{Binding Content}" AcceptsReturn="True" TextWrapping="Wrap" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Font" /><TextBox Grid.Column="1" Text="{Binding FontFamily}" Watermark="(bundled)" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Size (pt)" /><TextBox Grid.Column="1" Text="{Binding FontSizePt}" /></Grid>
+                                    <StackPanel Orientation="Horizontal" Spacing="14" Margin="0,4">
+                                        <CheckBox IsChecked="{Binding Bold}" Content="Bold" />
+                                        <CheckBox IsChecked="{Binding Italic}" Content="Italic" />
+                                        <CheckBox IsChecked="{Binding Underline}" Content="Underline" />
+                                    </StackPanel>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Sizing" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.FontSizing}" SelectedItem="{Binding FontSizing}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Min pt" /><TextBox Grid.Column="1" Text="{Binding MinFontSizePt}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Max pt" /><TextBox Grid.Column="1" Text="{Binding MaxFontSizePt}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Line ×" /><TextBox Grid.Column="1" Text="{Binding LineSpacing}" /></Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:BarcodeEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Symbology" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Symbology}" SelectedItem="{Binding Symbology}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value}" /></Grid>
+                                    <CheckBox IsChecked="{Binding ShowText}" Content="Show text" Margin="0,4" />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleWidthMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm}" /></Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:QrEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Encoding" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.QrEncoding}" SelectedItem="{Binding Encoding}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="EC level" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.EcLevel}" SelectedItem="{Binding EcLevel}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleSizeMm}" Watermark="auto" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm}" /></Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:SerialEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Start" /><TextBox Grid.Column="1" Text="{Binding Start}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Step" /><TextBox Grid.Column="1" Text="{Binding Step}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Pad len" /><TextBox Grid.Column="1" Text="{Binding PadLength}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Pad char" /><TextBox Grid.Column="1" Text="{Binding PadChar}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Prefix" /><TextBox Grid.Column="1" Text="{Binding Prefix}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Suffix" /><TextBox Grid.Column="1" Text="{Binding Suffix}" /></Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:DateTimeEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Kind" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateKind}" SelectedItem="{Binding Kind}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Format" /><TextBox Grid.Column="1" Text="{Binding Format}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Source" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateSource}" SelectedItem="{Binding Source}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Fixed UTC" /><TextBox Grid.Column="1" Text="{Binding FixedValueUtc}" Watermark="ISO-8601" /></Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:ShapeEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.ShapeType}" SelectedItem="{Binding ShapeType}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Stroke mm" /><TextBox Grid.Column="1" Text="{Binding StrokeWidthMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Fill" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fill}" SelectedItem="{Binding Fill}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm}" /></Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:ImageEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Fit" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fit}" SelectedItem="{Binding Fit}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Threshold" /><TextBox Grid.Column="1" Text="{Binding Threshold}" /></Grid>
+                                    <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" />
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:TableEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <views:BaseElementFields />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Cols" /><TextBox Grid.Column="1" Text="{Binding Cols}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Rows" /><TextBox Grid.Column="1" Text="{Binding Rows}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Border mm" /><TextBox Grid.Column="1" Text="{Binding BorderWidthMm}" /></Grid>
+                                    <CheckBox IsChecked="{Binding HeaderRow}" Content="Header row" Margin="0,4" />
+                                    <TextBlock Text="Cell text editing — next pass" Foreground="#777" FontSize="11" Margin="0,4" />
+                                </StackPanel>
+                            </DataTemplate>
+
+                        </ContentControl.DataTemplates>
+                    </ContentControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
+
+    </DockPanel>
 
 </Window>

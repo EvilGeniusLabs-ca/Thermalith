@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ed="clr-namespace:Thermalith.App.ViewModels.Editors"
+             x:Class="Thermalith.App.Views.BaseElementFields"
+             x:DataType="ed:ElementEditorViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Grid.row">
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+        <Style Selector="Grid.row > TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#888" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="2">
+        <TextBlock Text="{Binding TypeLabel}" FontWeight="Bold" Margin="0,0,0,4" />
+
+        <Grid Classes="row" ColumnDefinitions="84,*">
+            <TextBlock Text="Name" />
+            <TextBox Grid.Column="1" Text="{Binding Name}" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,2">
+            <Grid Classes="row" ColumnDefinitions="84,*" Margin="0,0,4,0">
+                <TextBlock Text="X (mm)" />
+                <TextBox Grid.Column="1" Text="{Binding X}" />
+            </Grid>
+            <Grid Grid.Column="1" Classes="row" ColumnDefinitions="84,*">
+                <TextBlock Text="Y (mm)" />
+                <TextBox Grid.Column="1" Text="{Binding Y}" />
+            </Grid>
+        </Grid>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,2">
+            <Grid Classes="row" ColumnDefinitions="84,*" Margin="0,0,4,0">
+                <TextBlock Text="W (mm)" />
+                <TextBox Grid.Column="1" Text="{Binding W}" />
+            </Grid>
+            <Grid Grid.Column="1" Classes="row" ColumnDefinitions="84,*">
+                <TextBlock Text="H (mm)" />
+                <TextBox Grid.Column="1" Text="{Binding H}" />
+            </Grid>
+        </Grid>
+
+        <Grid Classes="row" ColumnDefinitions="84,*">
+            <TextBlock Text="Rotation°" />
+            <TextBox Grid.Column="1" Text="{Binding Rotation}" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,2">
+            <Grid Classes="row" ColumnDefinitions="84,*" Margin="0,0,4,0">
+                <TextBlock Text="Justify H" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{x:Static ed:EditorOptions.JustifyH}" SelectedItem="{Binding JustifyH}" />
+            </Grid>
+            <Grid Grid.Column="1" Classes="row" ColumnDefinitions="84,*">
+                <TextBlock Text="Justify V" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{x:Static ed:EditorOptions.JustifyV}" SelectedItem="{Binding JustifyV}" />
+            </Grid>
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4">
+            <CheckBox IsChecked="{Binding Visible}" Content="Visible" />
+            <CheckBox IsChecked="{Binding Locked}" Content="Locked" />
+        </StackPanel>
+
+        <Separator Margin="0,4" />
+    </StackPanel>
+
+</UserControl>
