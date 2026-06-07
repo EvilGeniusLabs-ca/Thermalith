@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>print-harness</AssemblyName>
+    <RootNamespace>Thermalith.PrintHarness</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Niimbot.Net\Niimbot.Net.csproj" />
+  </ItemGroup>
+
+</Project>

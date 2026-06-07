@@ -1,0 +1,24 @@
+# .NET build output
+bin/
+obj/
+artifacts/
+
+# IDE / editor
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# Publish / packaging
+publish/
+*.nupkg
+*.snupkg
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Secrets (never commit)
+appsettings.Development.json
+*.secrets.json

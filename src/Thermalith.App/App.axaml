@@ -1,0 +1,11 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Thermalith.App.App"
+             RequestedThemeVariant="Default">
+
+    <!-- Avalonia's built-in control theme. "Default" follows the OS light/dark setting. -->
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+
+</Application>
