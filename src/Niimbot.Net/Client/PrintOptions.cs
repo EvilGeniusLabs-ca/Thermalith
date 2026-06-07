@@ -2,6 +2,14 @@ using Niimbot.Net.Commands;
 
 namespace Niimbot.Net;
 
+/// <summary>Horizontal placement of a label-width raster within the full printhead.</summary>
+public enum PrintAlignment
+{
+    Left,
+    Center,
+    Right,
+}
+
 /// <summary>Options for a print job. Defaults match the B1's sensible starting point.</summary>
 public sealed record PrintOptions
 {
@@ -22,6 +30,27 @@ public sealed record PrintOptions
 
     /// <summary>Overall timeout for a single page to finish printing.</summary>
     public TimeSpan PageTimeout { get; init; } = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Use the compact indexed-row packet for rows with ≤6 black pixels. Defaults to true; set
+    /// false to force every row through the dense bitmap-row packet (a diagnostic for the
+    /// less-verified indexed path).
+    /// </summary>
+    public bool UseIndexedRows { get; init; } = true;
+
+    /// <summary>
+    /// Horizontal placement of a label-width raster within the printhead. The protocol has no
+    /// horizontal-offset command — every row is laid down from printhead pixel 0 — so the client
+    /// pads the bitmap to the full head width and positions the content. Defaults to
+    /// <see cref="PrintAlignment.Center"/>. See build spec §5 and the NIIMBOT protocol notes.
+    /// </summary>
+    public PrintAlignment HorizontalAlign { get; init; } = PrintAlignment.Center;
+
+    /// <summary>Calibration nudge in pixels added to the aligned X position (+ moves right).</summary>
+    public int OffsetXPx { get; init; } = 0;
+
+    /// <summary>Calibration nudge in pixels prepended as blank feed rows (+ moves content down).</summary>
+    public int OffsetYPx { get; init; } = 0;
 }
 
 /// <summary>Progress for an in-flight print, reported via <c>IProgress</c>.</summary>

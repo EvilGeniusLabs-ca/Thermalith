@@ -166,7 +166,15 @@ public sealed class NiimbotClient : IAsyncDisposable
                 $"Bitmap width {bitmap.WidthPx}px exceeds the {profile.Model} printhead ({profile.PrintheadPixels}px).",
                 nameof(bitmap));
 
-        var rows = RowEncoder.Encode(bitmap, new RowEncoder.Options { PrintheadPixels = profile.PrintheadPixels });
+        // Position the label-width raster on the full printhead (the protocol has no horizontal
+        // offset, so we pad and place the content ourselves), then encode the head-width result.
+        var page = PositionOnHead(bitmap, profile.PrintheadPixels, options);
+
+        var rows = RowEncoder.Encode(page, new RowEncoder.Options
+        {
+            PrintheadPixels = profile.PrintheadPixels,
+            UseIndexedRows = options.UseIndexedRows,
+        });
 
         // Print init.
         await SendAsync(PacketGenerator.SetDensity(density), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
@@ -175,7 +183,7 @@ public sealed class NiimbotClient : IAsyncDisposable
 
         // Page.
         await SendAsync(PacketGenerator.PageStart(), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
-        await SendPageSizeAsync(profile, bitmap, totalPages, ct).ConfigureAwait(false);
+        await SendPageSizeAsync(profile, page, totalPages, ct).ConfigureAwait(false);
 
         foreach (var row in rows)
             await SendAsync(row, options.PageTimeout, ct).ConfigureAwait(false); // one-way
@@ -220,6 +228,45 @@ public sealed class NiimbotClient : IAsyncDisposable
         _commandLock.Dispose();
         if (_ownsTransport)
             await _transport.DisposeAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Pad a label-width raster to the full printhead width and place the content per the requested
+    /// alignment + calibration offset (the protocol has no horizontal-offset command). A positive
+    /// <see cref="PrintOptions.OffsetYPx"/> prepends blank feed rows. Returns the head-width page the
+    /// encoder sends; a no-op when the source already fills the head with zero offsets.
+    /// </summary>
+    internal static MonochromeBitmap PositionOnHead(MonochromeBitmap src, int headPx, PrintOptions options)
+    {
+        var baseX = options.HorizontalAlign switch
+        {
+            PrintAlignment.Left => 0,
+            PrintAlignment.Right => headPx - src.WidthPx,
+            _ => (headPx - src.WidthPx) / 2,
+        };
+        var leftPx = Math.Clamp(baseX + options.OffsetXPx, 0, headPx - src.WidthPx);
+        var topPad = Math.Max(0, options.OffsetYPx);
+
+        if (leftPx == 0 && topPad == 0 && src.WidthPx == headPx)
+            return src;
+
+        var dstBytesPerRow = (headPx + 7) / 8;
+        var packed = new byte[dstBytesPerRow * (src.HeightPx + topPad)];
+
+        for (var y = 0; y < src.HeightPx; y++)
+        {
+            var row = src.Row(y);
+            var dstRow = (y + topPad) * dstBytesPerRow;
+            for (var x = 0; x < src.WidthPx; x++)
+            {
+                if ((row[x >> 3] & (0x80 >> (x & 7))) == 0)
+                    continue;
+                var dx = leftPx + x;
+                packed[dstRow + (dx >> 3)] |= (byte)(0x80 >> (dx & 7));
+            }
+        }
+
+        return new MonochromeBitmap(headPx, src.HeightPx + topPad, packed);
     }
 
     // --- print-task-version dispatch ---

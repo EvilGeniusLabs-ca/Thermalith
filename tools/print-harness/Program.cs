@@ -97,7 +97,7 @@ async Task<int> ProbeCommand(CancellationToken ct)
 
 int EncodeCommand()
 {
-    var bitmap = BuildTestPattern(320, 240);
+    var bitmap = ConfiguredPattern();
     var rows = RowEncoder.Encode(bitmap, new RowEncoder.Options { PrintheadPixels = 384 });
     Console.WriteLine($"Test bitmap: {bitmap.WidthPx}×{bitmap.HeightPx}px, {bitmap.Packed.Length} packed bytes.");
     Console.WriteLine($"Row encoder produced {rows.Count} row packets. (offline — nothing sent)");
@@ -145,16 +145,34 @@ async Task<int> ConnectCommand(PrintMode print, CancellationToken ct, bool statu
             break;
 
         case PrintMode.Bitmap:
-            var bitmap = BuildTestPattern(320, 240);
-            Console.WriteLine($"\nBitmap: {bitmap.WidthPx}×{bitmap.HeightPx}px.");
+            var bitmap = ConfiguredPattern();
+            Console.WriteLine($"\nBitmap: {bitmap.WidthPx}×{bitmap.HeightPx}px " +
+                              $"(~{bitmap.WidthPx / 7.992:0.#}×{bitmap.HeightPx / 7.992:0.#} mm @ 203 dpi).");
             if (!Confirm("Print the hardcoded test bitmap?"))
                 return 0;
             var density = int.TryParse(GetOption(args, "--density"), out var d) ? (int?)d : null;
             var copies = int.TryParse(GetOption(args, "--copies"), out var c) ? c : 1;
+            var useIndexed = !args.Contains("--no-indexed");
+            var offsetX = int.TryParse(GetOption(args, "--offset-x"), out var ox) ? ox : 0;
+            var offsetY = int.TryParse(GetOption(args, "--offset-y"), out var oy) ? oy : 0;
+            var align = GetOption(args, "--align")?.ToLowerInvariant() switch
+            {
+                "left" => PrintAlignment.Left,
+                "right" => PrintAlignment.Right,
+                _ => PrintAlignment.Center,
+            };
             var progress = new Progress<PrintProgress>(p =>
                 Console.WriteLine($"  page {p.Page}/{p.TotalPages}  print {p.PagePrintPercent}%  feed {p.PageFeedPercent}%"));
-            Console.WriteLine("Printing…");
-            await client.PrintAsync(bitmap, new PrintOptions { Density = density, Copies = copies }, progress, ct);
+            Console.WriteLine($"Printing… (align {align}, offset {offsetX:+0;-0;0}/{offsetY:+0;-0;0}px, indexed {(useIndexed ? "on" : "off")})");
+            await client.PrintAsync(bitmap, new PrintOptions
+            {
+                Density = density,
+                Copies = copies,
+                UseIndexedRows = useIndexed,
+                HorizontalAlign = align,
+                OffsetXPx = offsetX,
+                OffsetYPx = offsetY,
+            }, progress, ct);
             Console.WriteLine("Done. A label should have come out of the printer.");
             break;
     }
@@ -211,6 +229,17 @@ static int Usage(string? error)
     return error is null ? 0 : 2;
 }
 
+MonochromeBitmap ConfiguredPattern()
+{
+    var w = int.TryParse(GetOption(args, "--width"), out var pw) ? pw : 320;
+    var h = int.TryParse(GetOption(args, "--height"), out var ph) ? ph : 240;
+    return BuildTestPattern(w, h);
+}
+
+// A deliberately unambiguous diagnostic pattern: a thick border, a thick X across the whole
+// field, and a solid filled square in the TOP-LEFT corner as an origin/orientation marker. Thick
+// strokes are easy to see and (being >6 px per row) avoid the sparse indexed-row path, so a clean
+// print isolates orientation/positioning from encoding.
 static MonochromeBitmap BuildTestPattern(int width, int height)
 {
     var bytesPerRow = (width + 7) / 8;
@@ -222,22 +251,43 @@ static MonochromeBitmap BuildTestPattern(int width, int height)
         packed[y * bytesPerRow + (x >> 3)] |= (byte)(0x80 >> (x & 7));
     }
 
+    void Dot(int x, int y, int r)
+    {
+        for (var dy = -r; dy <= r; dy++)
+            for (var dx = -r; dx <= r; dx++)
+                Set(x + dx, y + dy);
+    }
+
+    const int border = 6;
+
+    // Thick border.
     for (var x = 0; x < width; x++)
-    {
-        Set(x, 0); Set(x, 1);
-        Set(x, height - 1); Set(x, height - 2);
-    }
+        for (var t = 0; t < border; t++)
+        {
+            Set(x, t);
+            Set(x, height - 1 - t);
+        }
     for (var y = 0; y < height; y++)
+        for (var t = 0; t < border; t++)
+        {
+            Set(t, y);
+            Set(width - 1 - t, y);
+        }
+
+    // Thick diagonal X (3px) corner to corner.
+    var n = Math.Max(width, height);
+    for (var i = 0; i < n; i++)
     {
-        Set(0, y); Set(1, y);
-        Set(width - 1, y); Set(width - 2, y);
+        var x = i * (width - 1) / (n - 1);
+        var y = i * (height - 1) / (n - 1);
+        Dot(x, y, 1);
+        Dot(width - 1 - x, y, 1);
     }
-    for (var i = 0; i < Math.Min(width, height); i++)
-    {
-        var x = i * width / Math.Min(width, height);
-        Set(x, i);
-        Set(width - 1 - x, i);
-    }
+
+    // Solid origin marker: filled square in the top-left corner.
+    for (var y = border; y < border + 32 && y < height; y++)
+        for (var x = border; x < border + 32 && x < width; x++)
+            Set(x, y);
 
     return new MonochromeBitmap(width, height, packed);
 }
