@@ -159,7 +159,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconTable}" /><TextBlock Text="Table" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                 </StackPanel>
-                <TextBlock DockPanel.Dock="Top" Text="Layers" Margin="8,2" FontWeight="Bold" Foreground="#CCC" />
+                <TextBlock DockPanel.Dock="Top" Text="Elements" Margin="8,2" FontWeight="Bold" Foreground="#CCC" />
                 <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:LayerItemViewModel">
@@ -385,8 +385,8 @@
                     </ScrollViewer>
                 </TabItem>
 
-                <TabItem Header="Printer" DataContext="{Binding Printer}">
-                    <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled">
+                <TabItem Header="Printer">
+                    <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled" DataContext="{Binding Printer}">
                         <StackPanel Spacing="6">
                             <TextBlock Text="Connection" FontWeight="Bold" Foreground="#CCC" />
                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Ports}"
