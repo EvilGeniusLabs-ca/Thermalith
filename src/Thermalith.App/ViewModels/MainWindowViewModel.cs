@@ -185,15 +185,22 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasRecentFiles));
     }
 
-    /// <summary>Persist window/panel geometry on close.</summary>
-    public void SaveLayout(double width, double height, double leftPanel, double rightPanel)
+    /// <summary>
+    /// Persist window + panel geometry. Position/size are only updated when the window is in its
+    /// normal state (pass nulls while maximized so the restore size isn't clobbered with the
+    /// maximized bounds). Panel widths and the maximized flag are always saved.
+    /// </summary>
+    public void SaveWindowState(double? x, double? y, double? width, double? height, bool maximized, double leftPanel, double rightPanel)
     {
         _settings = _settings with
         {
-            WindowWidth = width,
-            WindowHeight = height,
-            LeftPanelWidth = leftPanel,
-            RightPanelWidth = rightPanel,
+            WindowX = x ?? _settings.WindowX,
+            WindowY = y ?? _settings.WindowY,
+            WindowWidth = width ?? _settings.WindowWidth,
+            WindowHeight = height ?? _settings.WindowHeight,
+            WindowMaximized = maximized,
+            LeftPanelWidth = leftPanel > 0 ? leftPanel : _settings.LeftPanelWidth,
+            RightPanelWidth = rightPanel > 0 ? rightPanel : _settings.RightPanelWidth,
         };
         _settingsService.Save(_settings);
     }

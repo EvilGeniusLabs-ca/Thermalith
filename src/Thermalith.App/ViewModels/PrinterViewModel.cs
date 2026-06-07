@@ -36,7 +36,6 @@ public sealed partial class PrinterViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(DisconnectCommand))]
     [NotifyCanExecuteChangedFor(nameof(PrintCommand))]
     [NotifyCanExecuteChangedFor(nameof(RefreshStatusCommand))]
-    [NotifyCanExecuteChangedFor(nameof(RefreshPortsCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -59,9 +58,11 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     // ── Discovery ────────────────────────────────────────────────────────────────────────────
 
-    [RelayCommand(CanExecute = nameof(NotBusy))]
+    // Scan is always available — you scan precisely when the printer might be off/unconnected.
+    [RelayCommand]
     private async Task RefreshPortsAsync()
     {
+        if (IsBusy) return;
         IsBusy = true;
         Message = "Scanning ports…";
         Ports.Clear();
@@ -232,7 +233,6 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     // ── CanExecute ───────────────────────────────────────────────────────────────────────────
 
-    private bool NotBusy() => !IsBusy;
     private bool CanConnect() => !IsBusy && !IsConnected && SelectedPort is not null;
     private bool CanOperate() => !IsBusy && IsConnected;
 

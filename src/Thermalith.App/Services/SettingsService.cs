@@ -8,8 +8,11 @@ public sealed record AppSettings
     public List<string> RecentFiles { get; init; } = [];
     public double WindowWidth { get; init; } = 1200;
     public double WindowHeight { get; init; } = 780;
+    public double? WindowX { get; init; }
+    public double? WindowY { get; init; }
+    public bool WindowMaximized { get; init; }
     public double LeftPanelWidth { get; init; } = 200;
-    public double RightPanelWidth { get; init; } = 280;
+    public double RightPanelWidth { get; init; } = 300;
 }
 
 /// <summary>

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Thermalith.App.Services;
 using Thermalith.App.ViewModels;
 
@@ -34,14 +35,46 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         vm.CloseRequested += (_, _) => Close();
 
         // Restore persisted window geometry.
-        Width = vm.Settings.WindowWidth;
-        Height = vm.Settings.WindowHeight;
-        BodyGrid.ColumnDefinitions[0].Width = new GridLength(vm.Settings.LeftPanelWidth);
-        BodyGrid.ColumnDefinitions[4].Width = new GridLength(vm.Settings.RightPanelWidth);
+        var s = vm.Settings;
+        Width = s.WindowWidth;
+        Height = s.WindowHeight;
+        if (s.WindowX is { } wx && s.WindowY is { } wy)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Position = new PixelPoint((int)wx, (int)wy);
+        }
+        if (s.WindowMaximized) WindowState = WindowState.Maximized;
+        BodyGrid.ColumnDefinitions[0].Width = new GridLength(s.LeftPanelWidth);
+        BodyGrid.ColumnDefinitions[4].Width = new GridLength(s.RightPanelWidth);
 
         WireKeymap(vm);
         BuildRecentMenu(vm);
         vm.RecentFiles.CollectionChanged += (_, _) => BuildRecentMenu(vm);
+
+        // Persist geometry as it changes too — a debugger stop kills the process before a clean close.
+        _persistDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
+        _persistDebounce.Tick += (_, _) => { _persistDebounce!.Stop(); PersistWindowState(); };
+        PositionChanged += (_, _) => DebouncePersist();
+        Resized += (_, _) => DebouncePersist();
+    }
+
+    private DispatcherTimer? _persistDebounce;
+
+    private void DebouncePersist()
+    {
+        _persistDebounce?.Stop();
+        _persistDebounce?.Start();
+    }
+
+    private void PersistWindowState()
+    {
+        if (Vm is not { } vm) return;
+        var left = BodyGrid.ColumnDefinitions[0].ActualWidth;
+        var right = BodyGrid.ColumnDefinitions[4].ActualWidth;
+        if (WindowState == WindowState.Normal)
+            vm.SaveWindowState(Position.X, Position.Y, Width, Height, false, left, right);
+        else
+            vm.SaveWindowState(null, null, null, null, WindowState == WindowState.Maximized, left, right);
     }
 
     private async void OnWindowClosing(object? sender, WindowClosingEventArgs e)
@@ -60,7 +93,7 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             return;
         }
 
-        vm.SaveLayout(Width, Height, BodyGrid.ColumnDefinitions[0].ActualWidth, BodyGrid.ColumnDefinitions[4].ActualWidth);
+        PersistWindowState();
         vm.Printer.Shutdown();
     }
 
