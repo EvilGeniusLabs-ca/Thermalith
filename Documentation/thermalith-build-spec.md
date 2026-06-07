@@ -262,6 +262,15 @@ The model is a root with canvas + a flat, ordered control collection (optionally
 
 **Label presets (label-stock catalog).** Ship a catalog of standard Niimbot label stock — per-SKU `widthMm × heightMm` + `shape` (rectangle / rounded / circle / die-cut / cable) — so the user picks "40×30 rect" from a list instead of typing dimensions. Complements RFID auto-detect (§5) for non-RFID rolls and seeds new-label setup. **The catalog is a data-gathering task: mine Niimbot's own desktop software and website for the official label SKUs/sizes/shapes** (§11). Ships as a static JSON resource in Core, user-extensible with custom sizes.
 
+#### 6.1.3 Safe print area (hardware skew / registration tolerance)
+
+Hardware finding (B1, validated 2026-06-07): real prints carry a small **constant** mechanical skew — the label tracks through the head at a slight fixed angle, shearing straight lines — plus a registration offset. The **vendor app skews the identical square the same way**, confirming this is hardware, not the raster we send. Design intent: **slight skew is acceptable; content printing off the label is not.** The engine therefore optimizes for *staying on-label*, not for perfect straightness.
+
+- **Safe print area.** The canvas carries an inset **safe area** — a margin smaller than the full label — sized so worst-case skew + registration cannot push content past the label edge. Authoring defaults inside it; content may extend toward the bleed edge, but validation (§6.7) flags anything at risk of clipping. The inset is per-profile and calibratable.
+- **Editor guides (§7).** The editor draws the safe-area rectangle (vertical + horizontal guides) on the canvas so the user lays out within it; the bleed/edge zone is visually distinct.
+- **Transparency.** When output is skewed, the product says plainly it is printer registration/skew (a hardware limit): we send a clean raster, the head prints it straight, the paper path shears it. No implication of a design defect.
+- **Optional counter-shear (secondary).** Because the skew is constant, the calibration system (§6.3.6) *may* pre-shear the raster to cancel it — exceeding vendor fidelity (the app does not). A nice-to-have, not required to ship; the safe area is the primary mitigation.
+
 ### 6.2 Controls Catalog
 
 | Control | Type-specific properties |
