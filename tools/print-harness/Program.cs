@@ -233,14 +233,16 @@ MonochromeBitmap ConfiguredPattern()
 {
     var w = int.TryParse(GetOption(args, "--width"), out var pw) ? pw : 320;
     var h = int.TryParse(GetOption(args, "--height"), out var ph) ? ph : 240;
-    return BuildTestPattern(w, h);
+    var kind = GetOption(args, "--pattern")?.ToLowerInvariant() ?? "box";
+    return BuildTestPattern(w, h, kind);
 }
 
-// A deliberately unambiguous diagnostic pattern: a thick border, a thick X across the whole
-// field, and a solid filled square in the TOP-LEFT corner as an origin/orientation marker. Thick
-// strokes are easy to see and (being >6 px per row) avoid the sparse indexed-row path, so a clean
-// print isolates orientation/positioning from encoding.
-static MonochromeBitmap BuildTestPattern(int width, int height)
+// Diagnostic patterns, both with a thick border + top-left origin square (orientation marker) and
+// thick (>6 px/row) strokes that avoid the sparse indexed-row path:
+//   box   — adds a diagonal X (general check).
+//   cross — adds a centered full-height vertical + full-width horizontal line: clean straight
+//           references for measuring feed skew (a constant skew bends these visibly).
+static MonochromeBitmap BuildTestPattern(int width, int height, string kind = "box")
 {
     var bytesPerRow = (width + 7) / 8;
     var packed = new byte[bytesPerRow * height];
@@ -274,14 +276,29 @@ static MonochromeBitmap BuildTestPattern(int width, int height)
             Set(width - 1 - t, y);
         }
 
-    // Thick diagonal X (3px) corner to corner.
-    var n = Math.Max(width, height);
-    for (var i = 0; i < n; i++)
+    if (kind == "cross")
     {
-        var x = i * (width - 1) / (n - 1);
-        var y = i * (height - 1) / (n - 1);
-        Dot(x, y, 1);
-        Dot(width - 1 - x, y, 1);
+        // Centered crosshair — straight reference lines for skew measurement.
+        var cx = width / 2;
+        var cy = height / 2;
+        for (var y = 0; y < height; y++)
+            for (var t = -1; t <= 1; t++)
+                Set(cx + t, y);
+        for (var x = 0; x < width; x++)
+            for (var t = -1; t <= 1; t++)
+                Set(x, cy + t);
+    }
+    else
+    {
+        // Thick diagonal X (3px) corner to corner.
+        var n = Math.Max(width, height);
+        for (var i = 0; i < n; i++)
+        {
+            var x = i * (width - 1) / (n - 1);
+            var y = i * (height - 1) / (n - 1);
+            Dot(x, y, 1);
+            Dot(width - 1 - x, y, 1);
+        }
     }
 
     // Solid origin marker: filled square in the top-left corner.
