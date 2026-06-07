@@ -44,6 +44,7 @@ public partial class MainWindow : Window, IFilePicker
     private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
         Vm?.SaveLayout(Width, Height, BodyGrid.ColumnDefinitions[0].ActualWidth, BodyGrid.ColumnDefinitions[4].ActualWidth);
+        Vm?.Printer.Shutdown();
     }
 
     // ── Canvas interaction: select, drag-move, resize (§7) ───────────────────────────────────

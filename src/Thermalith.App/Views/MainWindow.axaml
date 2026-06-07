@@ -63,7 +63,14 @@
                 <MenuItem Header="Send _Backward" Command="{Binding SendBackwardCommand}" />
                 <MenuItem Header="Send to _Back" Command="{Binding SendToBackCommand}" />
             </MenuItem>
-            <MenuItem Header="_Printer" IsEnabled="False" ToolTip.Tip="Printer panel — deferred to a later pass" />
+            <MenuItem Header="_Printer">
+                <MenuItem Header="_Refresh Ports" Command="{Binding Printer.RefreshPortsCommand}" />
+                <MenuItem Header="_Connect" Command="{Binding Printer.ConnectCommand}" />
+                <MenuItem Header="_Disconnect" Command="{Binding Printer.DisconnectCommand}" />
+                <Separator />
+                <MenuItem Header="Refresh _Status" Command="{Binding Printer.RefreshStatusCommand}" />
+                <MenuItem Header="_Print" Command="{Binding Printer.PrintCommand}" />
+            </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About Thermalith" Command="{Binding AboutCommand}" />
             </MenuItem>
@@ -183,11 +190,11 @@
 
             <GridSplitter Grid.Column="3" Width="4" Background="#111" />
 
-            <!-- RIGHT: inspector -->
-            <DockPanel Grid.Column="4" Background="#262626">
-                <TextBlock DockPanel.Dock="Top" Text="Inspector" Margin="8,6" FontWeight="Bold" Foreground="#CCC" />
-                <ScrollViewer Padding="8">
-                    <ContentControl Content="{Binding Editor.SelectedEditor}">
+            <!-- RIGHT: inspector + printer tabs -->
+            <TabControl Grid.Column="4" Background="#262626">
+                <TabItem Header="Properties">
+                    <ScrollViewer Padding="8">
+                        <ContentControl Content="{Binding Editor.SelectedEditor}">
                         <ContentControl.DataTemplates>
 
                             <DataTemplate DataType="ed:TextEditorViewModel">
@@ -286,10 +293,69 @@
                                 </StackPanel>
                             </DataTemplate>
 
-                        </ContentControl.DataTemplates>
-                    </ContentControl>
-                </ScrollViewer>
-            </DockPanel>
+                            </ContentControl.DataTemplates>
+                        </ContentControl>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Printer" DataContext="{Binding Printer}">
+                    <ScrollViewer Padding="8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Connection" FontWeight="Bold" Foreground="#CCC" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Ports}"
+                                      SelectedItem="{Binding SelectedPort}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PortItem">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button Content="Scan" Command="{Binding RefreshPortsCommand}" />
+                                <Button Content="Connect" Command="{Binding ConnectCommand}" />
+                                <Button Content="Disconnect" Command="{Binding DisconnectCommand}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding ConnectionInfo}" Foreground="#AAA" TextWrapping="Wrap" />
+
+                            <Separator />
+                            <TextBlock Text="Status" FontWeight="Bold" Foreground="#CCC" />
+                            <TextBlock Text="{Binding StatusInfo}" Foreground="#AAA" TextWrapping="Wrap" />
+                            <Button Content="Refresh status" Command="{Binding RefreshStatusCommand}" HorizontalAlignment="Left" />
+
+                            <Separator />
+                            <TextBlock Text="Print" FontWeight="Bold" Foreground="#CCC" />
+                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                                <TextBlock Text="Density" Foreground="#888" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                    <Slider Width="150" Minimum="{Binding DensityMin}" Maximum="{Binding DensityMax}"
+                                            Value="{Binding Density}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                                    <TextBlock Text="{Binding Density}" VerticalAlignment="Center" Foreground="#AAA" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                                <TextBlock Text="Label type" Foreground="#888" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding LabelTypes}" SelectedItem="{Binding SelectedLabelType}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                                <TextBlock Text="Copies" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Text="{Binding Copies}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                                <TextBlock Text="Offset X px" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Text="{Binding OffsetX}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                                <TextBlock Text="Offset Y px" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Text="{Binding OffsetY}" />
+                            </Grid>
+                            <Button Content="Print" Command="{Binding PrintCommand}" HorizontalAlignment="Stretch" Margin="0,6" />
+
+                            <TextBlock Text="{Binding Message}" Foreground="#8AC" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
         </Grid>
 
     </DockPanel>

@@ -65,6 +65,10 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public int PreviewWidthPx { get; private set; }
     public int PreviewHeightPx { get; private set; }
+
+    /// <summary>Render the current document to the 1bpp raster for printing (same path as the preview, §6.3).</summary>
+    public Niimbot.Net.Encoding.MonochromeBitmap RenderForPrint() =>
+        _renderer.Render(_live, new ResolveContext { Now = DateTimeOffset.Now, Assets = _assets, RowIndex = 0 });
     public string? FilePath { get; private set; }
     public string DocumentName => _live.Metadata.Name;
     public bool CanUndo => _history.CanUndo;

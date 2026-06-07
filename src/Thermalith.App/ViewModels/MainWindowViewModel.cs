@@ -24,6 +24,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsService = settingsService;
         _settings = settingsService.Load();
         Editor = new EditorViewModel();
+        Printer = new PrinterViewModel(Editor);
         RecentFiles = new ObservableCollection<string>(_settings.RecentFiles);
 
         Editor.StateChanged += (_, _) => OnEditorStateChanged();
@@ -32,6 +33,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public EditorViewModel Editor { get; }
+    public PrinterViewModel Printer { get; }
     public ObservableCollection<string> RecentFiles { get; }
 
     /// <summary>Set by the view before first use.</summary>
