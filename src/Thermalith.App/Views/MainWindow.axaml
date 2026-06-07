@@ -316,7 +316,25 @@
                                     <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Rows" /><TextBox Grid.Column="1" Text="{Binding Rows}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Border mm" /><TextBox Grid.Column="1" Text="{Binding BorderWidthMm}" /></Grid>
                                     <CheckBox IsChecked="{Binding HeaderRow}" Content="Header row" Margin="0,4" />
-                                    <TextBlock Text="Cell text editing — next pass" Foreground="#777" FontSize="11" Margin="0,4" />
+                                    <TextBlock Text="Cells" Foreground="#888" Margin="0,4,0,2" />
+                                    <ItemsControl ItemsSource="{Binding CellRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="ed:TableRowViewModel">
+                                                <ItemsControl ItemsSource="{Binding Cells}" Margin="0,1">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="ed:TableCellViewModel">
+                                                            <TextBox Width="58" Margin="1" Padding="3,1" Text="{Binding Content}" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </DataTemplate>
 

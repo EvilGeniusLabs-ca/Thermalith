@@ -65,6 +65,12 @@ public abstract partial class ElementEditorViewModel : ObservableObject
         if (_loaded) _onChanged();
     }
 
+    /// <summary>Fire the edit callback for changes that don't flow through an observable property (e.g. nested table cells).</summary>
+    protected void RaiseEdited()
+    {
+        if (_loaded) _onChanged();
+    }
+
     /// <summary>Reconstruct the immutable element record from the current field values.</summary>
     public abstract LabelElement ToElement();
 

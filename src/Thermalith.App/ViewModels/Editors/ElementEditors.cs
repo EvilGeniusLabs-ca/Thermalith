@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Thermalith.Core.Model;
 
@@ -225,27 +226,52 @@ public sealed partial class TableEditorViewModel : ElementEditorViewModel
 {
     public override string TypeLabel => "Table";
 
-    private readonly List<List<TableCell>>? _cells; // cell content editing is a later pass
+    private readonly double[]? _columnWidthsMm;
+    private readonly double[]? _rowHeightsMm;
 
     [ObservableProperty] private int _cols;
     [ObservableProperty] private int _rows;
     [ObservableProperty] private double _borderWidthMm;
     [ObservableProperty] private bool _headerRow;
 
+    /// <summary>Editable cell grid bound by the inspector; rebuilt when cols/rows change, preserving content.</summary>
+    public ObservableCollection<TableRowViewModel> CellRows { get; } = [];
+
     public TableEditorViewModel(TableElement el, Action onChanged) : base(el, onChanged)
     {
-        _cells = el.Props.Cells;
         _cols = el.Props.Cols;
         _rows = el.Props.Rows;
         _borderWidthMm = el.Props.BorderWidthMm;
         _headerRow = el.Props.HeaderRow;
         _columnWidthsMm = el.Props.ColumnWidthsMm;
         _rowHeightsMm = el.Props.RowHeightsMm;
+        BuildCells(el.Props.Cells);
         MarkLoaded();
     }
 
-    private readonly double[]? _columnWidthsMm;
-    private readonly double[]? _rowHeightsMm;
+    partial void OnColsChanged(int value) => BuildCells(SnapshotCells());
+    partial void OnRowsChanged(int value) => BuildCells(SnapshotCells());
+
+    private void BuildCells(IReadOnlyList<IReadOnlyList<string>>? existing)
+    {
+        CellRows.Clear();
+        for (var r = 0; r < Math.Max(0, Rows); r++)
+        {
+            var row = new ObservableCollection<TableCellViewModel>();
+            for (var c = 0; c < Math.Max(0, Cols); c++)
+            {
+                var content = existing is not null && r < existing.Count && c < existing[r].Count ? existing[r][c] : "";
+                row.Add(new TableCellViewModel(content, RaiseEdited));
+            }
+            CellRows.Add(new TableRowViewModel(row));
+        }
+    }
+
+    private void BuildCells(List<List<TableCell>>? cells) =>
+        BuildCells(cells?.Select(r => (IReadOnlyList<string>)r.Select(c => c.Content).ToList()).ToList());
+
+    private List<IReadOnlyList<string>> SnapshotCells() =>
+        CellRows.Select(r => (IReadOnlyList<string>)r.Cells.Select(c => c.Content).ToList()).ToList();
 
     public override LabelElement ToElement() => new TableElement
     {
@@ -253,7 +279,8 @@ public sealed partial class TableEditorViewModel : ElementEditorViewModel
         Props = new TableProps
         {
             Cols = Cols, Rows = Rows, BorderWidthMm = BorderWidthMm, HeaderRow = HeaderRow,
-            Cells = _cells, ColumnWidthsMm = _columnWidthsMm, RowHeightsMm = _rowHeightsMm,
+            ColumnWidthsMm = _columnWidthsMm, RowHeightsMm = _rowHeightsMm,
+            Cells = CellRows.Select(r => r.Cells.Select(c => new TableCell { Content = c.Content }).ToList()).ToList(),
         },
     };
 }
