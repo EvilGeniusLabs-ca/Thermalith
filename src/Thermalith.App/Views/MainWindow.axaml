@@ -113,7 +113,7 @@
         <Border DockPanel.Dock="Bottom" Background="#202020" Padding="8,3">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <TextBlock Text="{Binding Editor.StatusText}" Foreground="#AAA" />
-                <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Foreground="#8AC" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding StatusMessage, UpdateSourceTrigger=PropertyChanged}" Foreground="#8AC" HorizontalAlignment="Center" />
                 <TextBlock Grid.Column="2" Text="{Binding Editor.Dirty, StringFormat='dirty: {0}'}" Foreground="#777" />
             </Grid>
         </Border>
@@ -153,8 +153,8 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:LayerItemViewModel">
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="{Binding Name}" />
-                                <TextBlock Grid.Column="1" Text="{Binding TypeLabel}" Foreground="#777" FontSize="11" />
+                                <TextBlock Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Column="1" Text="{Binding TypeLabel, UpdateSourceTrigger=PropertyChanged}" Foreground="#777" FontSize="11" />
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -234,22 +234,22 @@
             <!-- RIGHT: inspector + printer tabs -->
             <TabControl Grid.Column="4" Background="#262626">
                 <TabItem Header="Properties">
-                    <ScrollViewer Padding="8">
+                    <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled">
                         <ContentControl Content="{Binding Editor.InspectorTarget}">
                         <ContentControl.DataTemplates>
 
                             <DataTemplate DataType="ed:CanvasEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <TextBlock Text="Label" FontWeight="Bold" Margin="0,0,0,4" />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Width mm" /><TextBox Grid.Column="1" Text="{Binding WidthMm}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Height mm" /><TextBox Grid.Column="1" Text="{Binding HeightMm}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="DPI" /><TextBox Grid.Column="1" Text="{Binding Dpi}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Bleed mm" /><TextBox Grid.Column="1" Text="{Binding BleedMm}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Safe inset" /><TextBox Grid.Column="1" Text="{Binding SafeAreaInsetMm}" Watermark="none" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Width mm" /><TextBox Grid.Column="1" Text="{Binding WidthMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Height mm" /><TextBox Grid.Column="1" Text="{Binding HeightMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="DPI" /><TextBox Grid.Column="1" Text="{Binding Dpi, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Bleed mm" /><TextBox Grid.Column="1" Text="{Binding BleedMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Safe inset" /><TextBox Grid.Column="1" Text="{Binding SafeAreaInsetMm, UpdateSourceTrigger=PropertyChanged}" Watermark="none" /></Grid>
                                     <TextBlock Text="Safe area guards content against print skew (§6.1.3)." Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
                                 </StackPanel>
                             </DataTemplate>
@@ -257,84 +257,84 @@
                             <DataTemplate DataType="ed:TextEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Content" /><TextBox Grid.Column="1" Text="{Binding Content}" AcceptsReturn="True" TextWrapping="Wrap" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Font" /><TextBox Grid.Column="1" Text="{Binding FontFamily}" Watermark="(bundled)" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Size (pt)" /><TextBox Grid.Column="1" Text="{Binding FontSizePt}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Content" /><TextBox Grid.Column="1" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Font" /><TextBox Grid.Column="1" Text="{Binding FontFamily, UpdateSourceTrigger=PropertyChanged}" Watermark="(bundled)" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Size (pt)" /><TextBox Grid.Column="1" Text="{Binding FontSizePt, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <StackPanel Orientation="Horizontal" Spacing="14" Margin="0,4">
                                         <CheckBox IsChecked="{Binding Bold}" Content="Bold" />
                                         <CheckBox IsChecked="{Binding Italic}" Content="Italic" />
                                         <CheckBox IsChecked="{Binding Underline}" Content="Underline" />
                                     </StackPanel>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Sizing" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.FontSizing}" SelectedItem="{Binding FontSizing}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Min pt" /><TextBox Grid.Column="1" Text="{Binding MinFontSizePt}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Max pt" /><TextBox Grid.Column="1" Text="{Binding MaxFontSizePt}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Line ×" /><TextBox Grid.Column="1" Text="{Binding LineSpacing}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Sizing" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.FontSizing}" SelectedItem="{Binding FontSizing}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Min pt" /><TextBox Grid.Column="1" Text="{Binding MinFontSizePt, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Max pt" /><TextBox Grid.Column="1" Text="{Binding MaxFontSizePt, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Line ×" /><TextBox Grid.Column="1" Text="{Binding LineSpacing, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:BarcodeEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Symbology" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Symbology}" SelectedItem="{Binding Symbology}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Symbology" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Symbology}" SelectedItem="{Binding Symbology}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <CheckBox IsChecked="{Binding ShowText}" Content="Show text" Margin="0,4" />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleWidthMm}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleWidthMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:QrEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Encoding" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.QrEncoding}" SelectedItem="{Binding Encoding}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="EC level" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.EcLevel}" SelectedItem="{Binding EcLevel}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleSizeMm}" Watermark="auto" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Encoding" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.QrEncoding}" SelectedItem="{Binding Encoding}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="EC level" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.EcLevel}" SelectedItem="{Binding EcLevel}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleSizeMm, UpdateSourceTrigger=PropertyChanged}" Watermark="auto" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:SerialEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Start" /><TextBox Grid.Column="1" Text="{Binding Start}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Step" /><TextBox Grid.Column="1" Text="{Binding Step}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Pad len" /><TextBox Grid.Column="1" Text="{Binding PadLength}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Pad char" /><TextBox Grid.Column="1" Text="{Binding PadChar}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Prefix" /><TextBox Grid.Column="1" Text="{Binding Prefix}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Suffix" /><TextBox Grid.Column="1" Text="{Binding Suffix}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Start" /><TextBox Grid.Column="1" Text="{Binding Start, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Step" /><TextBox Grid.Column="1" Text="{Binding Step, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Pad len" /><TextBox Grid.Column="1" Text="{Binding PadLength, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Pad char" /><TextBox Grid.Column="1" Text="{Binding PadChar, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Prefix" /><TextBox Grid.Column="1" Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Suffix" /><TextBox Grid.Column="1" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:DateTimeEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Kind" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateKind}" SelectedItem="{Binding Kind}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Format" /><TextBox Grid.Column="1" Text="{Binding Format}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Source" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateSource}" SelectedItem="{Binding Source}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Fixed UTC" /><TextBox Grid.Column="1" Text="{Binding FixedValueUtc}" Watermark="ISO-8601" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Kind" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateKind}" SelectedItem="{Binding Kind}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Format" /><TextBox Grid.Column="1" Text="{Binding Format, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Source" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateSource}" SelectedItem="{Binding Source}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Fixed UTC" /><TextBox Grid.Column="1" Text="{Binding FixedValueUtc, UpdateSourceTrigger=PropertyChanged}" Watermark="ISO-8601" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:ShapeEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.ShapeType}" SelectedItem="{Binding ShapeType}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Stroke mm" /><TextBox Grid.Column="1" Text="{Binding StrokeWidthMm}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Fill" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fill}" SelectedItem="{Binding Fill}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.ShapeType}" SelectedItem="{Binding ShapeType}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Stroke mm" /><TextBox Grid.Column="1" Text="{Binding StrokeWidthMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Fill" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fill}" SelectedItem="{Binding Fill}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:ImageEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Fit" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fit}" SelectedItem="{Binding Fit}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Threshold" /><TextBox Grid.Column="1" Text="{Binding Threshold}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Fit" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fit}" SelectedItem="{Binding Fit}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Threshold" /><TextBox Grid.Column="1" Text="{Binding Threshold, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" />
                                 </StackPanel>
                             </DataTemplate>
@@ -342,9 +342,9 @@
                             <DataTemplate DataType="ed:TableEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Cols" /><TextBox Grid.Column="1" Text="{Binding Cols}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Rows" /><TextBox Grid.Column="1" Text="{Binding Rows}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Border mm" /><TextBox Grid.Column="1" Text="{Binding BorderWidthMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Cols" /><TextBox Grid.Column="1" Text="{Binding Cols, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Rows" /><TextBox Grid.Column="1" Text="{Binding Rows, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Border mm" /><TextBox Grid.Column="1" Text="{Binding BorderWidthMm, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <CheckBox IsChecked="{Binding HeaderRow}" Content="Header row" Margin="0,4" />
                                     <TextBlock Text="Cells" Foreground="#888" Margin="0,4,0,2" />
                                     <ItemsControl ItemsSource="{Binding CellRows}">
@@ -358,7 +358,7 @@
                                                     </ItemsControl.ItemsPanel>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="ed:TableCellViewModel">
-                                                            <TextBox Width="58" Margin="1" Padding="3,1" Text="{Binding Content}" />
+                                                            <TextBox Width="58" Margin="1" Padding="3,1" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" />
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
@@ -374,14 +374,14 @@
                 </TabItem>
 
                 <TabItem Header="Printer" DataContext="{Binding Printer}">
-                    <ScrollViewer Padding="8">
+                    <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel Spacing="6">
                             <TextBlock Text="Connection" FontWeight="Bold" Foreground="#CCC" />
                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Ports}"
                                       SelectedItem="{Binding SelectedPort}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:PortItem">
-                                        <TextBlock Text="{Binding Label}" />
+                                        <TextBlock Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
@@ -390,43 +390,43 @@
                                 <Button Content="Connect" Command="{Binding ConnectCommand}" />
                                 <Button Content="Disconnect" Command="{Binding DisconnectCommand}" />
                             </StackPanel>
-                            <TextBlock Text="{Binding ConnectionInfo}" Foreground="#AAA" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding ConnectionInfo, UpdateSourceTrigger=PropertyChanged}" Foreground="#AAA" TextWrapping="Wrap" />
 
                             <Separator />
                             <TextBlock Text="Status" FontWeight="Bold" Foreground="#CCC" />
-                            <TextBlock Text="{Binding StatusInfo}" Foreground="#AAA" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding StatusInfo, UpdateSourceTrigger=PropertyChanged}" Foreground="#AAA" TextWrapping="Wrap" />
                             <Button Content="Refresh status" Command="{Binding RefreshStatusCommand}" HorizontalAlignment="Left" />
 
                             <Separator />
                             <TextBlock Text="Print" FontWeight="Bold" Foreground="#CCC" />
-                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                            <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Density" Foreground="#888" VerticalAlignment="Center" />
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                                     <Slider Width="150" Minimum="{Binding DensityMin}" Maximum="{Binding DensityMax}"
                                             Value="{Binding Density}" TickFrequency="1" IsSnapToTickEnabled="True" />
-                                    <TextBlock Text="{Binding Density}" VerticalAlignment="Center" Foreground="#AAA" />
+                                    <TextBlock Text="{Binding Density, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="#AAA" />
                                 </StackPanel>
                             </Grid>
-                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                            <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Label type" Foreground="#888" VerticalAlignment="Center" />
                                 <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
                                           ItemsSource="{Binding LabelTypes}" SelectedItem="{Binding SelectedLabelType}" />
                             </Grid>
-                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                            <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Copies" Foreground="#888" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" Text="{Binding Copies}" />
+                                <TextBox Grid.Column="1" Text="{Binding Copies, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
-                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                            <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Offset X px" Foreground="#888" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" Text="{Binding OffsetX}" />
+                                <TextBox Grid.Column="1" Text="{Binding OffsetX, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
-                            <Grid ColumnDefinitions="84,*" Margin="0,2">
+                            <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Offset Y px" Foreground="#888" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" Text="{Binding OffsetY}" />
+                                <TextBox Grid.Column="1" Text="{Binding OffsetY, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
                             <Button Content="Print" Command="{Binding PrintCommand}" HorizontalAlignment="Stretch" Margin="0,6" />
 
-                            <TextBlock Text="{Binding Message}" Foreground="#8AC" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" Foreground="#8AC" TextWrapping="Wrap" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>

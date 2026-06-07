@@ -5,61 +5,46 @@
              x:DataType="ed:ElementEditorViewModel">
 
     <UserControl.Styles>
-        <Style Selector="Grid.row">
-            <Setter Property="Margin" Value="0,2" />
-        </Style>
-        <Style Selector="Grid.row > TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center" />
+        <Style Selector="TextBlock.lbl">
             <Setter Property="Foreground" Value="#888" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="2">
-        <TextBlock Text="{Binding TypeLabel}" FontWeight="Bold" Margin="0,0,0,4" />
+    <StackPanel Spacing="4">
+        <TextBlock Text="{Binding TypeLabel}" FontWeight="Bold" Margin="0,0,0,2" />
 
-        <Grid Classes="row" ColumnDefinitions="84,*">
-            <TextBlock Text="Name" />
-            <TextBox Grid.Column="1" Text="{Binding Name}" />
+        <Grid ColumnDefinitions="56,*" Margin="0,1">
+            <TextBlock Classes="lbl" Text="Name" />
+            <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
-        <Grid ColumnDefinitions="*,*" Margin="0,2">
-            <Grid Classes="row" ColumnDefinitions="84,*" Margin="0,0,4,0">
-                <TextBlock Text="X (mm)" />
-                <TextBox Grid.Column="1" Text="{Binding X}" />
-            </Grid>
-            <Grid Grid.Column="1" Classes="row" ColumnDefinitions="84,*">
-                <TextBlock Text="Y (mm)" />
-                <TextBox Grid.Column="1" Text="{Binding Y}" />
-            </Grid>
+        <Grid ColumnDefinitions="Auto,*,Auto,*" Margin="0,1">
+            <TextBlock Classes="lbl" Text="X" Margin="0,0,4,0" />
+            <TextBox Grid.Column="1" Text="{Binding X, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock Classes="lbl" Grid.Column="2" Text="Y" Margin="8,0,4,0" />
+            <TextBox Grid.Column="3" Text="{Binding Y, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
-        <Grid ColumnDefinitions="*,*" Margin="0,2">
-            <Grid Classes="row" ColumnDefinitions="84,*" Margin="0,0,4,0">
-                <TextBlock Text="W (mm)" />
-                <TextBox Grid.Column="1" Text="{Binding W}" />
-            </Grid>
-            <Grid Grid.Column="1" Classes="row" ColumnDefinitions="84,*">
-                <TextBlock Text="H (mm)" />
-                <TextBox Grid.Column="1" Text="{Binding H}" />
-            </Grid>
+        <Grid ColumnDefinitions="Auto,*,Auto,*" Margin="0,1">
+            <TextBlock Classes="lbl" Text="W" Margin="0,0,4,0" />
+            <TextBox Grid.Column="1" Text="{Binding W, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock Classes="lbl" Grid.Column="2" Text="H" Margin="8,0,4,0" />
+            <TextBox Grid.Column="3" Text="{Binding H, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
-        <Grid Classes="row" ColumnDefinitions="84,*">
-            <TextBlock Text="Rotation°" />
-            <TextBox Grid.Column="1" Text="{Binding Rotation}" />
+        <Grid ColumnDefinitions="56,*" Margin="0,1">
+            <TextBlock Classes="lbl" Text="Rotation" />
+            <TextBox Grid.Column="1" Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
-        <Grid ColumnDefinitions="*,*" Margin="0,2">
-            <Grid Classes="row" ColumnDefinitions="84,*" Margin="0,0,4,0">
-                <TextBlock Text="Justify H" />
-                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
-                          ItemsSource="{x:Static ed:EditorOptions.JustifyH}" SelectedItem="{Binding JustifyH}" />
-            </Grid>
-            <Grid Grid.Column="1" Classes="row" ColumnDefinitions="84,*">
-                <TextBlock Text="Justify V" />
-                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
-                          ItemsSource="{x:Static ed:EditorOptions.JustifyV}" SelectedItem="{Binding JustifyV}" />
-            </Grid>
+        <Grid ColumnDefinitions="Auto,*,Auto,*" Margin="0,1">
+            <TextBlock Classes="lbl" Text="H" Margin="0,0,4,0" />
+            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Static ed:EditorOptions.JustifyH}" SelectedItem="{Binding JustifyH}" />
+            <TextBlock Classes="lbl" Grid.Column="2" Text="V" Margin="8,0,4,0" />
+            <ComboBox Grid.Column="3" HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Static ed:EditorOptions.JustifyV}" SelectedItem="{Binding JustifyV}" />
         </Grid>
 
         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4">
@@ -67,7 +52,7 @@
             <CheckBox IsChecked="{Binding Locked}" Content="Locked" />
         </StackPanel>
 
-        <Separator Margin="0,4" />
+        <Separator Margin="0,2" />
     </StackPanel>
 
 </UserControl>
