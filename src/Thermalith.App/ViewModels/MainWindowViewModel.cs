@@ -123,6 +123,19 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool CanRedo() => Editor.CanRedo;
     private bool CanDelete() => Editor.SelectedEditor is not null;
 
+    // ── Insert / Arrange ────────────────────────────────────────────────────────────────────────
+
+    [RelayCommand]
+    private void Insert(string? type)
+    {
+        if (!string.IsNullOrEmpty(type)) Editor.AddElement(type);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void BringToFront() => Editor.BringToFront();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void SendToBack() => Editor.SendToBack();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void BringForward() => Editor.BringForward();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void SendBackward() => Editor.SendBackward();
+
     [RelayCommand]
     private void Quit() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
@@ -168,7 +181,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnEditorPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(EditorViewModel.SelectedEditor))
+        {
             DeleteCommand.NotifyCanExecuteChanged();
+            BringToFrontCommand.NotifyCanExecuteChanged();
+            SendToBackCommand.NotifyCanExecuteChanged();
+            BringForwardCommand.NotifyCanExecuteChanged();
+            SendBackwardCommand.NotifyCanExecuteChanged();
+        }
     }
 
     private void UpdateTitle() =>

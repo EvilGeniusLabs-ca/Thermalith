@@ -47,6 +47,11 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public ObservableCollection<LayerItemViewModel> Layers { get; }
 
+    /// <summary>The eight resize-handle rectangles for the current selection (display coords).</summary>
+    public ObservableCollection<HandleSpec> SelectionHandles { get; } = [];
+
+    private const double HandleSize = 9;
+
     [ObservableProperty] private Bitmap? _preview;
     [ObservableProperty] private LayerItemViewModel? _selectedLayer;
     [ObservableProperty] private ElementEditorViewModel? _selectedEditor;
@@ -144,6 +149,119 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseState();
     }
 
+    public void AddElement(string type)
+    {
+        FlushGesture();
+        var el = ElementFactory.Create(type, _live.Canvas);
+        _live = _live with { Elements = _live.Elements.Append(el).ToList() };
+        _history.Commit(_live);
+        RebuildLayers();
+        SelectedLayer = Layers.FirstOrDefault(l => l.Id == el.Id);
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
+    // ── Z-order (Arrange, §6.2) ─────────────────────────────────────────────────────────────────
+
+    public void BringToFront() => Reorder(els => { var e = Take(els, out var rest); rest.Add(e); return rest; });
+    public void SendToBack() => Reorder(els => { var e = Take(els, out var rest); rest.Insert(0, e); return rest; });
+    public void BringForward() => Shift(+1);
+    public void SendBackward() => Shift(-1);
+
+    private void Shift(int delta) => Reorder(els =>
+    {
+        var id = SelectedEditor!.Id;
+        var idx = els.FindIndex(e => e.Id == id);
+        var target = Math.Clamp(idx + delta, 0, els.Count - 1);
+        if (target == idx) return els;
+        var e = els[idx];
+        els.RemoveAt(idx);
+        els.Insert(target, e);
+        return els;
+    });
+
+    private void Reorder(Func<List<LabelElement>, List<LabelElement>> op)
+    {
+        if (SelectedEditor is null) return;
+        FlushGesture();
+        var keepId = SelectedEditor.Id;
+        _live = _live with { Elements = op(new List<LabelElement>(_live.Elements)) };
+        _history.Commit(_live);
+        RebuildLayers();
+        SelectedLayer = Layers.FirstOrDefault(l => l.Id == keepId);
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
+    private LabelElement Take(List<LabelElement> els, out List<LabelElement> rest)
+    {
+        var id = SelectedEditor!.Id;
+        var e = els.First(x => x.Id == id);
+        rest = els.Where(x => x.Id != id).ToList();
+        return e;
+    }
+
+    // ── Interactive drag (move + resize, §7) ────────────────────────────────────────────────────
+
+    /// <summary>The selected element's geometry (mm), captured at drag start.</summary>
+    public GeomMm? SelectedGeometry() => SelectedEditor is { } ed ? new GeomMm(ed.X, ed.Y, ed.W, ed.H) : null;
+
+    /// <summary>Begin a pointer-driven move/resize gesture; the next <see cref="EndInteractive"/> is its single undo checkpoint.</summary>
+    public void BeginInteractive() => FlushGesture();
+
+    /// <summary>Commit the drag as one undo checkpoint.</summary>
+    public void EndInteractive()
+    {
+        _history.Commit(_live);
+        RaiseState();
+    }
+
+    /// <summary>Apply a drag delta (display px) against the geometry captured at drag start.</summary>
+    public void DragApply(DragMode mode, Handle handle, GeomMm start, double deltaXDisplay, double deltaYDisplay)
+    {
+        if (SelectedEditor is null) return;
+        var perMm = _live.Canvas.Dpi / 25.4 * Zoom;
+        var dmx = deltaXDisplay / perMm;
+        var dmy = deltaYDisplay / perMm;
+
+        double x = start.X, y = start.Y, w = start.W, h = start.H;
+        if (mode == DragMode.Move)
+        {
+            x = start.X + dmx;
+            y = start.Y + dmy;
+        }
+        else
+        {
+            var left = handle is Handle.TopLeft or Handle.Left or Handle.BottomLeft;
+            var right = handle is Handle.TopRight or Handle.Right or Handle.BottomRight;
+            var top = handle is Handle.TopLeft or Handle.Top or Handle.TopRight;
+            var bottom = handle is Handle.BottomLeft or Handle.Bottom or Handle.BottomRight;
+
+            if (left) { x = start.X + dmx; w = start.W - dmx; }
+            if (right) w = start.W + dmx;
+            if (top) { y = start.Y + dmy; h = start.H - dmy; }
+            if (bottom) h = start.H + dmy;
+
+            const double min = 1.0;
+            if (w < min) { if (left) x = start.X + start.W - min; w = min; }
+            if (h < min) { if (top) y = start.Y + start.H - min; h = min; }
+        }
+
+        ApplyGeometry(x, y, w, h);
+    }
+
+    private void ApplyGeometry(double x, double y, double w, double h)
+    {
+        if (SelectedEditor is not { } ed) return;
+        ed.SetGeometrySilently(x, y, w, h);
+        ReplaceElement(ed.ToElement());
+        MarkDirty();
+        UpdateSelectionBounds();
+        RequestRender();
+    }
+
     public void Undo()
     {
         FlushGesture();
@@ -220,11 +338,40 @@ public sealed partial class EditorViewModel : ObservableObject
         if (SelectedEditor is not { } ed)
         {
             HasSelection = false;
+            SelectionHandles.Clear();
             return;
         }
         var s = _live.Canvas.Dpi / 25.4 * Zoom;
-        SelectionBounds = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
+        var r = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
+        SelectionBounds = r;
         HasSelection = true;
+        RebuildHandles(r);
+    }
+
+    private void RebuildHandles(Rect r)
+    {
+        SelectionHandles.Clear();
+        const double hs = HandleSize, half = HandleSize / 2;
+        double l = r.X, t = r.Y, cx = r.X + r.Width / 2, cy = r.Y + r.Height / 2, rt = r.Right, bm = r.Bottom;
+        void Add(double x, double y, Handle k) => SelectionHandles.Add(new HandleSpec(x - half, y - half, hs, k));
+        Add(l, t, Handle.TopLeft);
+        Add(cx, t, Handle.Top);
+        Add(rt, t, Handle.TopRight);
+        Add(rt, cy, Handle.Right);
+        Add(rt, bm, Handle.BottomRight);
+        Add(cx, bm, Handle.Bottom);
+        Add(l, bm, Handle.BottomLeft);
+        Add(l, cy, Handle.Left);
+    }
+
+    /// <summary>Hit-test the resize handles (with a small tolerance) for a point in display coordinates.</summary>
+    public Handle? HitTestHandle(double dx, double dy)
+    {
+        const double pad = 3;
+        foreach (var h in SelectionHandles)
+            if (dx >= h.Left - pad && dx <= h.Left + h.Size + pad && dy >= h.Top - pad && dy <= h.Top + h.Size + pad)
+                return h.Kind;
+        return null;
     }
 
     // ── Rendering ───────────────────────────────────────────────────────────────────────────────

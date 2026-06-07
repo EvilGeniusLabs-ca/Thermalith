@@ -47,8 +47,22 @@
                 <MenuItem Name="MiZoomOut" Header="Zoom _Out" Command="{Binding ZoomOutCommand}" />
                 <MenuItem Name="MiZoomFit" Header="Zoom to _Fit" Command="{Binding ZoomFitCommand}" />
             </MenuItem>
-            <MenuItem Header="_Insert" IsEnabled="False" ToolTip.Tip="Insert palette — next pass" />
-            <MenuItem Header="_Arrange" IsEnabled="False" ToolTip.Tip="Align / distribute / z-order — next pass" />
+            <MenuItem Header="_Insert">
+                <MenuItem Header="_Text" Command="{Binding InsertCommand}" CommandParameter="text" />
+                <MenuItem Header="_Barcode" Command="{Binding InsertCommand}" CommandParameter="barcode" />
+                <MenuItem Header="_QR Code" Command="{Binding InsertCommand}" CommandParameter="qr" />
+                <MenuItem Header="_Serial" Command="{Binding InsertCommand}" CommandParameter="serial" />
+                <MenuItem Header="_Date / Time" Command="{Binding InsertCommand}" CommandParameter="datetime" />
+                <MenuItem Header="S_hape" Command="{Binding InsertCommand}" CommandParameter="shape" />
+                <MenuItem Header="_Image" Command="{Binding InsertCommand}" CommandParameter="image" />
+                <MenuItem Header="Ta_ble" Command="{Binding InsertCommand}" CommandParameter="table" />
+            </MenuItem>
+            <MenuItem Header="_Arrange">
+                <MenuItem Header="Bring to _Front" Command="{Binding BringToFrontCommand}" />
+                <MenuItem Header="Bring _Forward" Command="{Binding BringForwardCommand}" />
+                <MenuItem Header="Send _Backward" Command="{Binding SendBackwardCommand}" />
+                <MenuItem Header="Send to _Back" Command="{Binding SendToBackCommand}" />
+            </MenuItem>
             <MenuItem Header="_Printer" IsEnabled="False" ToolTip.Tip="Printer panel — deferred to a later pass" />
             <MenuItem Header="_Help">
                 <MenuItem Header="_About Thermalith" Command="{Binding AboutCommand}" />
@@ -90,9 +104,27 @@
                 <ColumnDefinition Width="300" MinWidth="200" />
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT: layers -->
+            <!-- LEFT: insert palette + layers -->
             <DockPanel Grid.Column="0" Background="#262626">
-                <TextBlock DockPanel.Dock="Top" Text="Layers" Margin="8,6" FontWeight="Bold" Foreground="#CCC" />
+                <TextBlock DockPanel.Dock="Top" Text="Insert" Margin="8,6,8,2" FontWeight="Bold" Foreground="#CCC" />
+                <WrapPanel DockPanel.Dock="Top" Margin="6,0,6,6">
+                    <WrapPanel.Styles>
+                        <Style Selector="Button">
+                            <Setter Property="Margin" Value="2" />
+                            <Setter Property="Padding" Value="6,3" />
+                            <Setter Property="MinWidth" Value="58" />
+                        </Style>
+                    </WrapPanel.Styles>
+                    <Button Content="Text" Command="{Binding InsertCommand}" CommandParameter="text" />
+                    <Button Content="Barcode" Command="{Binding InsertCommand}" CommandParameter="barcode" />
+                    <Button Content="QR" Command="{Binding InsertCommand}" CommandParameter="qr" />
+                    <Button Content="Serial" Command="{Binding InsertCommand}" CommandParameter="serial" />
+                    <Button Content="Date" Command="{Binding InsertCommand}" CommandParameter="datetime" />
+                    <Button Content="Shape" Command="{Binding InsertCommand}" CommandParameter="shape" />
+                    <Button Content="Image" Command="{Binding InsertCommand}" CommandParameter="image" />
+                    <Button Content="Table" Command="{Binding InsertCommand}" CommandParameter="table" />
+                </WrapPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Layers" Margin="8,2" FontWeight="Bold" Foreground="#CCC" />
                 <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:LayerItemViewModel">
@@ -113,7 +145,8 @@
                 <Border Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Panel Name="CanvasHost"
                            Width="{Binding Editor.DisplayWidth}" Height="{Binding Editor.DisplayHeight}"
-                           Background="White" PointerPressed="OnCanvasPressed">
+                           Background="White"
+                           PointerPressed="OnCanvasPressed" PointerMoved="OnCanvasMoved" PointerReleased="OnCanvasReleased">
                         <Image Source="{Binding Editor.Preview}" Stretch="Fill"
                                RenderOptions.BitmapInterpolationMode="None" />
                         <Canvas>
@@ -124,6 +157,26 @@
                                        Stroke="#2D7DF6" StrokeThickness="1.5" StrokeDashArray="3,2"
                                        IsVisible="{Binding Editor.HasSelection}" IsHitTestVisible="False" />
                         </Canvas>
+                        <ItemsControl ItemsSource="{Binding Editor.SelectionHandles}"
+                                      IsVisible="{Binding Editor.HasSelection}" IsHitTestVisible="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.Styles>
+                                <Style Selector="ContentPresenter" x:DataType="vm:HandleSpec">
+                                    <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                    <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                </Style>
+                            </ItemsControl.Styles>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:HandleSpec">
+                                    <Rectangle Width="{Binding Size}" Height="{Binding Size}"
+                                               Fill="White" Stroke="#2D7DF6" StrokeThickness="1" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </Panel>
                 </Border>
             </ScrollViewer>

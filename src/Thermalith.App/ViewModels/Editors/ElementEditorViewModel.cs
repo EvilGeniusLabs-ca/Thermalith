@@ -50,6 +50,15 @@ public abstract partial class ElementEditorViewModel : ObservableObject
     /// <summary>Call at the end of a subclass constructor so initial assignments don't fire the change callback.</summary>
     protected void MarkLoaded() => _loaded = true;
 
+    /// <summary>Update geometry from an interactive canvas drag without firing the edit callback (the editor commits the gesture itself).</summary>
+    public void SetGeometrySilently(double x, double y, double w, double h)
+    {
+        var was = _loaded;
+        _loaded = false;
+        X = x; Y = y; W = w; H = h;
+        _loaded = was;
+    }
+
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
