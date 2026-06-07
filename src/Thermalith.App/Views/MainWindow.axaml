@@ -46,6 +46,9 @@
                 <MenuItem Name="MiZoomIn" Header="Zoom _In" Command="{Binding ZoomInCommand}" />
                 <MenuItem Name="MiZoomOut" Header="Zoom _Out" Command="{Binding ZoomOutCommand}" />
                 <MenuItem Name="MiZoomFit" Header="Zoom to _Fit" Command="{Binding ZoomFitCommand}" />
+                <Separator />
+                <MenuItem Header="Show _Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.ShowGrid, Mode=TwoWay}" />
+                <MenuItem Header="_Snap to Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.SnapEnabled, Mode=TwoWay}" />
             </MenuItem>
             <MenuItem Header="_Insert">
                 <MenuItem Header="_Text" Command="{Binding InsertCommand}" CommandParameter="text" />
@@ -156,6 +159,8 @@
                            PointerPressed="OnCanvasPressed" PointerMoved="OnCanvasMoved" PointerReleased="OnCanvasReleased">
                         <Image Source="{Binding Editor.Preview}" Stretch="Fill"
                                RenderOptions.BitmapInterpolationMode="None" />
+                        <views:GridOverlay Spacing="{Binding Editor.GridSpacingDisplay}"
+                                           IsVisible="{Binding Editor.ShowGrid}" />
                         <Canvas>
                             <Rectangle Canvas.Left="{Binding Editor.SelectionBounds.X}"
                                        Canvas.Top="{Binding Editor.SelectionBounds.Y}"

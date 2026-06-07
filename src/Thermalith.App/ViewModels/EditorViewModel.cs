@@ -62,6 +62,14 @@ public sealed partial class EditorViewModel : ObservableObject
     [ObservableProperty] private bool _hasSelection;
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private bool _dirty;
+    [ObservableProperty] private bool _showGrid;
+    [ObservableProperty] private bool _snapEnabled;
+
+    /// <summary>Grid pitch in mm (also the snap increment).</summary>
+    public double GridMm { get; } = 2.0;
+
+    /// <summary>Grid spacing in display pixels (mm pitch × pxPerMm × zoom).</summary>
+    public double GridSpacingDisplay => _live.Canvas.Dpi / 25.4 * Zoom * GridMm;
 
     public int PreviewWidthPx { get; private set; }
     public int PreviewHeightPx { get; private set; }
@@ -233,10 +241,11 @@ public sealed partial class EditorViewModel : ObservableObject
         double x = start.X, y = start.Y, w = start.W, h = start.H;
         if (mode == DragMode.Move)
         {
-            x = start.X + dmx;
-            y = start.Y + dmy;
+            x = Snap(start.X + dmx);
+            y = Snap(start.Y + dmy);
+            ApplyGeometry(x, y, w, h);
+            return;
         }
-        else
         {
             var left = handle is Handle.TopLeft or Handle.Left or Handle.BottomLeft;
             var right = handle is Handle.TopRight or Handle.Right or Handle.BottomRight;
@@ -253,7 +262,7 @@ public sealed partial class EditorViewModel : ObservableObject
             if (h < min) { if (top) y = start.Y + start.H - min; h = min; }
         }
 
-        ApplyGeometry(x, y, w, h);
+        ApplyGeometry(Snap(x), Snap(y), Snap(w), Snap(h));
     }
 
     private void ApplyGeometry(double x, double y, double w, double h)
@@ -421,7 +430,10 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         DisplayWidth = PreviewWidthPx * Zoom;
         DisplayHeight = PreviewHeightPx * Zoom;
+        OnPropertyChanged(nameof(GridSpacingDisplay));
     }
+
+    private double Snap(double mm) => SnapEnabled ? Math.Round(mm / GridMm) * GridMm : mm;
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────
 
