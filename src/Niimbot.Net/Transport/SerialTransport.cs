@@ -1,4 +1,5 @@
 using System.IO.Ports;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
 namespace Niimbot.Net.Transport;
@@ -89,16 +90,29 @@ public sealed class SerialTransport : INiimbotTransport
         var port = Port;
         // Synchronous Write on a worker. SerialPort.BaseStream's async methods are unreliable on
         // Windows; the synchronous API honors WriteTimeout and is far more predictable.
+        // Catch on the worker thread (a WriteTimeout fires when e.g. the printer is powered off) so
+        // the exception isn't flagged by the debugger as "unhandled in user code" at the throw site,
+        // then rethrow on the awaiting context where callers (probe, client) handle it.
+        ExceptionDispatchInfo? failure = null;
         await Task.Run(() =>
         {
-            if (MemoryMarshal.TryGetArray(data, out var segment) && segment.Array is not null)
-                port.Write(segment.Array, segment.Offset, segment.Count);
-            else
+            try
             {
-                var tmp = data.ToArray();
-                port.Write(tmp, 0, tmp.Length);
+                if (MemoryMarshal.TryGetArray(data, out var segment) && segment.Array is not null)
+                    port.Write(segment.Array, segment.Offset, segment.Count);
+                else
+                {
+                    var tmp = data.ToArray();
+                    port.Write(tmp, 0, tmp.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                failure = ExceptionDispatchInfo.Capture(ex);
             }
         }, ct).ConfigureAwait(false);
+
+        failure?.Throw();
     }
 
     public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken ct = default)
