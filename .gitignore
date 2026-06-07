@@ -22,3 +22,7 @@ Thumbs.db
 # Secrets (never commit)
 appsettings.Development.json
 *.secrets.json
+
+# Ad-hoc byte-capture scratch (intentional captures live in docs/captures/)
+/print.txt
+/capture*.txt
