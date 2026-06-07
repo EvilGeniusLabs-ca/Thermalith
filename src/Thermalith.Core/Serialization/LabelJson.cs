@@ -22,6 +22,9 @@ public static class LabelJson
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             ReadCommentHandling = JsonCommentHandling.Skip,
             AllowTrailingCommas = true,
+            // The element `type` discriminator may sit after `id` in the schema (label-json-spec §11.1),
+            // so allow the polymorphic discriminator to appear out of order.
+            AllowOutOfOrderMetadataProperties = true,
             WriteIndented = true,
         };
         return o;

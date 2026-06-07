@@ -26,3 +26,6 @@ appsettings.Development.json
 # Ad-hoc byte-capture scratch (intentional captures live in docs/captures/)
 /print.txt
 /capture*.txt
+
+# Verify snapshot received files (transient; .verified.* are the committed baselines)
+*.received.*

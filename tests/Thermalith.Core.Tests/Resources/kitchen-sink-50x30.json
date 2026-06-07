@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.0",
+  "metadata": {
+    "name": "kitchen-sink-50x30",
+    "createdUtc": "2026-06-06T12:00:00Z",
+    "modifiedUtc": "2026-06-06T12:00:00Z",
+    "appVersion": "0.1.0"
+  },
+  "canvas": {
+    "widthMm": 50, "heightMm": 30,
+    "dpi": 203,
+    "shape": "rectangle",
+    "orientationDeg": 0,
+    "background": "white"
+  },
+  "defaultStyle": {
+    "fontFamily": "Inter",
+    "fontSizePt": 8,
+    "lineSpacing": 1.0,
+    "strokeWidthMm": 0.3
+  },
+  "tokens": [
+    { "name": "name",  "type": "string", "description": "Product name", "sample": "Widget Pro", "required": true },
+    { "name": "sku",   "type": "string", "sample": "WP-001", "required": true },
+    { "name": "price", "type": "string", "sample": "$9.99" },
+    { "name": "url",   "type": "string", "sample": "https://ex.com/p/wp-001" },
+    { "name": "lot",   "type": "string", "sample": "L240606" }
+  ],
+  "dataSource": {
+    "kind": "csv",
+    "path": "data.json",
+    "hasHeaderRow": true
+  },
+  "bindings": { "sku": "product_sku" },
+
+  "elements": [
+
+    { "id": "el_title", "type": "text", "name": "Product name",
+      "x": 2, "y": 1.5, "w": 30, "h": 6, "rotation": 0,
+      "justify": { "h": "left", "v": "middle" },
+      "props": { "content": "{name}", "fontSizePt": 11, "bold": true, "wrap": "word",
+                 "fontSizing": "fill", "minFontSizePt": 6, "maxFontSizePt": 14 } },
+
+    { "id": "el_logo", "type": "image", "name": "Logo",
+      "x": 41, "y": 1.5, "w": 7, "h": 7,
+      "props": { "assetId": "image_0001", "fit": "fit", "dither": "atkinson", "invert": false } },
+
+    { "id": "el_rule", "type": "shape", "name": "Divider",
+      "x": 2, "y": 9, "w": 46, "h": 0,
+      "props": { "shapeType": "line", "strokeWidthMm": 0.3 } },
+
+    { "id": "el_barcode", "type": "barcode", "name": "SKU barcode",
+      "x": 2, "y": 10.5, "w": 28, "h": 9,
+      "justify": { "h": "center", "v": "top" },
+      "props": { "symbology": "code128", "value": "{sku}", "showText": true,
+                 "textPosition": "below", "moduleWidthMm": 0.33, "quietZoneMm": 2 } },
+
+    { "id": "el_qr", "type": "qr", "name": "URL QR",
+      "x": 33, "y": 10.5, "w": 14, "h": 14,
+      "props": { "value": "{url}", "encoding": "text", "ecLevel": "M",
+                 "moduleSizeMm": "auto", "quietZoneMm": 1 } },
+
+    { "id": "el_price", "type": "text", "name": "Price",
+      "x": 2, "y": 20, "w": 16, "h": 5,
+      "justify": { "h": "left", "v": "middle" },
+      "props": { "content": "{price}", "fontSizePt": 12, "bold": true } },
+
+    { "id": "el_serial", "type": "serial", "name": "Serial",
+      "x": 2, "y": 25.5, "w": 14, "h": 3.5,
+      "justify": { "h": "left", "v": "middle" },
+      "props": { "start": 1, "step": 1, "padLength": 5, "padChar": "0", "prefix": "SN", "suffix": "" } },
+
+    { "id": "el_date", "type": "datetime", "name": "Print date",
+      "x": 17, "y": 25.5, "w": 14, "h": 3.5,
+      "justify": { "h": "center", "v": "middle" },
+      "props": { "kind": "date", "format": "yyyy-MM-dd", "source": "printNow" } },
+
+    { "id": "el_time", "type": "datetime", "name": "Print time",
+      "x": 17, "y": 20, "w": 14, "h": 4,
+      "justify": { "h": "center", "v": "middle" },
+      "props": { "kind": "time", "format": "HH:mm", "source": "printNow" } },
+
+    { "id": "el_lotbox", "type": "shape", "name": "Lot box",
+      "x": 33, "y": 25, "w": 15, "h": 4,
+      "props": { "shapeType": "roundedRect", "strokeWidthMm": 0.25, "fill": "none", "cornerRadiusMm": 0.8 } },
+
+    { "id": "el_spec", "type": "table", "name": "Spec table",
+      "x": 33, "y": 20, "w": 15, "h": 4,
+      "props": {
+        "cols": 2, "rows": 2,
+        "columnWidthsMm": [7, 8],
+        "rowHeightsMm": "auto",
+        "borderWidthMm": 0.2,
+        "headerRow": true,
+        "cells": [
+          [ { "content": "Lot" },   { "content": "Qty" } ],
+          [ { "content": "{lot}" }, { "content": "1", "justify": { "h": "right", "v": "middle" } } ]
+        ]
+      } }
+
+  ]
+}

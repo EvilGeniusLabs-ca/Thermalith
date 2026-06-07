@@ -83,7 +83,7 @@ public sealed class LabelRenderer
         var boxH = ctx.Px(t.HMm);
         var dpi = ctx.PxPerMm * 25.4;
 
-        using var tf = _fonts.Resolve(t.Style.FontFamily, t.Style.Bold, t.Style.Italic);
+        var tf = _fonts.Resolve(t.Style.FontFamily, t.Style.Bold, t.Style.Italic); // FontService owns the typeface lifetime
         using var paint = new SKPaint
         {
             Color = SKColors.Black,
