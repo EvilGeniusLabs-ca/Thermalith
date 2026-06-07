@@ -39,6 +39,9 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>Set by the view before first use.</summary>
     public IFilePicker? FilePicker { get; set; }
 
+    /// <summary>Set by the view before first use.</summary>
+    public IDialogService? Dialogs { get; set; }
+
     /// <summary>Raised when the user chooses Quit; the view closes the window.</summary>
     public event EventHandler? CloseRequested;
 
@@ -49,21 +52,35 @@ public partial class MainWindowViewModel : ViewModelBase
     // ── File ────────────────────────────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    private void New() => Editor.NewDocument();
+    private async Task NewAsync()
+    {
+        if (!await EnsureDiscardableAsync()) return;
+        Editor.NewDocument();
+    }
 
     [RelayCommand]
     private async Task OpenAsync()
     {
         if (FilePicker is null) return;
+        if (!await EnsureDiscardableAsync()) return;
         var path = await FilePicker.OpenLabelAsync();
         if (path is null) return;
         OpenPath(path);
     }
 
     [RelayCommand]
-    private void OpenRecent(string? path)
+    private async Task OpenRecentAsync(string? path)
     {
-        if (!string.IsNullOrEmpty(path)) OpenPath(path);
+        if (string.IsNullOrEmpty(path)) return;
+        if (!await EnsureDiscardableAsync()) return;
+        OpenPath(path);
+    }
+
+    /// <summary>True if it's safe to replace the current document (not dirty, or the user confirms discard).</summary>
+    public async Task<bool> EnsureDiscardableAsync()
+    {
+        if (!Editor.Dirty) return true;
+        return Dialogs is not null && await Dialogs.ConfirmDiscardAsync();
     }
 
     private void OpenPath(string path)

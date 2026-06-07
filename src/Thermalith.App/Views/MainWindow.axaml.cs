@@ -12,8 +12,10 @@ namespace Thermalith.App.Views;
 /// canvas hit-testing, the platform file dialogs (<see cref="IFilePicker"/>), the central keymap
 /// wiring (§7.2), the dynamic recent-files submenu, and persisting window/panel geometry.
 /// </summary>
-public partial class MainWindow : Window, IFilePicker
+public partial class MainWindow : Window, IFilePicker, IDialogService
 {
+    private bool _allowClose;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -28,6 +30,7 @@ public partial class MainWindow : Window, IFilePicker
         if (Vm is not { } vm) return;
 
         vm.FilePicker = this;
+        vm.Dialogs = this;
         vm.CloseRequested += (_, _) => Close();
 
         // Restore persisted window geometry.
@@ -41,11 +44,27 @@ public partial class MainWindow : Window, IFilePicker
         vm.RecentFiles.CollectionChanged += (_, _) => BuildRecentMenu(vm);
     }
 
-    private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
+    private async void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
-        Vm?.SaveLayout(Width, Height, BodyGrid.ColumnDefinitions[0].ActualWidth, BodyGrid.ColumnDefinitions[4].ActualWidth);
-        Vm?.Printer.Shutdown();
+        if (Vm is not { } vm) return;
+
+        // Guard unsaved work: cancel the close, confirm, then close for real.
+        if (!_allowClose && vm.Editor.Dirty)
+        {
+            e.Cancel = true;
+            if (await ConfirmDiscardAsync())
+            {
+                _allowClose = true;
+                Close();
+            }
+            return;
+        }
+
+        vm.SaveLayout(Width, Height, BodyGrid.ColumnDefinitions[0].ActualWidth, BodyGrid.ColumnDefinitions[4].ActualWidth);
+        vm.Printer.Shutdown();
     }
+
+    public Task<bool> ConfirmDiscardAsync() => new ConfirmDialog().ShowDialog<bool>(this);
 
     // ── Canvas interaction: select, drag-move, resize (§7) ───────────────────────────────────
 
