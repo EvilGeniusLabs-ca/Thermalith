@@ -155,6 +155,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanDelete))] private void BringForward() => Editor.BringForward();
     [RelayCommand(CanExecute = nameof(CanDelete))] private void SendBackward() => Editor.SendBackward();
 
+    [RelayCommand(CanExecute = nameof(CanAlign))] private void AlignLeft() => Editor.AlignLeft();
+    [RelayCommand(CanExecute = nameof(CanAlign))] private void AlignRight() => Editor.AlignRight();
+    [RelayCommand(CanExecute = nameof(CanAlign))] private void AlignTop() => Editor.AlignTop();
+    [RelayCommand(CanExecute = nameof(CanAlign))] private void AlignBottom() => Editor.AlignBottom();
+    [RelayCommand(CanExecute = nameof(CanAlign))] private void AlignCenterH() => Editor.AlignCenterH();
+    [RelayCommand(CanExecute = nameof(CanAlign))] private void AlignMiddleV() => Editor.AlignMiddleV();
+    [RelayCommand(CanExecute = nameof(CanDistribute))] private void DistributeH() => Editor.DistributeH();
+    [RelayCommand(CanExecute = nameof(CanDistribute))] private void DistributeV() => Editor.DistributeV();
+
+    private bool CanAlign() => Editor.SelectionCount >= 2;
+    private bool CanDistribute() => Editor.SelectionCount >= 3;
+
     [RelayCommand]
     private void Quit() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
@@ -206,6 +218,17 @@ public partial class MainWindowViewModel : ViewModelBase
             SendToBackCommand.NotifyCanExecuteChanged();
             BringForwardCommand.NotifyCanExecuteChanged();
             SendBackwardCommand.NotifyCanExecuteChanged();
+        }
+        else if (e.PropertyName == nameof(EditorViewModel.SelectionCount))
+        {
+            AlignLeftCommand.NotifyCanExecuteChanged();
+            AlignRightCommand.NotifyCanExecuteChanged();
+            AlignTopCommand.NotifyCanExecuteChanged();
+            AlignBottomCommand.NotifyCanExecuteChanged();
+            AlignCenterHCommand.NotifyCanExecuteChanged();
+            AlignMiddleVCommand.NotifyCanExecuteChanged();
+            DistributeHCommand.NotifyCanExecuteChanged();
+            DistributeVCommand.NotifyCanExecuteChanged();
         }
     }
 

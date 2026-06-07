@@ -47,10 +47,23 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public ObservableCollection<LayerItemViewModel> Layers { get; }
 
-    /// <summary>The eight resize-handle rectangles for the current selection (display coords).</summary>
+    /// <summary>The eight resize-handle rectangles for the current selection (display coords); only shown for a single selection.</summary>
     public ObservableCollection<HandleSpec> SelectionHandles { get; } = [];
 
+    /// <summary>A dashed outline rectangle per selected element (display coords) — supports multi-select.</summary>
+    public ObservableCollection<SelRect> SelectionRects { get; } = [];
+
     private const double HandleSize = 9;
+
+    private readonly List<string> _selectedIds = [];
+    private bool _syncingSelection;
+    private Dictionary<string, GeomMm>? _dragGeoms;
+    private DragMode _dragMode = DragMode.None;
+    private Handle _dragHandle;
+    private bool _dragMoved;
+
+    /// <summary>Number of currently-selected elements (drives align/distribute enablement).</summary>
+    public int SelectionCount => _selectedIds.Count;
 
     [ObservableProperty] private Bitmap? _preview;
     [ObservableProperty] private LayerItemViewModel? _selectedLayer;
@@ -144,7 +157,7 @@ public sealed partial class EditorViewModel : ObservableObject
 
         BeginGesture();
         MarkDirty();
-        UpdateSelectionBounds();
+        UpdateSelectionVisuals();
         RequestRender();
     }
 
@@ -225,62 +238,88 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ── Interactive drag (move + resize, §7) ────────────────────────────────────────────────────
 
-    /// <summary>The selected element's geometry (mm), captured at drag start.</summary>
-    public GeomMm? SelectedGeometry() => SelectedEditor is { } ed ? new GeomMm(ed.X, ed.Y, ed.W, ed.H) : null;
+    public bool IsDragging => _dragMode != DragMode.None;
 
-    /// <summary>Begin a pointer-driven move/resize gesture; the next <see cref="EndInteractive"/> is its single undo checkpoint.</summary>
-    public void BeginInteractive() => FlushGesture();
-
-    /// <summary>Commit the drag as one undo checkpoint.</summary>
-    public void EndInteractive()
+    /// <summary>Begin a pointer-driven gesture, capturing every selected element's start geometry. Resize requires a single selection.</summary>
+    public void BeginDrag(DragMode mode, Handle handle)
     {
-        _history.Commit(_live);
-        RaiseState();
+        if (_selectedIds.Count == 0) return;
+        FlushGesture();
+        _dragMode = mode;
+        _dragHandle = handle;
+        _dragMoved = false;
+        _dragGeoms = new Dictionary<string, GeomMm>();
+        foreach (var id in _selectedIds)
+            if (_live.Elements.FirstOrDefault(e => e.Id == id) is { } e)
+                _dragGeoms[id] = new GeomMm(e.X, e.Y, e.W, e.H);
     }
 
-    /// <summary>Apply a drag delta (display px) against the geometry captured at drag start.</summary>
-    public void DragApply(DragMode mode, Handle handle, GeomMm start, double deltaXDisplay, double deltaYDisplay)
+    /// <summary>Apply the running drag delta (display px) against the captured start geometry.</summary>
+    public void DragTo(double deltaXDisplay, double deltaYDisplay)
     {
-        if (SelectedEditor is null) return;
+        if (_dragMode == DragMode.None || _dragGeoms is null) return;
+        _dragMoved = true;
         var perMm = _live.Canvas.Dpi / 25.4 * Zoom;
         var dmx = deltaXDisplay / perMm;
         var dmy = deltaYDisplay / perMm;
 
-        double x = start.X, y = start.Y, w = start.W, h = start.H;
-        if (mode == DragMode.Move)
+        var list = new List<LabelElement>(_live.Elements);
+        if (_dragMode == DragMode.Move)
         {
-            x = Snap(start.X + dmx);
-            y = Snap(start.Y + dmy);
-            ApplyGeometry(x, y, w, h);
-            return;
+            foreach (var (id, g) in _dragGeoms)
+                ReplaceIn(list, id, e => e with { X = Snap(g.X + dmx), Y = Snap(g.Y + dmy) });
         }
+        else if (_dragGeoms.Count == 1)
         {
-            var left = handle is Handle.TopLeft or Handle.Left or Handle.BottomLeft;
-            var right = handle is Handle.TopRight or Handle.Right or Handle.BottomRight;
-            var top = handle is Handle.TopLeft or Handle.Top or Handle.TopRight;
-            var bottom = handle is Handle.BottomLeft or Handle.Bottom or Handle.BottomRight;
-
-            if (left) { x = start.X + dmx; w = start.W - dmx; }
-            if (right) w = start.W + dmx;
-            if (top) { y = start.Y + dmy; h = start.H - dmy; }
-            if (bottom) h = start.H + dmy;
-
-            const double min = 1.0;
-            if (w < min) { if (left) x = start.X + start.W - min; w = min; }
-            if (h < min) { if (top) y = start.Y + start.H - min; h = min; }
+            var (id, g) = _dragGeoms.First();
+            var (x, y, w, h) = ResizeGeom(_dragHandle, g, dmx, dmy);
+            ReplaceIn(list, id, e => e with { X = Snap(x), Y = Snap(y), W = Snap(w), H = Snap(h) });
         }
 
-        ApplyGeometry(Snap(x), Snap(y), Snap(w), Snap(h));
+        _live = _live with { Elements = list };
+        RefreshPrimaryEditorGeometry();
+        MarkDirty();
+        UpdateSelectionVisuals();
+        RequestRender();
     }
 
-    private void ApplyGeometry(double x, double y, double w, double h)
+    /// <summary>Commit the drag as one undo checkpoint.</summary>
+    public void EndDrag()
     {
-        if (SelectedEditor is not { } ed) return;
-        ed.SetGeometrySilently(x, y, w, h);
-        ReplaceElement(ed.ToElement());
-        MarkDirty();
-        UpdateSelectionBounds();
-        RequestRender();
+        if (_dragMoved) { _history.Commit(_live); RaiseState(); }
+        _dragMode = DragMode.None;
+        _dragGeoms = null;
+    }
+
+    private static (double X, double Y, double W, double H) ResizeGeom(Handle handle, GeomMm g, double dmx, double dmy)
+    {
+        var left = handle is Handle.TopLeft or Handle.Left or Handle.BottomLeft;
+        var right = handle is Handle.TopRight or Handle.Right or Handle.BottomRight;
+        var top = handle is Handle.TopLeft or Handle.Top or Handle.TopRight;
+        var bottom = handle is Handle.BottomLeft or Handle.Bottom or Handle.BottomRight;
+
+        double x = g.X, y = g.Y, w = g.W, h = g.H;
+        if (left) { x = g.X + dmx; w = g.W - dmx; }
+        if (right) w = g.W + dmx;
+        if (top) { y = g.Y + dmy; h = g.H - dmy; }
+        if (bottom) h = g.H + dmy;
+
+        const double min = 1.0;
+        if (w < min) { if (left) x = g.X + g.W - min; w = min; }
+        if (h < min) { if (top) y = g.Y + g.H - min; h = min; }
+        return (x, y, w, h);
+    }
+
+    private static void ReplaceIn(List<LabelElement> list, string id, Func<LabelElement, LabelElement> map)
+    {
+        var idx = list.FindIndex(e => e.Id == id);
+        if (idx >= 0) list[idx] = map(list[idx]);
+    }
+
+    private void RefreshPrimaryEditorGeometry()
+    {
+        if (SelectedEditor is { } ed && _live.Elements.FirstOrDefault(e => e.Id == ed.Id) is { } el)
+            ed.SetGeometrySilently(el.X, el.Y, el.W, el.H);
     }
 
     public void Undo()
@@ -340,17 +379,38 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ── Selection + hit testing ─────────────────────────────────────────────────────────────────
 
+    // The layers list drives a single primary selection; multi-select happens on the canvas.
     partial void OnSelectedLayerChanged(LayerItemViewModel? value)
     {
-        var el = value is null ? null : _live.Elements.FirstOrDefault(e => e.Id == value.Id);
-        SelectedEditor = el is null ? null : ElementEditorViewModel.Create(el, OnElementEdited);
-        UpdateSelectionBounds();
+        if (_syncingSelection) return;
+        SetSelection(value is null ? [] : [value.Id], value?.Id);
     }
 
     partial void OnSelectedEditorChanged(ElementEditorViewModel? value) => OnPropertyChanged(nameof(InspectorTarget));
 
-    /// <summary>Select the topmost (frontmost) element under a point in display coordinates, or clear selection.</summary>
-    public void HitTestSelect(double displayX, double displayY)
+    /// <summary>The set of selected element ids in z-order.</summary>
+    public IReadOnlyList<string> SelectedIds => _selectedIds;
+
+    private void SetSelection(IReadOnlyList<string> ids, string? primary)
+    {
+        _selectedIds.Clear();
+        foreach (var id in ids.Distinct()) _selectedIds.Add(id);
+
+        var primId = primary is not null && _selectedIds.Contains(primary) ? primary : _selectedIds.LastOrDefault();
+        var el = primId is null ? null : _live.Elements.FirstOrDefault(e => e.Id == primId);
+        SelectedEditor = el is null ? null : ElementEditorViewModel.Create(el, OnElementEdited);
+
+        _syncingSelection = true;
+        SelectedLayer = primId is null ? null : Layers.FirstOrDefault(l => l.Id == primId);
+        _syncingSelection = false;
+
+        if (SelectedEditor is null) OnPropertyChanged(nameof(InspectorTarget));
+        UpdateSelectionVisuals();
+        OnPropertyChanged(nameof(SelectionCount));
+    }
+
+    /// <summary>Topmost (frontmost) element id under a display point, or null.</summary>
+    public string? HitTest(double displayX, double displayY)
     {
         var pxPerMm = _live.Canvas.Dpi / 25.4;
         var mmX = displayX / Zoom / pxPerMm;
@@ -358,28 +418,121 @@ public sealed partial class EditorViewModel : ObservableObject
         for (var i = _live.Elements.Count - 1; i >= 0; i--)
         {
             var e = _live.Elements[i];
-            if (mmX >= e.X && mmX <= e.X + e.W && mmY >= e.Y && mmY <= e.Y + e.H)
-            {
-                SelectedLayer = Layers.FirstOrDefault(l => l.Id == e.Id);
-                return;
-            }
+            if (mmX >= e.X && mmX <= e.X + e.W && mmY >= e.Y && mmY <= e.Y + e.H) return e.Id;
         }
-        SelectedLayer = null;
+        return null;
     }
 
-    private void UpdateSelectionBounds()
+    /// <summary>Select the element under a point. <paramref name="additive"/> toggles it in the set. Returns true if an element was hit.</summary>
+    public bool SelectAt(double displayX, double displayY, bool additive)
     {
-        if (SelectedEditor is not { } ed)
+        var id = HitTest(displayX, displayY);
+        if (id is null)
         {
-            HasSelection = false;
-            SelectionHandles.Clear();
-            return;
+            if (!additive) SetSelection([], null);
+            return false;
         }
+        if (additive)
+        {
+            var ids = new List<string>(_selectedIds);
+            if (ids.Remove(id)) SetSelection(ids, ids.LastOrDefault());
+            else { ids.Add(id); SetSelection(ids, id); }
+        }
+        else if (!_selectedIds.Contains(id))
+        {
+            SetSelection([id], id); // clicking an unselected element selects just it
+        }
+        return true;
+    }
+
+    /// <summary>Select all elements whose display rect intersects the marquee (empty marquee clears selection).</summary>
+    public void SelectInRect(Rect marquee)
+    {
         var s = _live.Canvas.Dpi / 25.4 * Zoom;
-        var r = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
-        SelectionBounds = r;
-        HasSelection = true;
-        RebuildHandles(r);
+        var ids = new List<string>();
+        foreach (var e in _live.Elements)
+        {
+            var r = new Rect(e.X * s, e.Y * s, e.W * s, e.H * s);
+            if (r.Intersects(marquee)) ids.Add(e.Id);
+        }
+        SetSelection(ids, ids.LastOrDefault());
+    }
+
+    private void UpdateSelectionVisuals()
+    {
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        SelectionRects.Clear();
+        foreach (var id in _selectedIds)
+            if (_live.Elements.FirstOrDefault(e => e.Id == id) is { } e)
+                SelectionRects.Add(new SelRect(e.X * s, e.Y * s, e.W * s, e.H * s));
+
+        HasSelection = _selectedIds.Count > 0;
+
+        // Resize handles only make sense for a single selection.
+        if (_selectedIds.Count == 1 && SelectedEditor is { } ed)
+        {
+            var r = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
+            SelectionBounds = r;
+            RebuildHandles(r);
+        }
+        else
+        {
+            SelectionHandles.Clear();
+        }
+    }
+
+    // ── Align / distribute (Arrange across the selection, §6.2) ─────────────────────────────────
+
+    public void AlignLeft() => AlignEdit(s => { var v = s.Min(e => e.X); return e => e with { X = v }; });
+    public void AlignRight() => AlignEdit(s => { var v = s.Max(e => e.X + e.W); return e => e with { X = v - e.W }; });
+    public void AlignTop() => AlignEdit(s => { var v = s.Min(e => e.Y); return e => e with { Y = v }; });
+    public void AlignBottom() => AlignEdit(s => { var v = s.Max(e => e.Y + e.H); return e => e with { Y = v - e.H }; });
+    public void AlignCenterH() => AlignEdit(s => { var c = (s.Min(e => e.X) + s.Max(e => e.X + e.W)) / 2; return e => e with { X = c - e.W / 2 }; });
+    public void AlignMiddleV() => AlignEdit(s => { var c = (s.Min(e => e.Y) + s.Max(e => e.Y + e.H)) / 2; return e => e with { Y = c - e.H / 2 }; });
+
+    public void DistributeH() => DistributeEdit(horizontal: true);
+    public void DistributeV() => DistributeEdit(horizontal: false);
+
+    private void AlignEdit(Func<IReadOnlyList<LabelElement>, Func<LabelElement, LabelElement>> build)
+    {
+        if (_selectedIds.Count < 2) return;
+        var selected = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
+        var map = build(selected);
+        var ids = new HashSet<string>(_selectedIds);
+        CommitTransform(e => ids.Contains(e.Id) ? map(e) : e);
+    }
+
+    private void DistributeEdit(bool horizontal)
+    {
+        if (_selectedIds.Count < 3) return;
+        var sorted = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id))
+            .OrderBy(e => horizontal ? e.X + e.W / 2 : e.Y + e.H / 2).ToList();
+        double firstC = Center(sorted[0]), lastC = Center(sorted[^1]);
+        var step = (lastC - firstC) / (sorted.Count - 1);
+        var updated = new Dictionary<string, LabelElement>();
+        for (var i = 1; i < sorted.Count - 1; i++)
+        {
+            var e = sorted[i];
+            var c = firstC + i * step;
+            updated[e.Id] = horizontal ? e with { X = c - e.W / 2 } : e with { Y = c - e.H / 2 };
+        }
+        CommitTransform(e => updated.TryGetValue(e.Id, out var u) ? u : e);
+
+        double Center(LabelElement e) => horizontal ? e.X + e.W / 2 : e.Y + e.H / 2;
+    }
+
+    private void CommitTransform(Func<LabelElement, LabelElement> map)
+    {
+        FlushGesture();
+        var ids = _selectedIds.ToList();
+        var primary = SelectedEditor?.Id;
+        _live = _live with { Elements = _live.Elements.Select(map).ToList() };
+        _history.Commit(_live);
+        RebuildLayers();
+        SetSelection(ids, primary);
+        MarkDirty();
+        RenderNow();
+        RaiseState();
     }
 
     private void RebuildHandles(Rect r)
@@ -426,7 +579,7 @@ public sealed partial class EditorViewModel : ObservableObject
             PreviewWidthPx = mono.WidthPx;
             PreviewHeightPx = mono.HeightPx;
             UpdateDisplaySize();
-            UpdateSelectionBounds();
+            UpdateSelectionVisuals();
             UpdateSafeArea();
             StatusText = $"{_live.Canvas.WidthMm:0.#} × {_live.Canvas.HeightMm:0.#} mm · {_live.Canvas.Dpi} dpi · {mono.WidthPx}×{mono.HeightPx} px";
         }
@@ -445,7 +598,7 @@ public sealed partial class EditorViewModel : ObservableObject
     partial void OnZoomChanged(double value)
     {
         UpdateDisplaySize();
-        UpdateSelectionBounds();
+        UpdateSelectionVisuals();
     }
 
     private void UpdateDisplaySize()

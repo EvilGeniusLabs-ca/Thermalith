@@ -66,73 +66,94 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     public Task<bool> ConfirmDiscardAsync() => new ConfirmDialog().ShowDialog<bool>(this);
 
-    // ── Canvas interaction: select, drag-move, resize (§7) ───────────────────────────────────
+    // ── Canvas interaction: select, drag-move, resize, marquee (§7) ──────────────────────────────
 
-    private DragMode _dragMode = DragMode.None;
-    private Handle _dragHandle;
-    private Point _dragStart;
-    private GeomMm _dragStartGeom;
-    private bool _dragMoved;
+    private bool _dragging;
+    private bool _marquee;
+    private Point _pressPoint;
 
     private void OnCanvasPressed(object? sender, PointerPressedEventArgs e)
     {
         if (Vm is not { } vm || sender is not Control host) return;
         var ed = vm.Editor;
         var p = e.GetPosition(host);
+        _pressPoint = p;
 
-        // A resize handle of the current selection takes priority.
+        // A resize handle of a single selection takes priority.
         if (ed.HasSelection && ed.HitTestHandle(p.X, p.Y) is { } handle)
         {
-            StartDrag(ed, DragMode.Resize, handle, p);
+            ed.BeginDrag(DragMode.Resize, handle);
+            _dragging = true;
             e.Pointer.Capture(host);
             return;
         }
 
-        // Otherwise select the topmost element under the point; if one is hit, start a move.
-        ed.HitTestSelect(p.X, p.Y);
-        if (ed.HasSelection)
+        var additive = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        if (ed.SelectAt(p.X, p.Y, additive))
         {
-            StartDrag(ed, DragMode.Move, Handle.TopLeft, p);
+            ed.BeginDrag(DragMode.Move, Handle.TopLeft); // move the whole selection
+            _dragging = true;
             e.Pointer.Capture(host);
         }
-    }
-
-    private void StartDrag(ViewModels.EditorViewModel ed, DragMode mode, Handle handle, Point p)
-    {
-        if (ed.SelectedGeometry() is not { } geom) return;
-        _dragMode = mode;
-        _dragHandle = handle;
-        _dragStart = p;
-        _dragStartGeom = geom;
-        _dragMoved = false;
-        ed.BeginInteractive();
+        else
+        {
+            // Empty space → rubber-band marquee select.
+            _marquee = true;
+            ShowMarquee(p, p);
+            e.Pointer.Capture(host);
+        }
     }
 
     private void OnCanvasMoved(object? sender, PointerEventArgs e)
     {
         if (Vm is not { } vm || sender is not Control host) return;
+        var p = e.GetPosition(host);
 
-        if (_dragMode == DragMode.None)
+        if (_dragging)
         {
-            UpdateCursor(vm.Editor, host, e.GetPosition(host));
+            vm.Editor.DragTo(p.X - _pressPoint.X, p.Y - _pressPoint.Y);
             return;
         }
-
-        var p = e.GetPosition(host);
-        var dx = p.X - _dragStart.X;
-        var dy = p.Y - _dragStart.Y;
-        if (!_dragMoved && Math.Abs(dx) < 1 && Math.Abs(dy) < 1) return; // ignore click jitter
-        _dragMoved = true;
-        vm.Editor.DragApply(_dragMode, _dragHandle, _dragStartGeom, dx, dy);
+        if (_marquee)
+        {
+            ShowMarquee(_pressPoint, p);
+            return;
+        }
+        UpdateCursor(vm.Editor, host, p);
     }
 
     private void OnCanvasReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (_dragMode == DragMode.None) return;
-        if (_dragMoved && Vm is { } vm) vm.Editor.EndInteractive();
-        _dragMode = DragMode.None;
-        e.Pointer.Capture(null);
+        if (Vm is not { } vm || sender is not Control host) return;
+
+        if (_dragging)
+        {
+            vm.Editor.EndDrag();
+            _dragging = false;
+            e.Pointer.Capture(null);
+            return;
+        }
+        if (_marquee)
+        {
+            _marquee = false;
+            Marquee.IsVisible = false;
+            vm.Editor.SelectInRect(RectFrom(_pressPoint, e.GetPosition(host)));
+            e.Pointer.Capture(null);
+        }
     }
+
+    private void ShowMarquee(Point a, Point b)
+    {
+        var r = RectFrom(a, b);
+        Canvas.SetLeft(Marquee, r.X);
+        Canvas.SetTop(Marquee, r.Y);
+        Marquee.Width = r.Width;
+        Marquee.Height = r.Height;
+        Marquee.IsVisible = true;
+    }
+
+    private static Rect RectFrom(Point a, Point b) =>
+        new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
 
     private StandardCursorType _cursorType = StandardCursorType.Arrow;
 

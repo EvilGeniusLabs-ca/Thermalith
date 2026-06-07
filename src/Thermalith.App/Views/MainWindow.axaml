@@ -65,6 +65,20 @@
                 <MenuItem Header="Bring _Forward" Command="{Binding BringForwardCommand}" />
                 <MenuItem Header="Send _Backward" Command="{Binding SendBackwardCommand}" />
                 <MenuItem Header="Send to _Back" Command="{Binding SendToBackCommand}" />
+                <Separator />
+                <MenuItem Header="_Align">
+                    <MenuItem Header="Left" Command="{Binding AlignLeftCommand}" />
+                    <MenuItem Header="Center" Command="{Binding AlignCenterHCommand}" />
+                    <MenuItem Header="Right" Command="{Binding AlignRightCommand}" />
+                    <Separator />
+                    <MenuItem Header="Top" Command="{Binding AlignTopCommand}" />
+                    <MenuItem Header="Middle" Command="{Binding AlignMiddleVCommand}" />
+                    <MenuItem Header="Bottom" Command="{Binding AlignBottomCommand}" />
+                </MenuItem>
+                <MenuItem Header="_Distribute">
+                    <MenuItem Header="Horizontally" Command="{Binding DistributeHCommand}" />
+                    <MenuItem Header="Vertically" Command="{Binding DistributeVCommand}" />
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_Printer">
                 <MenuItem Header="_Refresh Ports" Command="{Binding Printer.RefreshPortsCommand}" />
@@ -168,13 +182,29 @@
                                        Height="{Binding Editor.SafeAreaBounds.Height}"
                                        Stroke="#E0A030" StrokeThickness="1" StrokeDashArray="4,3"
                                        IsVisible="{Binding Editor.HasSafeArea}" IsHitTestVisible="False" />
-                            <Rectangle Canvas.Left="{Binding Editor.SelectionBounds.X}"
-                                       Canvas.Top="{Binding Editor.SelectionBounds.Y}"
-                                       Width="{Binding Editor.SelectionBounds.Width}"
-                                       Height="{Binding Editor.SelectionBounds.Height}"
-                                       Stroke="#2D7DF6" StrokeThickness="1.5" StrokeDashArray="3,2"
-                                       IsVisible="{Binding Editor.HasSelection}" IsHitTestVisible="False" />
+                            <Rectangle Name="Marquee" Stroke="#2D7DF6" StrokeThickness="1" StrokeDashArray="2,2"
+                                       Fill="#202D7DF6" IsVisible="False" IsHitTestVisible="False" />
                         </Canvas>
+                        <ItemsControl ItemsSource="{Binding Editor.SelectionRects}"
+                                      IsVisible="{Binding Editor.HasSelection}" IsHitTestVisible="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.Styles>
+                                <Style Selector="ContentPresenter" x:DataType="vm:SelRect">
+                                    <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                    <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                </Style>
+                            </ItemsControl.Styles>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SelRect">
+                                    <Rectangle Width="{Binding Width}" Height="{Binding Height}"
+                                               Stroke="#2D7DF6" StrokeThickness="1.5" StrokeDashArray="3,2" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                         <ItemsControl ItemsSource="{Binding Editor.SelectionHandles}"
                                       IsVisible="{Binding Editor.HasSelection}" IsHitTestVisible="False">
                             <ItemsControl.ItemsPanel>
