@@ -135,6 +135,14 @@ public sealed class NiimbotClient : IAsyncDisposable
         await SendAsync(PacketGenerator.SetLabelType(labelType), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
 
     /// <summary>
+    /// Trigger the printer's built-in self-test page — a single command that exercises connect +
+    /// paper feed without touching the bitmap encoder, so it is the safest first live print. Throws
+    /// <see cref="PrintException"/> if the model reports the command unsupported.
+    /// </summary>
+    public async Task PrintTestPageAsync(CancellationToken ct = default) =>
+        await SendAsync(PacketGenerator.PrintTestPage(), TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);
+
+    /// <summary>
     /// Print a 1bpp bitmap. Runs the model's print task (B1: 7-byte PrintStart + 6-byte SetPageSize),
     /// streams the RLE-encoded rows, then polls status to completion. <paramref name="progress"/> is
     /// reported during the wait.
