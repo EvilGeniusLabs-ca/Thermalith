@@ -162,6 +162,12 @@
                         <views:GridOverlay Spacing="{Binding Editor.GridSpacingDisplay}"
                                            IsVisible="{Binding Editor.ShowGrid}" />
                         <Canvas>
+                            <Rectangle Canvas.Left="{Binding Editor.SafeAreaBounds.X}"
+                                       Canvas.Top="{Binding Editor.SafeAreaBounds.Y}"
+                                       Width="{Binding Editor.SafeAreaBounds.Width}"
+                                       Height="{Binding Editor.SafeAreaBounds.Height}"
+                                       Stroke="#E0A030" StrokeThickness="1" StrokeDashArray="4,3"
+                                       IsVisible="{Binding Editor.HasSafeArea}" IsHitTestVisible="False" />
                             <Rectangle Canvas.Left="{Binding Editor.SelectionBounds.X}"
                                        Canvas.Top="{Binding Editor.SelectionBounds.Y}"
                                        Width="{Binding Editor.SelectionBounds.Width}"
@@ -199,8 +205,24 @@
             <TabControl Grid.Column="4" Background="#262626">
                 <TabItem Header="Properties">
                     <ScrollViewer Padding="8">
-                        <ContentControl Content="{Binding Editor.SelectedEditor}">
+                        <ContentControl Content="{Binding Editor.InspectorTarget}">
                         <ContentControl.DataTemplates>
+
+                            <DataTemplate DataType="ed:CanvasEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Label" FontWeight="Bold" Margin="0,0,0,4" />
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Width mm" /><TextBox Grid.Column="1" Text="{Binding WidthMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Height mm" /><TextBox Grid.Column="1" Text="{Binding HeightMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="DPI" /><TextBox Grid.Column="1" Text="{Binding Dpi}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Bleed mm" /><TextBox Grid.Column="1" Text="{Binding BleedMm}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="84,*"><TextBlock Text="Safe inset" /><TextBox Grid.Column="1" Text="{Binding SafeAreaInsetMm}" Watermark="none" /></Grid>
+                                    <TextBlock Text="Safe area guards content against print skew (§6.1.3)." Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
+                                </StackPanel>
+                            </DataTemplate>
 
                             <DataTemplate DataType="ed:TextEditorViewModel">
                                 <StackPanel Spacing="2">

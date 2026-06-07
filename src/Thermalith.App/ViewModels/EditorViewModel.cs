@@ -60,6 +60,8 @@ public sealed partial class EditorViewModel : ObservableObject
     [ObservableProperty] private double _displayHeight;
     [ObservableProperty] private Rect _selectionBounds;
     [ObservableProperty] private bool _hasSelection;
+    [ObservableProperty] private Rect _safeAreaBounds;
+    [ObservableProperty] private bool _hasSafeArea;
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private bool _dirty;
     [ObservableProperty] private bool _showGrid;
@@ -73,6 +75,11 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public int PreviewWidthPx { get; private set; }
     public int PreviewHeightPx { get; private set; }
+
+    private CanvasEditorViewModel _canvasEditor = null!;
+
+    /// <summary>What the inspector shows: the selected element editor, or the canvas editor when nothing is selected (§7).</summary>
+    public object InspectorTarget => SelectedEditor ?? (object)_canvasEditor;
 
     /// <summary>Render the current document to the 1bpp raster for printing (same path as the preview, §6.3).</summary>
     public Niimbot.Net.Encoding.MonochromeBitmap RenderForPrint() =>
@@ -116,6 +123,7 @@ public sealed partial class EditorViewModel : ObservableObject
         _gestureActive = false;
         FilePath = path;
         Dirty = false;
+        _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
         RebuildLayers();
         SelectedLayer = null;
         FitToWidth();
@@ -294,10 +302,21 @@ public sealed partial class EditorViewModel : ObservableObject
     private void AfterHistoryChange()
     {
         var keepId = SelectedEditor?.Id;
+        _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
         RebuildLayers();
         SelectedLayer = keepId is null ? null : Layers.FirstOrDefault(l => l.Id == keepId);
+        if (SelectedLayer is null) OnPropertyChanged(nameof(InspectorTarget));
         Dirty = true;
         RenderNow();
+        RaiseState();
+    }
+
+    private void OnCanvasEdited()
+    {
+        _live = _canvasEditor.Apply(_live);
+        BeginGesture();
+        MarkDirty();
+        RequestRender();
         RaiseState();
     }
 
@@ -327,6 +346,8 @@ public sealed partial class EditorViewModel : ObservableObject
         SelectedEditor = el is null ? null : ElementEditorViewModel.Create(el, OnElementEdited);
         UpdateSelectionBounds();
     }
+
+    partial void OnSelectedEditorChanged(ElementEditorViewModel? value) => OnPropertyChanged(nameof(InspectorTarget));
 
     /// <summary>Select the topmost (frontmost) element under a point in display coordinates, or clear selection.</summary>
     public void HitTestSelect(double displayX, double displayY)
@@ -406,6 +427,7 @@ public sealed partial class EditorViewModel : ObservableObject
             PreviewHeightPx = mono.HeightPx;
             UpdateDisplaySize();
             UpdateSelectionBounds();
+            UpdateSafeArea();
             StatusText = $"{_live.Canvas.WidthMm:0.#} × {_live.Canvas.HeightMm:0.#} mm · {_live.Canvas.Dpi} dpi · {mono.WidthPx}×{mono.HeightPx} px";
         }
         catch (Exception ex)
@@ -431,6 +453,24 @@ public sealed partial class EditorViewModel : ObservableObject
         DisplayWidth = PreviewWidthPx * Zoom;
         DisplayHeight = PreviewHeightPx * Zoom;
         OnPropertyChanged(nameof(GridSpacingDisplay));
+        UpdateSafeArea();
+    }
+
+    private void UpdateSafeArea()
+    {
+        if (_live.Canvas.SafeAreaInsetMm is { } inset && inset > 0)
+        {
+            var s = _live.Canvas.Dpi / 25.4 * Zoom;
+            SafeAreaBounds = new Rect(
+                inset * s, inset * s,
+                Math.Max(0, _live.Canvas.WidthMm - 2 * inset) * s,
+                Math.Max(0, _live.Canvas.HeightMm - 2 * inset) * s);
+            HasSafeArea = true;
+        }
+        else
+        {
+            HasSafeArea = false;
+        }
     }
 
     private double Snap(double mm) => SnapEnabled ? Math.Round(mm / GridMm) * GridMm : mm;
