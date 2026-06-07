@@ -191,14 +191,23 @@ public sealed class NiimbotClient : IAsyncDisposable
         if (_pumpCts is { } cts)
         {
             await cts.CancelAsync().ConfigureAwait(false);
+
+            // Close the transport first so any in-flight read is released, then drain the pump with
+            // a hard cap. The synchronous SerialTransport read returns within its ReadTimeout, so
+            // the pump exits promptly; the cap is belt-and-braces against a wedged transport.
+            await _transport.DisconnectAsync(ct).ConfigureAwait(false);
+
             if (_readPump is { } pump)
             {
-                try { await pump.ConfigureAwait(false); }
+                try { await pump.WaitAsync(TimeSpan.FromSeconds(2), ct).ConfigureAwait(false); }
                 catch (OperationCanceledException) { }
+                catch (TimeoutException) { }
             }
+
             cts.Dispose();
             _pumpCts = null;
             _readPump = null;
+            return;
         }
 
         await _transport.DisconnectAsync(ct).ConfigureAwait(false);

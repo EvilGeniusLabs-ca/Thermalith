@@ -1,4 +1,5 @@
 using System.IO.Ports;
+using System.Runtime.InteropServices;
 
 namespace Niimbot.Net.Transport;
 
@@ -79,29 +80,59 @@ public sealed class SerialTransport : INiimbotTransport
 
     public async ValueTask WriteAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
-        var stream = Stream;
-        await stream.WriteAsync(data, ct).ConfigureAwait(false);
-        await stream.FlushAsync(ct).ConfigureAwait(false);
+        var port = Port;
+        // Synchronous Write on a worker. SerialPort.BaseStream's async methods are unreliable on
+        // Windows; the synchronous API honors WriteTimeout and is far more predictable.
+        await Task.Run(() =>
+        {
+            if (MemoryMarshal.TryGetArray(data, out var segment) && segment.Array is not null)
+                port.Write(segment.Array, segment.Offset, segment.Count);
+            else
+            {
+                var tmp = data.ToArray();
+                port.Write(tmp, 0, tmp.Length);
+            }
+        }, ct).ConfigureAwait(false);
     }
 
     public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken ct = default)
     {
+        var port = _port;
+        if (port is null || !port.IsOpen)
+            return 0;
+
         try
         {
-            return await Stream.ReadAsync(buffer, ct).ConfigureAwait(false);
-        }
-        catch (TimeoutException)
-        {
-            // No data within ReadTimeout — normal idle; report zero so the read pump loops.
-            return 0;
+            // CRITICAL: use the synchronous Read, not BaseStream.ReadAsync. On Windows the async
+            // path ignores both the cancellation token AND ReadTimeout, so it blocks forever on an
+            // idle port and the client's read pump can never be cancelled (the cause of the hang on
+            // disconnect). The synchronous Read honors ReadTimeout, returning every ~500 ms so the
+            // pump checks cancellation; a quiet line surfaces as TimeoutException → 0.
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer, out var segment) && segment.Array is not null)
+                        return port.Read(segment.Array, segment.Offset, segment.Count);
+
+                    var tmp = new byte[buffer.Length];
+                    var k = port.Read(tmp, 0, tmp.Length);
+                    tmp.AsSpan(0, k).CopyTo(buffer.Span);
+                    return k;
+                }
+                catch (TimeoutException)
+                {
+                    return 0; // idle line within ReadTimeout
+                }
+            }, ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
-            throw;
+            return 0;
         }
         catch (Exception) when (!IsConnected)
         {
-            // Surprise unplug surfaces here.
+            // Surprise unplug / port closed mid-read.
             StateChanged?.Invoke(this, TransportState.Faulted);
             return 0;
         }
@@ -109,6 +140,6 @@ public sealed class SerialTransport : INiimbotTransport
 
     public async ValueTask DisposeAsync() => await DisconnectAsync().ConfigureAwait(false);
 
-    private Stream Stream =>
-        _port?.BaseStream ?? throw new InvalidOperationException("Serial port is not connected.");
+    private SerialPort Port =>
+        _port ?? throw new InvalidOperationException("Serial port is not connected.");
 }

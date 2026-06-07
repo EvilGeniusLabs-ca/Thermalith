@@ -12,8 +12,8 @@ namespace Niimbot.Net.Tests;
 /// </summary>
 public class PrintSequenceTests
 {
-    [Fact(Skip = "PENDING-HARDWARE-VERIFICATION: confirm the B1 accepts the 0x03-prefixed Connect " +
-                 "(niimbluelib prefixes it; niimprint sends no Connect at all).")]
+    [Fact] // HARDWARE-VERIFIED against a real B1 (firmware 13.02) capture, 2026-06-07:
+           //   TX  03 55 55 C1 01 01 C1 AA AA   →   RX  55 55 C2 01 03 C0 AA AA (In_Connect, ConnectedV3)
     public void Connect_prefix_is_accepted_by_a_real_B1()
     {
         var bytes = PacketGenerator.Connect().ToBytes();

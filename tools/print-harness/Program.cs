@@ -23,9 +23,21 @@ var logFile = GetOption(args, "--log");
 var assumeYes = args.Contains("--yes");
 Console.WriteLine("Thermalith print-harness — Phase 0 transport spike.\n");
 
-// Ctrl+C aborts cleanly so a hung print disconnects instead of leaving the port open.
+// Ctrl+C: first press cancels gracefully (clean disconnect); a second press force-exits so the
+// user is never stuck if cleanup itself wedges.
 using var cts = new CancellationTokenSource();
-Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); Console.WriteLine("\n(aborting…)"); };
+Console.CancelKeyPress += (_, e) =>
+{
+    if (cts.IsCancellationRequested)
+    {
+        Console.WriteLine("\n(force exit)");
+        e.Cancel = false; // let the runtime terminate the process
+        return;
+    }
+    e.Cancel = true;
+    cts.Cancel();
+    Console.WriteLine("\n(aborting… press Ctrl+C again to force exit)");
+};
 
 using var log = new CaptureLog(logFile, !args.Contains("--no-color"));
 
