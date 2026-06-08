@@ -64,9 +64,9 @@ global.json                           # pin the .NET SDK
 │   ├── Niimbot.Net/                 # (1) NuGet: protocol + transport. PURE. No UI, no render, no data.
 │   ├── Thermalith.Core/         # (2) Label engine: document model, render, serialize, data-bind.
 │   │                                #     Depends on Niimbot.Net. No UI.
-│   ├── Thermalith.App/           # (3) Avalonia desktop editor. Depends on Core (+ DonationWare).
-│   ├── Thermalith.Server/        # (4) API / MCP server. Depends on Core.
-│   └── EvilGeniusLabs.DonationWare/ # (5) Aux leaf: UI-agnostic donation NuGet. No domain deps. §4.2.
+│   ├── Thermalith.App/           # (3) Avalonia desktop editor. Depends on Core.
+│   └── Thermalith.Server/        # (4) API / MCP server. Depends on Core.
+│                                    # (Donations: external EvilGeniusLabs.DonationWare NuGet — own repo.)
 ├── tests/
 │   ├── Niimbot.Net.Tests/
 │   ├── Thermalith.Core.Tests/
@@ -86,7 +86,7 @@ Niimbot.Net  ←  Thermalith.Core  ←  Thermalith.App
                           └──────────────  Thermalith.Server
 ```
 
-Nothing depends "up". `Niimbot.Net` knows nothing about labels, rendering, or data. `Core` knows nothing about Avalonia. The App and Server are siblings that share `Core`. `EvilGeniusLabs.DonationWare` (§4.2) is an independent **leaf** consumed only by the App — it sits entirely outside the Niimbot domain graph and never touches `Net`/`Core`.
+Nothing depends "up". `Niimbot.Net` knows nothing about labels, rendering, or data. `Core` knows nothing about Avalonia. The App and Server are siblings that share `Core`. Donation support is the **external `EvilGeniusLabs.DonationWare` MIT NuGet** (its own repo, §4.2) consumed by the App at Phase 6 — it sits entirely outside this solution and the Niimbot domain graph.
 
 > **Note on the "implementation project":** the label document model, rendering, serialization, and data binding are shared between the editor and the server, so they belong in `Thermalith.Core`, not inside the app. The app is the editor *UI* on top of Core; the server is headless access *to* Core. This keeps the three-project intent intact while avoiding duplicated engine logic.
 
@@ -102,19 +102,14 @@ Conventions for the whole solution, set once at scaffold.
 - **Logging:** Serilog with category context (`Log.ForContext("Category", …)`). File sink to the per-platform log dir (§7).
 - **Core stack pins (bump to latest stable at scaffold):** Avalonia `11.3.x`, CommunityToolkit.Mvvm `8.x`, SkiaSharp via Avalonia's backend, `Avalonia.Fonts.Inter` (the bundled Latin default, §6.3). Pin exact versions in `Directory.Packages.props`.
 
-### 4.2 Auxiliary project — `EvilGeniusLabs.DonationWare` (donation NuGet)
+### 4.2 Donation support — external `EvilGeniusLabs.DonationWare` NuGet
 
-A small, **UI-agnostic** NuGet for surfacing voluntary donation options (Ko-fi, PayPal, Stripe Payment Link, custom). Deliberately named *outside* the Niimbot domain so it can **break out to its own solution/repo later with zero rename**, and is reusable across all the free EvilGeniusLabs software. Off the critical path — build it whenever, integrate late (§12).
-
-**Placement (leaf, outside the core graph):** `Thermalith.App` → `EvilGeniusLabs.DonationWare`. Nothing else references it; `Niimbot.Net` and `Thermalith.Core` stay unaware of it.
-
-**What it ships (no UI controls — resolved, package-shape decision):**
-- **Provider model + config:** records for `KoFi | PayPal | Stripe | Custom`, each with a URL, display label, and the "ask" message. This is *data* the host app binds to its own button/menu — the package renders nothing.
-- **Branding assets:** the provider icons as **framework-agnostic embedded resources** (SVG/PNG), exposed via API (resource stream / URI) so the host can drop in "an icon of choice, or all" using its own UI toolkit.
-- **Cross-platform launch — the package owns 'transport for all platforms':** an `IDonationLauncher` with a default OS implementation (Windows `ShellExecute`, macOS `open`, Linux `xdg-open`) that opens the chosen donation URL. The interface is the seam — an Avalonia host *may* inject an impl backed by `TopLevel.Launcher.LaunchUriAsync(...)`, but the package runs standalone with zero UI dependency.
-- **Easy-setup gateway:** a fluent one-call config (e.g. `DonationConfig.AddKoFi("user").AddPayPal("me/handle").AddStripe("https://buy.stripe.com/…")`) returning the model the app renders + launches.
-
-**Security — URL-only.** No Stripe secret keys, no Checkout/API, no money handled in-process. "Stripe" means a hosted **Payment Link**, exactly like the other providers. (Embedding a Stripe secret in a desktop binary is a PCI/security non-starter.)
+Voluntary donation options (Ko-fi, PayPal, Stripe Payment Link, custom) are provided by the
+**`EvilGeniusLabs.DonationWare`** package — a small, **UI-agnostic, MIT-licensed** NuGet that lives in
+**its own repo** (`d:\Projects\EvilGeniusLabs.DonationWare`, extracted 2026-06-08; reusable across all
+EvilGeniusLabs software, open or commercial). Thermalith simply *consumes* the published NuGet and wires
+it into Help/About at Phase 6 (§12) — off the critical path, not part of this solution. Full design +
+worklist live in that repo's `Documentation/`. URL-only, no money handled in-process.
 
 **License: MIT** — a generic reusable widget wants maximum reuse and carries no protocol IP. A permissive package aggregates cleanly into the otherwise-GPL-v3 solution (§10).
 
@@ -546,7 +541,7 @@ Single source of truth keeps the manual, the in-app help, and the MCP tool descr
 ## 10. Cross-Cutting Decisions
 
 **Licensing (resolved — GPL-v3, free-for-all, no commercial track):**
-This project is not being commercialized. The four Niimbot projects (`Niimbot.Net`, `Thermalith.Core`, `Thermalith.App`, `Thermalith.Server`) ship under **GPL-v3**: free for anyone to use, modify, and redistribute; copyleft keeps derivatives open, so there is no proprietary/closed commercial implementation. (The auxiliary `EvilGeniusLabs.DonationWare` leaf is **MIT** — §4.2 — which aggregates cleanly into a GPL solution.)
+This project is not being commercialized. The four Niimbot projects (`Niimbot.Net`, `Thermalith.Core`, `Thermalith.App`, `Thermalith.Server`) ship under **GPL-v3**: free for anyone to use, modify, and redistribute; copyleft keeps derivatives open, so there is no proprietary/closed commercial implementation. (Donations come from the external **MIT** `EvilGeniusLabs.DonationWare` NuGet — §4.2, its own repo — which aggregates cleanly into a GPL solution.)
 - **No license inherited from the source projects.** `Niimbot.Net` is a *wholly new rebuild* synthesized from studying `niimbluelib` + `niimprint`, not a copy (§5), so we inherit neither upstream's terms and are free to license as we choose. GPL-v3 is a deliberate pick, not a requirement. (A one-time check of each upstream's actual license is good hygiene, but it does not constrain us.)
 - **LGPL carve-out — considered and dropped.** LGPL-v3 on the lib would let *closed-source* third-party apps depend on `Niimbot.Net` (GPL-v3 only lets GPL apps use it). That trade only matters if maximizing third-party adoption of the lib outranks pure copyleft. Given the free-for-all / non-commercial priority and the value of simplicity: **GPL-v3 throughout, no carve-out.** Revisit only if a concrete need to let closed apps build on the lib appears.
 
@@ -614,7 +609,7 @@ The product is GPL-v3 / free-for-all (above) and asks for *voluntary* support on
 
 **Phase 6 — Help + distribution + donationware:**
 - Capability JSON → PDF manual + in-app help; per-OS packaging.
-- Integrate `EvilGeniusLabs.DonationWare` (§4.2) into the App's Help/About. The package itself is standalone and off the critical path — it can be built and published anytime — but wire it in here, late, so it never distracts from getting a label out of the printer.
+- Integrate the external `EvilGeniusLabs.DonationWare` NuGet (§4.2, its own repo) into the App's Help/About. The package is standalone and off the critical path — built/published from its own repo anytime — but wire it in here, late, so it never distracts from getting a label out of the printer.
 
 Each phase is independently testable; Phase 0 de-risks the whole project the same way proving the serial port did before.
 
