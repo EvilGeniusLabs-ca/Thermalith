@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
+        xmlns:ed="clr-namespace:Thermalith.App.ViewModels.Editors"
+        x:Class="Thermalith.App.Views.RollDialog"
+        x:DataType="vm:RollDialogViewModel"
+        Title="{Binding Title}"
+        Width="380" SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Window.Styles>
+        <Style Selector="Grid.r">
+            <Setter Property="Margin" Value="0,3" />
+        </Style>
+        <Style Selector="Grid.r > TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#888" />
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="18" Spacing="2">
+        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="16" Margin="0,0,0,8" />
+
+        <Border IsVisible="{Binding HasRfid}" Background="#22000000" CornerRadius="4" Padding="8,5" Margin="0,0,0,8">
+            <StackPanel Spacing="2">
+                <TextBlock Text="Roll detected (RFID)" Foreground="#8AC" FontSize="11" />
+                <TextBlock Text="{Binding RfidSummary}" Foreground="#AAA" FontSize="11" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name}" /></Grid>
+        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Part name" /><TextBox Grid.Column="1" Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged}" Watermark="e.g. T40*20-320WHITE" /></Grid>
+        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Box id" /><TextBox Grid.Column="1" Text="{Binding BoxId}" Watermark="optional, e.g. 30486" /></Grid>
+        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Paper type" /><ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{x:Static ed:EditorOptions.PaperType}" SelectedItem="{Binding PaperType}" /></Grid>
+        <Grid ColumnDefinitions="92,*,Auto,*" Margin="0,3">
+            <TextBlock Text="Width mm" Foreground="#888" VerticalAlignment="Center" />
+            <TextBox Grid.Column="1" Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock Grid.Column="2" Text="Height" Foreground="#888" VerticalAlignment="Center" Margin="10,0,6,0" />
+            <TextBox Grid.Column="3" Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Shape" /><ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
+        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Density" /><TextBox Grid.Column="1" Text="{Binding Density}" Watermark="optional" /></Grid>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,14,0,0">
+            <Button Content="Cancel" Click="OnCancel" MinWidth="80" />
+            <Button Content="Save" Click="OnSave" MinWidth="80" />
+        </StackPanel>
+    </StackPanel>
+</Window>

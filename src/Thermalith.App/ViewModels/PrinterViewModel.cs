@@ -50,6 +50,15 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     /// <summary>Concise loaded-roll summary for the main interface, e.g. "B1 · 59/96 labels".</summary>
     [ObservableProperty] private string _loadedRollText = "No printer";
+
+    /// <summary>The RFID of the currently-loaded roll (set on connect/refresh), or null. Used by the shell to resolve/prompt.</summary>
+    public RfidInfo? LoadedRfid { get; private set; }
+
+    /// <summary>DPI of the connected printer, or null.</summary>
+    public int? ConnectedDpi => _caps?.Dpi;
+
+    /// <summary>Raised after a connect/refresh so the shell can look up or prompt for the loaded roll.</summary>
+    public event EventHandler? RollDetected;
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private LabelType _selectedLabelType = LabelType.WithGaps;
     [ObservableProperty] private int _density = 3;
@@ -117,6 +126,7 @@ public sealed partial class PrinterViewModel : ObservableObject
                 + (_caps.FirmwareVersion is { Length: > 0 } fw ? $" · fw {fw}" : "");
             Message = "Connected.";
             await RefreshStatusCoreAsync();
+            RollDetected?.Invoke(this, EventArgs.Empty); // let the shell resolve/prompt the loaded roll
         }
         catch (Exception ex)
         {
@@ -183,8 +193,21 @@ public sealed partial class PrinterViewModel : ObservableObject
         }
     }
 
+    /// <summary>Set the selected print label-type from a roll's paper-type string (drives SetLabelType at print).</summary>
+    public void ApplyPaperType(string? paperType)
+    {
+        SelectedLabelType = paperType?.ToLowerInvariant() switch
+        {
+            "black" => LabelType.Black,
+            "continuous" => LabelType.Continuous,
+            "transparent" => LabelType.Transparent,
+            _ => LabelType.WithGaps,
+        };
+    }
+
     private void UpdateLoadedRoll(RfidInfo? rfid)
     {
+        LoadedRfid = rfid;
         if (!IsConnected || _caps is null)
         {
             LoadedRollText = "No printer";

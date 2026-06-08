@@ -464,6 +464,28 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseState();
     }
 
+    /// <summary>Apply a loaded/selected roll's physical size + shape (and printer DPI) to the canvas (worklist §B).</summary>
+    public void ApplyRoll(double widthMm, double heightMm, string? shape, int? dpi)
+    {
+        FlushGesture();
+        _live = _live with
+        {
+            Canvas = _live.Canvas with
+            {
+                WidthMm = widthMm > 0 ? widthMm : _live.Canvas.WidthMm,
+                HeightMm = heightMm > 0 ? heightMm : _live.Canvas.HeightMm,
+                Shape = string.IsNullOrEmpty(shape) ? _live.Canvas.Shape : shape,
+                Dpi = dpi is > 0 ? dpi.Value : _live.Canvas.Dpi,
+            },
+        };
+        _history.Commit(_live);
+        _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
+        if (SelectedEditor is null) OnPropertyChanged(nameof(InspectorTarget));
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
     // ── Gestures (history coalescing, §6.4) ─────────────────────────────────────────────────────
 
     private void BeginGesture()

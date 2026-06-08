@@ -19,4 +19,5 @@ public static class EditorOptions
     public static string[] DateSource { get; } = ["printNow", "fixed"];
     public static string[] CanvasShape { get; } = ["rectangle", "rounded", "circle", "dieCut"];
     public static int[] Orientation { get; } = [0, 90, 180, 270];
+    public static string[] PaperType { get; } = ["gap", "black", "continuous", "transparent", "perforated"];
 }

@@ -117,6 +117,10 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     public Task<bool> ConfirmDiscardAsync() => new ConfirmDialog().ShowDialog<bool>(this);
 
+    public Task<Thermalith.Core.Catalog.RollDefinition?> DefineRollAsync(Thermalith.Core.Catalog.RollDefinition seed, string title) =>
+        new RollDialog { DataContext = new ViewModels.RollDialogViewModel(seed, title) }
+            .ShowDialog<Thermalith.Core.Catalog.RollDefinition?>(this);
+
     // ── Canvas interaction: select, drag-move, resize, marquee (§7) ──────────────────────────────
 
     private bool _dragging;

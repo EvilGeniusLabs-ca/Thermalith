@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Niimbot.Net.Commands;
 using Thermalith.App.Services;
+using Thermalith.Core.Catalog;
 using Thermalith.Core.Serialization;
 
 namespace Thermalith.App.ViewModels;
@@ -15,6 +17,7 @@ namespace Thermalith.App.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService;
+    private readonly LabelRollStore _rollStore = new();
     private AppSettings _settings;
 
     public MainWindowViewModel() : this(new SettingsService()) { }
@@ -29,6 +32,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Editor.StateChanged += (_, _) => OnEditorStateChanged();
         Editor.PropertyChanged += OnEditorPropertyChanged;
+        Printer.RollDetected += OnRollDetected;
         UpdateTitle();
     }
 
@@ -55,8 +59,80 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task NewAsync()
     {
         if (!await EnsureDiscardableAsync()) return;
+
+        // New-label dialog seeded (size/paper) from the last-used roll — barcodeless, so confirming
+        // it doesn't redefine a learned roll, only updates the "last used" default.
+        var last = _rollStore.LastUsed;
+        var seed = new RollDefinition
+        {
+            Name = "Untitled",
+            PaperType = last?.PaperType ?? "gap",
+            WidthMm = last?.WidthMm ?? 50,
+            HeightMm = last?.HeightMm ?? 30,
+            Shape = last?.Shape ?? "rectangle",
+            Density = last?.Density,
+        };
+        var def = Dialogs is null ? seed : await Dialogs.DefineRollAsync(seed, "New label");
+        if (def is null) return; // cancelled
+
         Editor.NewDocument();
+        Editor.ApplyRoll(def.WidthMm, def.HeightMm, def.Shape, Printer.ConnectedDpi);
+        Printer.ApplyPaperType(def.PaperType);
+        _rollStore.Remember(def);
     }
+
+    // ── Loaded-roll detection (worklist §B) ───────────────────────────────────────────────────────
+
+    private async void OnRollDetected(object? sender, EventArgs e)
+    {
+        try { await ResolveRollAsync(); }
+        catch (Exception ex) { StatusMessage = "Roll detect: " + ex.Message; }
+    }
+
+    private async Task ResolveRollAsync()
+    {
+        if (Printer.LoadedRfid is not { TagPresent: true } r || string.IsNullOrEmpty(r.Barcode)) return;
+
+        var known = _rollStore.FindByBarcode(r.Barcode);
+        if (known is not null)
+        {
+            ApplyResolvedRoll(known);
+            _rollStore.Remember(known); // refresh last-used
+            StatusMessage = $"Loaded roll: {known.Name} ({known.WidthMm:0.#}×{known.HeightMm:0.#} mm)";
+            return;
+        }
+
+        if (Dialogs is null) return;
+        var seed = new RollDefinition
+        {
+            Barcode = r.Barcode,
+            Uuid = r.Uuid,
+            Serial = r.SerialNumber,
+            ConsumablesType = r.ConsumablesType.ToString(),
+            PaperType = MapPaper(r.ConsumablesType),
+            Shape = "rectangle",
+        };
+        var defined = await Dialogs.DefineRollAsync(seed, "New label roll detected");
+        if (defined is null) return;
+
+        _rollStore.Remember(defined);
+        ApplyResolvedRoll(defined);
+        StatusMessage = $"Saved roll: {defined.Name}";
+    }
+
+    private void ApplyResolvedRoll(RollDefinition roll)
+    {
+        Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi);
+        Printer.ApplyPaperType(roll.PaperType);
+    }
+
+    private static string MapPaper(LabelType t) => t switch
+    {
+        LabelType.Black => "black",
+        LabelType.Continuous => "continuous",
+        LabelType.Transparent => "transparent",
+        _ => "gap",
+    };
 
     [RelayCommand]
     private async Task OpenAsync()
