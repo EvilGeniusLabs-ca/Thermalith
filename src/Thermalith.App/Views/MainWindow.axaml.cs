@@ -257,13 +257,15 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         Bind(EditorAction.Open, vm.OpenCommand, MiOpen);
         Bind(EditorAction.Save, vm.SaveCommand, MiSave);
         Bind(EditorAction.SaveAs, vm.SaveAsCommand, MiSaveAs);
-        Bind(EditorAction.Undo, vm.UndoCommand, MiUndo);
-        Bind(EditorAction.Redo, vm.RedoCommand, MiRedo);
-        Bind(EditorAction.Delete, vm.DeleteCommand, MiDelete);
-        Bind(EditorAction.Cut, vm.CutCommand, MiCut);
-        Bind(EditorAction.Copy, vm.CopyCommand, MiCopy);
-        Bind(EditorAction.Paste, vm.PasteCommand, MiPaste);
-        Bind(EditorAction.Duplicate, vm.DuplicateCommand, MiDuplicate);
+        // Text-conflicting shortcuts are guarded: while a text field has focus the keystroke edits the
+        // text (Delete a char, Ctrl+C/X/V, Ctrl+Z) instead of the document. Menu clicks still apply.
+        Bind(EditorAction.Undo, vm.UndoCommand, MiUndo, guardText: true);
+        Bind(EditorAction.Redo, vm.RedoCommand, MiRedo, guardText: true);
+        Bind(EditorAction.Delete, vm.DeleteCommand, MiDelete, guardText: true);
+        Bind(EditorAction.Cut, vm.CutCommand, MiCut, guardText: true);
+        Bind(EditorAction.Copy, vm.CopyCommand, MiCopy, guardText: true);
+        Bind(EditorAction.Paste, vm.PasteCommand, MiPaste, guardText: true);
+        Bind(EditorAction.Duplicate, vm.DuplicateCommand, MiDuplicate, guardText: true);
         Bind(EditorAction.Group, vm.GroupCommand, MiGroup);
         Bind(EditorAction.Ungroup, vm.UngroupCommand, MiUngroup);
         Bind(EditorAction.ZoomIn, vm.ZoomInCommand, MiZoomIn);
@@ -272,11 +274,33 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         Bind(EditorAction.Quit, vm.QuitCommand, MiQuit);
         return;
 
-        void Bind(EditorAction action, System.Windows.Input.ICommand command, MenuItem item)
+        void Bind(EditorAction action, System.Windows.Input.ICommand command, MenuItem item, bool guardText = false)
         {
             var gesture = keymap.Gesture(action);
-            KeyBindings.Add(new KeyBinding { Gesture = gesture, Command = command });
+            var bound = guardText ? new TextAwareCommand(command, this) : command;
+            KeyBindings.Add(new KeyBinding { Gesture = gesture, Command = bound });
             item.InputGesture = gesture;
+        }
+    }
+
+    /// <summary>
+    /// Wraps an editor command so its keyboard shortcut is a no-op while a text input has focus — letting
+    /// Delete / Ctrl+C/X/V / Ctrl+Z act on the text being edited, not the document. (A NumericUpDown's
+    /// inner editor is a TextBox, so its fields are covered too.) Menu clicks bind the raw command.
+    /// </summary>
+    private sealed class TextAwareCommand(System.Windows.Input.ICommand inner, TopLevel top) : System.Windows.Input.ICommand
+    {
+        public bool CanExecute(object? parameter) => inner.CanExecute(parameter);
+
+        public void Execute(object? parameter)
+        {
+            if (top.FocusManager?.GetFocusedElement() is not TextBox) inner.Execute(parameter);
+        }
+
+        public event EventHandler? CanExecuteChanged
+        {
+            add => inner.CanExecuteChanged += value;
+            remove => inner.CanExecuteChanged -= value;
         }
     }
 

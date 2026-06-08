@@ -8,10 +8,11 @@ public static class ElementFactory
     public static LabelElement Create(string type, Canvas canvas)
     {
         var (w, h) = DefaultSize(type);
-        w = Math.Min(w, canvas.WidthMm - 2);
-        h = Math.Min(h, canvas.HeightMm - 2);
-        var x = Math.Max(1, (canvas.WidthMm - w) / 2);
-        var y = Math.Max(1, (canvas.HeightMm - h) / 2);
+        // Whole-mm placement, centred (positioning is integer-mm throughout — see EditorViewModel.Snap).
+        w = Math.Round(Math.Min(w, canvas.WidthMm - 2));
+        h = Math.Round(Math.Min(h, canvas.HeightMm - 2));
+        var x = Math.Max(1, Math.Round((canvas.WidthMm - w) / 2));
+        var y = Math.Max(1, Math.Round((canvas.HeightMm - h) / 2));
         var id = DocumentFactory.NewId();
 
         return type switch

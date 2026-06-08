@@ -308,7 +308,7 @@
                                     <TextBlock Classes="section" Text="Font" />
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Font" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fonts}" SelectedItem="{Binding SelectedFont}" /></Grid>
                                     <!-- Size + B/I/U share one row. -->
-                                    <Grid Classes="frow" ColumnDefinitions="62,90,*">
+                                    <Grid Classes="frow" ColumnDefinitions="62,120,*">
                                         <TextBlock Text="Size (pt)" />
                                         <NumericUpDown Grid.Column="1" Value="{Binding FontSizePt}" Minimum="1" Maximum="500" />
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right">
@@ -322,7 +322,7 @@
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Sizing" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.FontSizing}" SelectedItem="{Binding FontSizing}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*,46,*"><TextBlock Text="Min pt" /><NumericUpDown Grid.Column="1" Value="{Binding MinFontSizePt}" Minimum="1" /><TextBlock Grid.Column="2" Text="Max pt" Margin="8,0,4,0" /><NumericUpDown Grid.Column="3" Value="{Binding MaxFontSizePt}" Minimum="1" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Line ×" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="80,*"><TextBlock Text="Line spacing" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 

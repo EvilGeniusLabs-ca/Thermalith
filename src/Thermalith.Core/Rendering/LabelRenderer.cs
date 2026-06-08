@@ -354,7 +354,9 @@ public sealed class LabelRenderer
         {
             var tw = textPaint!.MeasureText(b.Value);
             var tx = ox + (codeW - tw) / 2;
-            var ty = above ? y - textPaint.FontMetrics.Ascent : barsTop + barsH - textPaint.FontMetrics.Descent;
+            // Baseline = top of the text band minus the (negative) ascent, so the glyphs sit *inside*
+            // the band — above the bars, or below them — never overlapping. (below used descent: a bug.)
+            var ty = (above ? y : barsTop + barsH) - textPaint.FontMetrics.Ascent;
             ctx.Canvas.DrawText(b.Value, tx, ty, textPaint);
         }
     }
