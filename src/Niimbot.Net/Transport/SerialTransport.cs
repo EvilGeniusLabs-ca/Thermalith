@@ -135,10 +135,14 @@ public sealed class SerialTransport : INiimbotTransport
                 try
                 {
                     var waited = 0;
-                    while (port.BytesToRead == 0)
+                    while (true)
                     {
+                        // Check liveness BEFORE touching BytesToRead — the port can be closed under us
+                        // on disconnect/shutdown, and BytesToRead throws once it is.
                         if (ct.IsCancellationRequested || !port.IsOpen)
                             return 0;
+                        if (port.BytesToRead > 0)
+                            break;
                         if (waited >= _readTimeoutMs)
                             return 0; // idle line
                         Thread.Sleep(15);
@@ -156,6 +160,12 @@ public sealed class SerialTransport : INiimbotTransport
                 catch (TimeoutException)
                 {
                     return 0; // safety net — shouldn't happen now that we only Read when data is present
+                }
+                catch (Exception) when (!port.IsOpen)
+                {
+                    // Port closed/disposed mid-read (the disconnect-on-shutdown race) — caught on the
+                    // worker thread so it isn't flagged as unhandled-in-user-code; surfaces as 0.
+                    return 0;
                 }
             }, ct).ConfigureAwait(false);
         }
