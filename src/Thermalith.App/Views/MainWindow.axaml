@@ -3,6 +3,7 @@
         xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
         xmlns:ed="clr-namespace:Thermalith.App.ViewModels.Editors"
         xmlns:views="clr-namespace:Thermalith.App.Views"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         x:Class="Thermalith.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
@@ -380,8 +381,8 @@
                                     <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" />
                                     <TextBlock Text="Transform" Foreground="#888" Margin="0,4,0,0" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <Button Classes="icon" Command="{Binding RotateCcwCommand}" ToolTip.Tip="Rotate counter-clockwise 90°"><Path Classes="icon" Data="{StaticResource IconRotateCcw}" /></Button>
-                                        <Button Classes="icon" Command="{Binding RotateCwCommand}" ToolTip.Tip="Rotate clockwise 90°"><Path Classes="icon" Data="{StaticResource IconRotateCw}" /></Button>
+                                        <Button Classes="icon" Command="{Binding RotateCcwCommand}" ToolTip.Tip="Rotate counter-clockwise 90°"><mi:MaterialIcon Kind="RotateLeft" Width="16" Height="16" Foreground="#D0D0D0" /></Button>
+                                        <Button Classes="icon" Command="{Binding RotateCwCommand}" ToolTip.Tip="Rotate clockwise 90°"><mi:MaterialIcon Kind="RotateRight" Width="16" Height="16" Foreground="#D0D0D0" /></Button>
                                         <ToggleButton Classes="icon" IsChecked="{Binding FlipH}" ToolTip.Tip="Mirror (flip horizontal)"><Path Classes="icon" Data="{StaticResource IconMirror}" /></ToggleButton>
                                         <ToggleButton Classes="icon" IsChecked="{Binding FlipV}" ToolTip.Tip="Flip (vertical)"><Path Classes="icon" Data="{StaticResource IconFlip}" /></ToggleButton>
                                     </StackPanel>
