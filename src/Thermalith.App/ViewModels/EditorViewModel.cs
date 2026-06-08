@@ -486,6 +486,33 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseState();
     }
 
+    /// <summary>Canvas width in mm, surfaced for the toolbar quick-edit (worklist §C). Setting it resizes the
+    /// canvas as a committed change; the value stays in sync with the inspector via <see cref="RaiseState"/>.</summary>
+    public double CanvasWidthMm
+    {
+        get => _live.Canvas.WidthMm;
+        set { if (value > 0 && Math.Abs(value - _live.Canvas.WidthMm) > 1e-6) ResizeCanvas(value, _live.Canvas.HeightMm); }
+    }
+
+    /// <summary>Canvas height in mm, surfaced for the toolbar quick-edit (worklist §C).</summary>
+    public double CanvasHeightMm
+    {
+        get => _live.Canvas.HeightMm;
+        set { if (value > 0 && Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
+    }
+
+    private void ResizeCanvas(double widthMm, double heightMm)
+    {
+        FlushGesture();
+        _live = _live with { Canvas = _live.Canvas with { WidthMm = widthMm, HeightMm = heightMm } };
+        _history.Commit(_live);
+        _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
+        if (SelectedEditor is null) OnPropertyChanged(nameof(InspectorTarget));
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
     // ── Gestures (history coalescing, §6.4) ─────────────────────────────────────────────────────
 
     private void BeginGesture()
@@ -793,6 +820,8 @@ public sealed partial class EditorViewModel : ObservableObject
         OnPropertyChanged(nameof(CanUndo));
         OnPropertyChanged(nameof(CanRedo));
         OnPropertyChanged(nameof(DocumentName));
+        OnPropertyChanged(nameof(CanvasWidthMm));
+        OnPropertyChanged(nameof(CanvasHeightMm));
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

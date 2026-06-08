@@ -119,12 +119,22 @@
                     <Button Content="−" Command="{Binding ZoomOutCommand}" />
                     <Button Content="Fit" Command="{Binding ZoomFitCommand}" />
                     <Button Content="+" Command="{Binding ZoomInCommand}" />
+                    <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                    <!-- Quick canvas-size edit; bound to the same canvas as the Properties panel (§C). -->
+                    <TextBlock Text="W" Foreground="#888" VerticalAlignment="Center" />
+                    <TextBox Width="52" Text="{Binding Editor.CanvasWidthMm, StringFormat={}{0:0.#}}"
+                             VerticalAlignment="Center" ToolTip.Tip="Canvas width (mm)" />
+                    <TextBlock Text="H" Foreground="#888" VerticalAlignment="Center" />
+                    <TextBox Width="52" Text="{Binding Editor.CanvasHeightMm, StringFormat={}{0:0.#}}"
+                             VerticalAlignment="Center" ToolTip.Tip="Canvas height (mm)" />
+                    <TextBlock Text="mm" Foreground="#888" VerticalAlignment="Center" />
                 </StackPanel>
-                <!-- Connected printer + remaining labels (from the RFID roll). -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="8,0,4,0">
+                <!-- Right: connected printer + remaining labels (from the RFID roll), then Print pinned far-right. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="8,0,0,0">
                     <Ellipse Width="9" Height="9" VerticalAlignment="Center"
                              Fill="{Binding Printer.IsConnected, Converter={StaticResource ConnDot}}" />
                     <TextBlock Text="{Binding Printer.LoadedRollText}" Foreground="#BBB" VerticalAlignment="Center" />
+                    <Button Content="Print" Command="{Binding Printer.PrintCommand}" Classes="accent" />
                 </StackPanel>
             </Grid>
         </Border>
