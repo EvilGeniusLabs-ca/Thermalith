@@ -123,10 +123,10 @@
                     <Rectangle Width="1" Fill="#444" Margin="4,0" />
                     <!-- Quick canvas-size edit; bound to the same canvas as the Properties panel (§C). -->
                     <TextBlock Text="W" Foreground="#888" VerticalAlignment="Center" />
-                    <TextBox Width="52" Text="{Binding Editor.CanvasWidthMm, Converter={StaticResource Num}}"
+                    <NumericUpDown Width="52" Value="{Binding Editor.CanvasWidthMm}" Minimum="1"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas width (mm)" />
                     <TextBlock Text="H" Foreground="#888" VerticalAlignment="Center" />
-                    <TextBox Width="52" Text="{Binding Editor.CanvasHeightMm, Converter={StaticResource Num}}"
+                    <NumericUpDown Width="52" Value="{Binding Editor.CanvasHeightMm}" Minimum="1"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas height (mm)" />
                     <TextBlock Text="mm" Foreground="#888" VerticalAlignment="Center" />
                 </StackPanel>
@@ -286,14 +286,14 @@
                                 <StackPanel Spacing="2">
                                     <TextBlock Text="Label" FontWeight="Bold" Margin="0,0,0,4" />
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Width mm" /><TextBox Grid.Column="1" Text="{Binding WidthMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Height mm" /><TextBox Grid.Column="1" Text="{Binding HeightMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="DPI" /><TextBox Grid.Column="1" Text="{Binding Dpi, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Width mm" /><NumericUpDown Grid.Column="1" Value="{Binding WidthMm}" Minimum="1" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Height mm" /><NumericUpDown Grid.Column="1" Value="{Binding HeightMm}" Minimum="1" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="DPI" /><NumericUpDown Grid.Column="1" Value="{Binding Dpi}" Minimum="50" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Bleed mm" /><TextBox Grid.Column="1" Text="{Binding BleedMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Safe inset" /><TextBox Grid.Column="1" Text="{Binding SafeAreaInsetMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" Watermark="none" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Bleed mm" /><NumericUpDown Grid.Column="1" Value="{Binding BleedMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Safe inset" /><NumericUpDown Grid.Column="1" Value="{Binding SafeAreaInsetMm}" Increment="0.1" Minimum="0" Watermark="none" /></Grid>
                                     <TextBlock Text="Safe area guards content against print skew (§6.1.3)." Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
                                 </StackPanel>
                             </DataTemplate>
@@ -333,8 +333,8 @@
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <CheckBox IsChecked="{Binding ShowText}" Content="Show text" Margin="0,4" />
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleWidthMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleWidthMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Quiet mm" /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
@@ -344,17 +344,17 @@
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Encoding" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.QrEncoding}" SelectedItem="{Binding Encoding}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="EC level" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.EcLevel}" SelectedItem="{Binding EcLevel}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Module mm" /><TextBox Grid.Column="1" Text="{Binding ModuleSizeMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" Watermark="auto" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Quiet mm" /><TextBox Grid.Column="1" Text="{Binding QuietZoneMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleSizeMm}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Quiet mm" /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:SerialEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Start" /><TextBox Grid.Column="1" Text="{Binding Start, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Step" /><TextBox Grid.Column="1" Text="{Binding Step, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Pad len" /><TextBox Grid.Column="1" Text="{Binding PadLength, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Start" /><NumericUpDown Grid.Column="1" Value="{Binding Start}" Minimum="0" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Step" /><NumericUpDown Grid.Column="1" Value="{Binding Step}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Pad len" /><NumericUpDown Grid.Column="1" Value="{Binding PadLength}" Minimum="0" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Pad char" /><TextBox Grid.Column="1" Text="{Binding PadChar, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Prefix" /><TextBox Grid.Column="1" Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Suffix" /><TextBox Grid.Column="1" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
@@ -375,9 +375,9 @@
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.ShapeType}" SelectedItem="{Binding ShapeType}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Stroke mm" /><TextBox Grid.Column="1" Text="{Binding StrokeWidthMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Stroke mm" /><NumericUpDown Grid.Column="1" Value="{Binding StrokeWidthMm}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Fill" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fill}" SelectedItem="{Binding Fill}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Corner mm" /><TextBox Grid.Column="1" Text="{Binding CornerRadiusMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm}" Increment="0.1" Minimum="0" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
@@ -387,7 +387,7 @@
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Fit" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fit}" SelectedItem="{Binding Fit}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Threshold" /><TextBox Grid.Column="1" Text="{Binding Threshold, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Threshold" /><NumericUpDown Grid.Column="1" Value="{Binding Threshold}" Minimum="0" Maximum="255" FormatString="0" /></Grid>
                                     <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" />
                                     <TextBlock Text="Transform" Foreground="#888" Margin="0,4,0,0" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -402,9 +402,9 @@
                             <DataTemplate DataType="ed:TableEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Cols" /><TextBox Grid.Column="1" Text="{Binding Cols, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Rows" /><TextBox Grid.Column="1" Text="{Binding Rows, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Border mm" /><TextBox Grid.Column="1" Text="{Binding BorderWidthMm, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Cols}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Rows}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Border mm" /><NumericUpDown Grid.Column="1" Value="{Binding BorderWidthMm}" Increment="0.1" Minimum="0" /></Grid>
                                     <CheckBox IsChecked="{Binding HeaderRow}" Content="Header row" Margin="0,4" />
                                     <TextBlock Text="Cells" Foreground="#888" Margin="0,4,0,2" />
                                     <ItemsControl ItemsSource="{Binding CellRows}">
@@ -479,15 +479,15 @@
                             </Grid>
                             <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Copies" Foreground="#888" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" Text="{Binding Copies, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding Copies}" Minimum="1" FormatString="0" />
                             </Grid>
                             <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Offset X px" Foreground="#888" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" Text="{Binding OffsetX, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding OffsetX}" FormatString="0" />
                             </Grid>
                             <Grid ColumnDefinitions="62,*" Margin="0,2">
                                 <TextBlock Text="Offset Y px" Foreground="#888" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" Text="{Binding OffsetY, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding OffsetY}" FormatString="0" />
                             </Grid>
                             <Button Content="Print" Command="{Binding PrintCommand}" HorizontalAlignment="Stretch" Margin="0,6" />
 
