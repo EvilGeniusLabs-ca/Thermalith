@@ -11,53 +11,49 @@
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="4">
+    <!-- A single label column width (64) keeps the Name / X / W / Rotation field left edges aligned. -->
+    <StackPanel Spacing="3">
         <TextBlock Text="{Binding TypeLabel}" FontWeight="Bold" Margin="0,0,0,2" />
 
-        <Grid ColumnDefinitions="56,*" Margin="0,1">
+        <Grid ColumnDefinitions="64,*" Margin="0,1">
             <TextBlock Classes="lbl" Text="Name" />
             <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
-        <Grid ColumnDefinitions="Auto,*,Auto,*" Margin="0,1">
-            <TextBlock Classes="lbl" Text="X" Margin="0,0,4,0" />
-            <TextBox Grid.Column="1" Text="{Binding X, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock Classes="lbl" Grid.Column="2" Text="Y" Margin="8,0,4,0" />
-            <TextBox Grid.Column="3" Text="{Binding Y, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Classes="section" Text="Position &amp; size" />
+
+        <Grid ColumnDefinitions="64,*,22,*" Margin="0,1">
+            <TextBlock Classes="lbl" Text="X" />
+            <NumericUpDown Grid.Column="1" Value="{Binding X}" Minimum="0" />
+            <TextBlock Classes="lbl" Grid.Column="2" Text="Y" Margin="6,0,4,0" />
+            <NumericUpDown Grid.Column="3" Value="{Binding Y}" Minimum="0" />
         </Grid>
 
-        <Grid ColumnDefinitions="Auto,*,Auto,*" Margin="0,1">
-            <TextBlock Classes="lbl" Text="W" Margin="0,0,4,0" />
-            <TextBox Grid.Column="1" Text="{Binding W, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock Classes="lbl" Grid.Column="2" Text="H" Margin="8,0,4,0" />
-            <TextBox Grid.Column="3" Text="{Binding H, UpdateSourceTrigger=PropertyChanged}" />
+        <Grid ColumnDefinitions="64,*,22,*" Margin="0,1">
+            <TextBlock Classes="lbl" Text="W" />
+            <NumericUpDown Grid.Column="1" Value="{Binding W}" Minimum="1" />
+            <TextBlock Classes="lbl" Grid.Column="2" Text="H" Margin="6,0,4,0" />
+            <NumericUpDown Grid.Column="3" Value="{Binding H}" Minimum="1" />
         </Grid>
 
-        <Grid ColumnDefinitions="56,*" Margin="0,1">
+        <Grid ColumnDefinitions="64,*" Margin="0,1">
             <TextBlock Classes="lbl" Text="Rotation" />
-            <TextBox Grid.Column="1" Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged}" />
+            <NumericUpDown Grid.Column="1" Value="{Binding Rotation}" Minimum="0" Maximum="360" />
         </Grid>
 
-        <Grid ColumnDefinitions="20,*" Margin="0,2">
-            <TextBlock Classes="lbl" Text="H" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="3">
-                <ToggleButton Classes="icon" ToolTip.Tip="Left" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=left}"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></ToggleButton>
-                <ToggleButton Classes="icon" ToolTip.Tip="Center" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=center}"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></ToggleButton>
-                <ToggleButton Classes="icon" ToolTip.Tip="Right" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=right}"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></ToggleButton>
-                <ToggleButton Classes="icon" ToolTip.Tip="Justify" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=justify}"><Path Classes="icon" Data="{StaticResource IconAlignJustify}" /></ToggleButton>
-            </StackPanel>
-        </Grid>
+        <TextBlock Classes="section" Text="Alignment" />
 
-        <Grid ColumnDefinitions="20,*" Margin="0,2">
-            <TextBlock Classes="lbl" Text="V" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="3">
-                <ToggleButton Classes="icon" ToolTip.Tip="Top" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=top}"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></ToggleButton>
-                <ToggleButton Classes="icon" ToolTip.Tip="Middle" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=middle}"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></ToggleButton>
-                <ToggleButton Classes="icon" ToolTip.Tip="Bottom" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></ToggleButton>
-            </StackPanel>
-        </Grid>
-
-        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4">
+        <!-- Horizontal align · vertical align · visibility/lock — all on one row. -->
+        <StackPanel Orientation="Horizontal" Spacing="2">
+            <ToggleButton Classes="icon" ToolTip.Tip="Align left" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=left}"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align center" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=center}"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align right" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=right}"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Justify" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=justify}"><Path Classes="icon" Data="{StaticResource IconAlignJustify}" /></ToggleButton>
+            <Rectangle Width="1" Fill="#444" Margin="3,3" />
+            <ToggleButton Classes="icon" ToolTip.Tip="Align top" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=top}"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align middle" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=middle}"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align bottom" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></ToggleButton>
+            <Rectangle Width="1" Fill="#444" Margin="3,3" />
             <ToggleButton Classes="icon" ToolTip.Tip="Visible" IsChecked="{Binding Visible}"><Path Classes="icon" Data="{StaticResource IconEye}" /></ToggleButton>
             <ToggleButton Classes="icon" ToolTip.Tip="Locked" IsChecked="{Binding Locked}"><Path Classes="icon" Data="{StaticResource IconLock}" /></ToggleButton>
         </StackPanel>

@@ -35,12 +35,12 @@
         <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Paper type" /><ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{x:Static ed:EditorOptions.PaperType}" SelectedItem="{Binding PaperType}" /></Grid>
         <Grid ColumnDefinitions="92,*,Auto,*" Margin="0,3">
             <TextBlock Text="Width mm" Foreground="#888" VerticalAlignment="Center" />
-            <TextBox Grid.Column="1" Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Column="1" Text="{Binding Width, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" />
             <TextBlock Grid.Column="2" Text="Height" Foreground="#888" VerticalAlignment="Center" Margin="10,0,6,0" />
-            <TextBox Grid.Column="3" Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Column="3" Text="{Binding Height, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" />
         </Grid>
         <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Shape" /><ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
-        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Density" /><TextBox Grid.Column="1" Text="{Binding Density}" Watermark="optional" /></Grid>
+        <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Density" /><TextBox Grid.Column="1" Text="{Binding Density, Converter={StaticResource Num}}" Watermark="optional" /></Grid>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,14,0,0">
             <Button Content="Cancel" Click="OnCancel" MinWidth="80" />

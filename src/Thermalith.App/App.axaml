@@ -7,6 +7,7 @@
 
     <Application.Resources>
         <conv:EqualityConverter x:Key="Eq" />
+        <conv:NumericTextConverter x:Key="Num" />
         <conv:BoolToBrushConverter x:Key="ConnDot" TrueBrush="#3FB950" FalseBrush="#555" />
         <conv:BoolToCursorConverter x:Key="BusyCursor" />
 
@@ -66,6 +67,23 @@
             <Setter Property="Height" Value="28" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <!-- Inspector section header (Position / Alignment / Font / …). -->
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#9AA0A6" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="0,8,0,2" />
+        </Style>
+
+        <!-- Numeric entry: up/down spinner on the right, clamps to Min/Max, stretches to its cell. -->
+        <Style Selector="NumericUpDown">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Increment" Value="1" />
+            <Setter Property="FormatString" Value="0.###" />
+            <Setter Property="ClipValueToMinMax" Value="True" />
+            <Setter Property="MinWidth" Value="0" />
         </Style>
 
         <!-- Insert palette button: icon to the left of the label, full-width. -->
