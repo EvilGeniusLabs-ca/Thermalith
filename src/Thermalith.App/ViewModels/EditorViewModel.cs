@@ -464,15 +464,24 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseState();
     }
 
-    /// <summary>Apply a loaded/selected roll's physical size + shape (and printer DPI) to the canvas (worklist §B).</summary>
-    public void ApplyRoll(double widthMm, double heightMm, string? shape, int? dpi)
+    /// <summary>
+    /// Apply a loaded/selected roll's physical size + shape (and printer DPI) to the canvas (worklist §B).
+    /// When <paramref name="maxWidthMm"/> is given (the connected printer's printable width), the canvas
+    /// width is clamped to it — a roll's stock width (e.g. 50 mm) can exceed what the printhead can image
+    /// (e.g. 48 mm / 384 px), so the canvas tracks the printable area, not the media width (worklist §A6).
+    /// Returns true if the width was clamped below the roll's stock width.
+    /// </summary>
+    public bool ApplyRoll(double widthMm, double heightMm, string? shape, int? dpi, double? maxWidthMm = null)
     {
         FlushGesture();
+        var w = widthMm > 0 ? widthMm : _live.Canvas.WidthMm;
+        var clamped = maxWidthMm is > 0 && w > maxWidthMm.Value;
+        if (clamped) w = maxWidthMm!.Value;
         _live = _live with
         {
             Canvas = _live.Canvas with
             {
-                WidthMm = widthMm > 0 ? widthMm : _live.Canvas.WidthMm,
+                WidthMm = w,
                 HeightMm = heightMm > 0 ? heightMm : _live.Canvas.HeightMm,
                 Shape = string.IsNullOrEmpty(shape) ? _live.Canvas.Shape : shape,
                 Dpi = dpi is > 0 ? dpi.Value : _live.Canvas.Dpi,
@@ -484,6 +493,7 @@ public sealed partial class EditorViewModel : ObservableObject
         MarkDirty();
         RenderNow();
         RaiseState();
+        return clamped;
     }
 
     /// <summary>Canvas width in mm, surfaced for the toolbar quick-edit (worklist §C). Setting it resizes the

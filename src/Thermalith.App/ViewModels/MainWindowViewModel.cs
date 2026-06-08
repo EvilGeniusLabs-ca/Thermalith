@@ -76,7 +76,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (def is null) return; // cancelled
 
         Editor.NewDocument();
-        Editor.ApplyRoll(def.WidthMm, def.HeightMm, def.Shape, Printer.ConnectedDpi);
+        Editor.ApplyRoll(def.WidthMm, def.HeightMm, def.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
         Printer.ApplyPaperType(def.PaperType);
         _rollStore.Remember(def);
     }
@@ -96,9 +96,10 @@ public partial class MainWindowViewModel : ViewModelBase
         var known = _rollStore.FindByBarcode(r.Barcode);
         if (known is not null)
         {
-            ApplyResolvedRoll(known);
+            var clamped = ApplyResolvedRoll(known);
             _rollStore.Remember(known); // refresh last-used
-            StatusMessage = $"Loaded roll: {known.Name} ({known.WidthMm:0.#}×{known.HeightMm:0.#} mm)";
+            StatusMessage = $"Loaded roll: {known.Name} ({known.WidthMm:0.#}×{known.HeightMm:0.#} mm)"
+                + (clamped ? $" — canvas width limited to {Printer.ConnectedPrintableWidthMm:0.#} mm (printable area)." : "");
             return;
         }
 
@@ -120,10 +121,13 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusMessage = $"Saved roll: {defined.Name}";
     }
 
-    private void ApplyResolvedRoll(RollDefinition roll)
+    /// <summary>Apply a roll to the canvas, clamping width to the connected printer's printable area.
+    /// Returns true if the canvas width was clamped below the roll's stock width.</summary>
+    private bool ApplyResolvedRoll(RollDefinition roll)
     {
-        Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi);
+        var clamped = Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
         Printer.ApplyPaperType(roll.PaperType);
+        return clamped;
     }
 
     private static string MapPaper(LabelType t) => t switch

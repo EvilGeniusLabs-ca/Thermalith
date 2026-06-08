@@ -60,6 +60,16 @@ public sealed partial class PrinterViewModel : ObservableObject
     /// <summary>DPI of the connected printer, or null.</summary>
     public int? ConnectedDpi => _caps?.Dpi;
 
+    /// <summary>
+    /// The connected printer's printable width in mm — the printhead pixel limit converted to mm and
+    /// rounded down to 0.1 mm so a canvas at this width never exceeds the printhead (worklist §A6).
+    /// Null when disconnected. The B1 reports 384 px @ 203 dpi → 48.0 mm (its 50 mm stock has ~1 mm
+    /// unprintable margins each side).
+    /// </summary>
+    public double? ConnectedPrintableWidthMm => _caps is { Dpi: > 0, PrintheadPixels: > 0 } c
+        ? Math.Floor(c.PrintheadPixels / (c.Dpi / 25.4) * 10) / 10
+        : null;
+
     /// <summary>Raised after a connect/refresh so the shell can look up or prompt for the loaded roll.</summary>
     public event EventHandler? RollDetected;
     [ObservableProperty] private string _message = "";
