@@ -383,9 +383,9 @@ public sealed partial class EditorViewModel : ObservableObject
         {
             ReplaceIn(list, id, e =>
             {
-                var nw = Math.Max(1, e.W * factor);
-                var nh = Math.Max(1, e.H * factor);
-                return e with { W = nw, H = nh, X = e.X + (e.W - nw) / 2, Y = e.Y + (e.H - nh) / 2 };
+                var nw = Math.Max(1, Math.Round(e.W * factor));
+                var nh = Math.Max(1, Math.Round(e.H * factor));
+                return e with { W = nw, H = nh, X = Math.Round(e.X + (e.W - nw) / 2), Y = Math.Round(e.Y + (e.H - nh) / 2) };
             });
         }
         _live = _live with { Elements = list };
@@ -807,7 +807,9 @@ public sealed partial class EditorViewModel : ObservableObject
         }
     }
 
-    private double Snap(double mm) => SnapEnabled ? Math.Round(mm / GridMm) * GridMm : mm;
+    // Element positioning is whole-mm only (build decision 2026-06-08): snap to the grid when enabled,
+    // otherwise round to the nearest mm so drags never leave sub-mm coordinates.
+    private double Snap(double mm) => SnapEnabled ? Math.Round(mm / GridMm) * GridMm : Math.Round(mm);
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────
 

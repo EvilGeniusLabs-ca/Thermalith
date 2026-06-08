@@ -22,23 +22,24 @@
 
         <TextBlock Classes="section" Text="Position &amp; size" />
 
+        <!-- Whole-mm positioning: integer format, 1-mm steps. -->
         <Grid ColumnDefinitions="64,*,22,*" Margin="0,1">
             <TextBlock Classes="lbl" Text="X" />
-            <NumericUpDown Grid.Column="1" Value="{Binding X}" Minimum="0" />
+            <NumericUpDown Grid.Column="1" Value="{Binding X}" Minimum="0" FormatString="0" />
             <TextBlock Classes="lbl" Grid.Column="2" Text="Y" Margin="6,0,4,0" />
-            <NumericUpDown Grid.Column="3" Value="{Binding Y}" Minimum="0" />
+            <NumericUpDown Grid.Column="3" Value="{Binding Y}" Minimum="0" FormatString="0" />
         </Grid>
 
         <Grid ColumnDefinitions="64,*,22,*" Margin="0,1">
             <TextBlock Classes="lbl" Text="W" />
-            <NumericUpDown Grid.Column="1" Value="{Binding W}" Minimum="1" />
+            <NumericUpDown Grid.Column="1" Value="{Binding W}" Minimum="1" FormatString="0" />
             <TextBlock Classes="lbl" Grid.Column="2" Text="H" Margin="6,0,4,0" />
-            <NumericUpDown Grid.Column="3" Value="{Binding H}" Minimum="1" />
+            <NumericUpDown Grid.Column="3" Value="{Binding H}" Minimum="1" FormatString="0" />
         </Grid>
 
         <Grid ColumnDefinitions="64,*" Margin="0,1">
             <TextBlock Classes="lbl" Text="Rotation" />
-            <NumericUpDown Grid.Column="1" Value="{Binding Rotation}" Minimum="0" Maximum="360" />
+            <NumericUpDown Grid.Column="1" Value="{Binding Rotation}" Minimum="0" Maximum="360" FormatString="0" />
         </Grid>
 
         <TextBlock Classes="section" Text="Alignment" />

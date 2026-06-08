@@ -301,19 +301,28 @@
                             <DataTemplate DataType="ed:TextEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Content" /><TextBox Grid.Column="1" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Font" /><TextBox Grid.Column="1" Text="{Binding FontFamily, UpdateSourceTrigger=PropertyChanged}" Watermark="(bundled)" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Size (pt)" /><TextBox Grid.Column="1" Text="{Binding FontSizePt, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4">
-                                        <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Bold}"><TextBlock Text="B" FontWeight="Bold" /></ToggleButton>
-                                        <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Italic}"><TextBlock Text="I" FontStyle="Italic" /></ToggleButton>
-                                        <ToggleButton Classes="icon" ToolTip.Tip="Underline" IsChecked="{Binding Underline}"><TextBlock Text="U" TextDecorations="Underline" /></ToggleButton>
-                                    </StackPanel>
+
+                                    <TextBlock Classes="section" Text="Content" />
+                                    <TextBox Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="48" />
+
+                                    <TextBlock Classes="section" Text="Font" />
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Font" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fonts}" SelectedItem="{Binding SelectedFont}" /></Grid>
+                                    <!-- Size + B/I/U share one row. -->
+                                    <Grid Classes="frow" ColumnDefinitions="62,90,*">
+                                        <TextBlock Text="Size (pt)" />
+                                        <NumericUpDown Grid.Column="1" Value="{Binding FontSizePt}" Minimum="1" Maximum="500" />
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right">
+                                            <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Bold}"><TextBlock Text="B" FontWeight="Bold" /></ToggleButton>
+                                            <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Italic}"><TextBlock Text="I" FontStyle="Italic" /></ToggleButton>
+                                            <ToggleButton Classes="icon" ToolTip.Tip="Underline" IsChecked="{Binding Underline}"><TextBlock Text="U" TextDecorations="Underline" /></ToggleButton>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock Classes="section" Text="Fitting" />
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Sizing" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.FontSizing}" SelectedItem="{Binding FontSizing}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*,46,*"><TextBlock Text="Min pt" /><NumericUpDown Grid.Column="1" Value="{Binding MinFontSizePt}" Minimum="1" /><TextBlock Grid.Column="2" Text="Max pt" Margin="8,0,4,0" /><NumericUpDown Grid.Column="3" Value="{Binding MaxFontSizePt}" Minimum="1" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Min pt" /><TextBox Grid.Column="1" Text="{Binding MinFontSizePt, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Max pt" /><TextBox Grid.Column="1" Text="{Binding MaxFontSizePt, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Line ×" /><TextBox Grid.Column="1" Text="{Binding LineSpacing, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource Num}}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Line ×" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 

@@ -42,6 +42,15 @@ public sealed partial class TextEditorViewModel : ElementEditorViewModel
         MarkLoaded();
     }
 
+    /// <summary>Font-family dropdown value: the bundled sentinel when no family override is set, else the family.</summary>
+    public string SelectedFont
+    {
+        get => string.IsNullOrWhiteSpace(FontFamily) ? EditorOptions.BundledFont : FontFamily!;
+        set => FontFamily = value == EditorOptions.BundledFont ? null : value;
+    }
+
+    partial void OnFontFamilyChanged(string? value) => OnPropertyChanged(nameof(SelectedFont));
+
     public override LabelElement ToElement() => new TextElement
     {
         Id = Id, Name = Name, X = X, Y = Y, W = W, H = H, Rotation = Rotation, Locked = Locked, Visible = Visible, Justify = JustifyValue(),

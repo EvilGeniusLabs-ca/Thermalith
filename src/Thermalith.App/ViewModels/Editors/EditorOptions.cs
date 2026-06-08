@@ -1,8 +1,36 @@
+using Avalonia.Media;
+
 namespace Thermalith.App.ViewModels.Editors;
 
 /// <summary>Enum value lists backing the inspector dropdowns (mirrors the schema, label-json-spec §11).</summary>
 public static class EditorOptions
 {
+    /// <summary>Sentinel for "use the app's bundled font" — maps to a null FontFamily on the element.</summary>
+    public const string BundledFont = "(bundled)";
+
+    private static string[]? _fonts;
+
+    /// <summary>Bundled sentinel followed by installed system font families (cross-platform via Avalonia's
+    /// <see cref="FontManager"/>). Built once on first access, after Avalonia is initialised.</summary>
+    public static string[] Fonts => _fonts ??= BuildFonts();
+
+    private static string[] BuildFonts()
+    {
+        try
+        {
+            var system = FontManager.Current.SystemFonts
+                .Select(f => f.Name)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct()
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase);
+            return new[] { BundledFont }.Concat(system).ToArray();
+        }
+        catch
+        {
+            return [BundledFont]; // headless / FontManager unavailable
+        }
+    }
+
     public static string[] JustifyH { get; } = ["left", "center", "right", "justify"];
     public static string[] JustifyV { get; } = ["top", "middle", "bottom"];
     public static string[] Wrap { get; } = ["none", "word"];
