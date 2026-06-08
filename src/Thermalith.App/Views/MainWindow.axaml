@@ -97,6 +97,7 @@
                 <MenuItem Header="_Disconnect" Command="{Binding Printer.DisconnectCommand}" />
                 <Separator />
                 <MenuItem Header="Refresh _Status" Command="{Binding Printer.RefreshStatusCommand}" />
+                <MenuItem Header="Change _Labels" Command="{Binding Printer.ChangeLabelsCommand}" />
                 <MenuItem Header="_Print" Command="{Binding Printer.PrintCommand}" />
             </MenuItem>
             <MenuItem Header="_Help">
@@ -427,7 +428,11 @@
                             <Separator />
                             <TextBlock Text="Status" FontWeight="Bold" Foreground="#CCC" />
                             <TextBlock Text="{Binding StatusInfo, UpdateSourceTrigger=PropertyChanged}" Foreground="#AAA" TextWrapping="Wrap" />
-                            <Button Content="Refresh status" Command="{Binding RefreshStatusCommand}" HorizontalAlignment="Left" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button Content="Refresh status" Command="{Binding RefreshStatusCommand}" />
+                                <Button Content="Change labels" Command="{Binding ChangeLabelsCommand}"
+                                        ToolTip.Tip="Re-read the roll after swapping labels" />
+                            </StackPanel>
 
                             <Separator />
                             <TextBlock Text="Print" FontWeight="Bold" Foreground="#CCC" />

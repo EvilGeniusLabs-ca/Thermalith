@@ -37,6 +37,7 @@ public sealed partial class PrinterViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(PrintCommand))]
     [NotifyCanExecuteChangedFor(nameof(RefreshStatusCommand))]
     [NotifyCanExecuteChangedFor(nameof(RefreshPortsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ChangeLabelsCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -44,6 +45,7 @@ public sealed partial class PrinterViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(DisconnectCommand))]
     [NotifyCanExecuteChangedFor(nameof(PrintCommand))]
     [NotifyCanExecuteChangedFor(nameof(RefreshStatusCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ChangeLabelsCommand))]
     private bool _isConnected;
 
     [ObservableProperty] private string _connectionInfo = "Not connected.";
@@ -175,6 +177,24 @@ public sealed partial class PrinterViewModel : ObservableObject
     {
         IsBusy = true;
         try { await RefreshStatusCoreAsync(); }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>
+    /// Re-read the loaded roll after the user swaps labels (the protocol gives no change event, so this is
+    /// explicit). Re-reads RFID, then raises <see cref="RollDetected"/> so the shell resolves/prompts as on connect.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanOperate))]
+    private async Task ChangeLabelsAsync()
+    {
+        IsBusy = true;
+        Message = "Reading new roll…";
+        try
+        {
+            await RefreshStatusCoreAsync();
+            RollDetected?.Invoke(this, EventArgs.Empty);
+            Message = "Roll updated.";
+        }
         finally { IsBusy = false; }
     }
 
