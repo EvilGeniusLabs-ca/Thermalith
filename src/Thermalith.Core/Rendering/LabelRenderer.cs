@@ -413,8 +413,13 @@ public sealed class LabelRenderer
             return;
         }
 
-        using var src = SKBitmap.Decode(im.Data);
-        if (src is null) return;
+        using var decoded = SKBitmap.Decode(im.Data);
+        if (decoded is null) return;
+
+        // Apply the orthogonal transforms (rotate 90° steps, then mirror/flip) losslessly before the
+        // fit/dither pipeline; null means identity, so reuse the decoded bitmap directly.
+        using var oriented = ApplyOrientation(decoded, im.RotateQuarters, im.FlipH, im.FlipV);
+        var src = oriented ?? decoded;
 
         // Rasterize the fitted image into an opaque grayscale-able target, then dither to 1-bit.
         using var target = new SKBitmap(dw, dh, SKColorType.Bgra8888, SKAlphaType.Opaque);
@@ -447,6 +452,33 @@ public sealed class LabelRenderer
         // stage-4 threshold re-binarizes anyway).
         using var blit = new SKPaint { FilterQuality = SKFilterQuality.None, IsAntialias = false };
         ctx.Canvas.DrawBitmap(bilevel, dx, dy, blit);
+    }
+
+    /// <summary>
+    /// Produce a transformed copy of the source: rotate clockwise in 90° steps, then mirror (H) /
+    /// flip (V) in the rotated frame. 90° steps + axis flips map pixels exactly (no resampling), so
+    /// it's lossless. Returns <c>null</c> when the transform is the identity.
+    /// </summary>
+    private static SKBitmap? ApplyOrientation(SKBitmap src, int rotateQuarters, bool flipH, bool flipV)
+    {
+        var q = ((rotateQuarters % 4) + 4) % 4;
+        if (q == 0 && !flipH && !flipV) return null;
+
+        var swap = q is 1 or 3;
+        var w = swap ? src.Height : src.Width;
+        var h = swap ? src.Width : src.Height;
+
+        var dst = new SKBitmap(w, h, src.ColorType, src.AlphaType);
+        using (var canvas = new SKCanvas(dst))
+        using (var p = new SKPaint { FilterQuality = SKFilterQuality.None, IsAntialias = false })
+        {
+            canvas.Clear(SKColors.Transparent);
+            canvas.Translate(w / 2f, h / 2f);
+            canvas.Scale(flipH ? -1f : 1f, flipV ? -1f : 1f); // mirror/flip in the post-rotation frame
+            canvas.RotateDegrees(q * 90);
+            canvas.DrawBitmap(src, -src.Width / 2f, -src.Height / 2f, p);
+        }
+        return dst;
     }
 
     private static SKRect FitRect(string fit, int srcW, int srcH, int dw, int dh)

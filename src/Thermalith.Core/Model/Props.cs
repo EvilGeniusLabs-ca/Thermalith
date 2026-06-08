@@ -100,6 +100,12 @@ public sealed record ImageProps
     public int Threshold { get; init; } = 128;             // used when dither = threshold
     public bool Invert { get; init; }
 
+    // Orthogonal image transforms, applied to the source before fit/dither (distinct from the
+    // element's freeform Rotation). Order: rotate, then mirror (H), then flip (V).
+    public int RotateQuarters { get; init; }               // 0..3 clockwise 90° steps
+    public bool FlipH { get; init; }                       // mirror left↔right
+    public bool FlipV { get; init; }                       // flip top↔bottom
+
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extensions { get; init; }
 }
 

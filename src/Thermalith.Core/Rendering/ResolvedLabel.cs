@@ -80,6 +80,9 @@ public sealed record ResolvedImage : ResolvedElement
     public string Dither { get; init; } = "floydSteinberg";
     public int Threshold { get; init; } = 128;
     public bool Invert { get; init; }
+    public int RotateQuarters { get; init; }
+    public bool FlipH { get; init; }
+    public bool FlipV { get; init; }
 }
 
 public sealed record ResolvedCell(string Text, Justify Justify);

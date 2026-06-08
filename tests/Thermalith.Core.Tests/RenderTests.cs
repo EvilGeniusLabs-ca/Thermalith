@@ -1,3 +1,4 @@
+using SkiaSharp;
 using Thermalith.Core.Fonts;
 using Thermalith.Core.Model;
 using Thermalith.Core.Rendering;
@@ -110,5 +111,44 @@ public class RenderTests
 
         Assert.Equal(portrait.WidthPx, rotated.HeightPx);
         Assert.Equal(portrait.HeightPx, rotated.WidthPx);
+    }
+
+    // An asymmetric source (black top-left quadrant only) so each orthogonal transform is observable.
+    private static byte[] AsymPng(int w = 8, int h = 8)
+    {
+        using var bmp = new SKBitmap(w, h, SKColorType.Bgra8888, SKAlphaType.Opaque);
+        for (var y = 0; y < h; y++)
+            for (var x = 0; x < w; x++)
+                bmp.SetPixel(x, y, x < w / 2 && y < h / 2 ? SKColors.Black : SKColors.White);
+        using var img = SKImage.FromBitmap(bmp);
+        using var data = img.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
+    }
+
+    private static LabelDocument ImageLabel(int rotateQuarters, bool flipH, bool flipV) => new()
+    {
+        Metadata = new LabelMetadata { Name = "img" },
+        Canvas = new Canvas { WidthMm = 20, HeightMm = 20, Dpi = 203 },
+        Elements =
+        [
+            new ImageElement { Id = "i", X = 2, Y = 2, W = 16, H = 16,
+                Props = new ImageProps { AssetId = "img", Fit = "stretch", Dither = "threshold", Threshold = 128,
+                    RotateQuarters = rotateQuarters, FlipH = flipH, FlipV = flipV } },
+        ],
+    };
+
+    [Fact]
+    public void Image_transform_rotate_180_equals_mirror_plus_flip()
+    {
+        using var fonts = new FontService();
+        var renderer = new LabelRenderer(fonts);
+        var ctx = new ResolveContext { Assets = new Dictionary<string, byte[]> { ["img"] = AsymPng() } };
+
+        var identity = renderer.Render(ImageLabel(0, false, false), ctx);
+        var rot180 = renderer.Render(ImageLabel(2, false, false), ctx);
+        var flipHV = renderer.Render(ImageLabel(0, true, true), ctx);
+
+        Assert.NotEqual(identity.Packed, rot180.Packed);   // the transform actually changes the raster
+        Assert.Equal(rot180.Packed, flipHV.Packed);        // 180° rotation ≡ mirror + flip
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Thermalith.Core.Model;
 
 namespace Thermalith.App.ViewModels.Editors;
@@ -204,6 +205,9 @@ public sealed partial class ImageEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private string _dither;
     [ObservableProperty] private int _threshold;
     [ObservableProperty] private bool _invert;
+    [ObservableProperty] private int _rotateQuarters;
+    [ObservableProperty] private bool _flipH;
+    [ObservableProperty] private bool _flipV;
 
     public ImageEditorViewModel(ImageElement el, Action onChanged) : base(el, onChanged)
     {
@@ -212,13 +216,24 @@ public sealed partial class ImageEditorViewModel : ElementEditorViewModel
         _dither = el.Props.Dither;
         _threshold = el.Props.Threshold;
         _invert = el.Props.Invert;
+        _rotateQuarters = el.Props.RotateQuarters;
+        _flipH = el.Props.FlipH;
+        _flipV = el.Props.FlipV;
         MarkLoaded();
     }
+
+    // Rotate in 90° steps; the property setter fires the change callback → re-render + history.
+    [RelayCommand] private void RotateCw() => RotateQuarters = (RotateQuarters + 1) % 4;
+    [RelayCommand] private void RotateCcw() => RotateQuarters = (RotateQuarters + 3) % 4;
 
     public override LabelElement ToElement() => new ImageElement
     {
         Id = Id, Name = Name, X = X, Y = Y, W = W, H = H, Rotation = Rotation, Locked = Locked, Visible = Visible, Justify = JustifyValue(),
-        Props = new ImageProps { AssetId = AssetId, Fit = Fit, Dither = Dither, Threshold = Threshold, Invert = Invert },
+        Props = new ImageProps
+        {
+            AssetId = AssetId, Fit = Fit, Dither = Dither, Threshold = Threshold, Invert = Invert,
+            RotateQuarters = RotateQuarters, FlipH = FlipH, FlipV = FlipV,
+        },
     };
 }
 

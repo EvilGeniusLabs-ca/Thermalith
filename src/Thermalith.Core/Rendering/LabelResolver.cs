@@ -110,6 +110,9 @@ public static class LabelResolver
                 Dither = im.Props.Dither,
                 Threshold = im.Props.Threshold,
                 Invert = im.Props.Invert,
+                RotateQuarters = im.Props.RotateQuarters,
+                FlipH = im.Props.FlipH,
+                FlipV = im.Props.FlipV,
             }, el, justify),
 
             TableElement tab => Geo(new ResolvedTable

@@ -378,6 +378,13 @@
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="62,*"><TextBlock Text="Threshold" /><TextBox Grid.Column="1" Text="{Binding Threshold, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" />
+                                    <TextBlock Text="Transform" Foreground="#888" Margin="0,4,0,0" />
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <Button Classes="icon" Command="{Binding RotateCcwCommand}" ToolTip.Tip="Rotate counter-clockwise 90°"><Path Classes="icon" Data="{StaticResource IconRotateCcw}" /></Button>
+                                        <Button Classes="icon" Command="{Binding RotateCwCommand}" ToolTip.Tip="Rotate clockwise 90°"><Path Classes="icon" Data="{StaticResource IconRotateCw}" /></Button>
+                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipH}" ToolTip.Tip="Mirror (flip horizontal)"><Path Classes="icon" Data="{StaticResource IconMirror}" /></ToggleButton>
+                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipV}" ToolTip.Tip="Flip (vertical)"><Path Classes="icon" Data="{StaticResource IconFlip}" /></ToggleButton>
+                                    </StackPanel>
                                 </StackPanel>
                             </DataTemplate>
 

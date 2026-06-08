@@ -27,6 +27,11 @@
         <StreamGeometry x:Key="IconShape">M0,0 H11 V11 H0 Z</StreamGeometry>
         <StreamGeometry x:Key="IconImage">M0,1 H12 V11 H0 Z M3.5,4 A1,1 0 1 1 3.49,4 M0,11 L4,6 L7,9 L10,5 L12,7</StreamGeometry>
         <StreamGeometry x:Key="IconTable">M0,1 H12 V11 H0 Z M0,4.3 H12 M0,7.6 H12 M4,1 V11 M8,1 V11</StreamGeometry>
+        <!-- Image transforms: rotate (circular arrow + arrowhead), mirror (vertical axis), flip (horizontal axis). -->
+        <StreamGeometry x:Key="IconRotateCw">M2,6 A4,4 0 1 1 6,10 M2,6 L1,4 M2,6 L4,5</StreamGeometry>
+        <StreamGeometry x:Key="IconRotateCcw">M10,6 A4,4 0 1 0 6,10 M10,6 L11,4 M10,6 L8,5</StreamGeometry>
+        <StreamGeometry x:Key="IconMirror">M6,0 V12 M4.5,3 L1,6 L4.5,9 Z M7.5,3 L11,6 L7.5,9 Z</StreamGeometry>
+        <StreamGeometry x:Key="IconFlip">M0,6 H12 M3,4.5 L6,1 L9,4.5 Z M3,7.5 L6,11 L9,7.5 Z</StreamGeometry>
     </Application.Resources>
 
     <Application.Styles>
@@ -46,6 +51,16 @@
 
         <!-- Compact square icon toggle button (justify / visible / lock / B-I-U). -->
         <Style Selector="ToggleButton.icon">
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <!-- Compact square icon button (command, not toggle) — matches ToggleButton.icon sizing. -->
+        <Style Selector="Button.icon">
             <Setter Property="Padding" Value="4" />
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="Width" Value="30" />
