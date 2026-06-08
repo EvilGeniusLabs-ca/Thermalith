@@ -617,3 +617,40 @@ The product is GPL-v3 / free-for-all (above) and asks for *voluntary* support on
 - Integrate `EvilGeniusLabs.DonationWare` (§4.2) into the App's Help/About. The package itself is standalone and off the critical path — it can be built and published anytime — but wire it in here, late, so it never distracts from getting a label out of the printer.
 
 Each phase is independently testable; Phase 0 de-risks the whole project the same way proving the serial port did before.
+
+## 13. Future Work
+
+Ideas captured for later, deliberately out of the near-term phases above.
+
+### 13.1 Community-shared label database (opt-in)
+
+**Context — the label catalogue is learned locally, not scraped.** Investigation (2026-06) found
+NIIMBOT's per-printer *size capabilities* live in a public static file
+(`oss-print.niimbot.com/.../devices.json` — printers, default/min/max widths, density, paper types,
+margins; mined into our own factual `printers.json`), but the **roll/SKU catalogue** (named stock
+with specific sizes, the "Label library" gallery) is a separate, auth/region-gated cloud API bundled
+with copyrighted template artwork — no clean public endpoint, and neither `niimbluelib` nor the
+`niimblue` editor mirrors it. So the label catalogue is **learned from the user's own rolls**: it
+starts empty; when a new RFID roll is detected (or the printer is off), the user fills out the
+**whole roll definition** — paper type (gap/black/continuous/transparent/…), width, height, shape,
+name, density — which is stored keyed by the roll's RFID barcode/SKU, auto-applied on re-load, and
+remembered as the last-used default. No scraping, no images, no IP exposure.
+
+**The future enhancement:** let users **opt in to share** their learned roll definitions to a hosted
+API, building an **ongoing, growing public, crowdsourced label database** — turning every user's
+cold-start empty list into a warm one over time.
+
+- **Shape (clean-room):** a record of product facts only — `{ barcode, name, paperType, widthMm,
+  heightMm, shape, density }`. Our own crowdsourced database, not derived from NIIMBOT's catalogue or
+  assets.
+- **Push:** when the user defines a roll, offer to share it (anonymous; no PII).
+- **Pull:** when a new barcode is detected, optionally query the database to pre-fill the roll form;
+  the user still confirms.
+- **Local-first, opt-in, off by default.** Never a dependency — the local learned store works fully
+  offline; the community DB is purely an enhancement.
+- **Home:** `Thermalith.Server` (the §8 API/MCP project), with submit + fetch verbs; hosted on EGL
+  infrastructure. Same fetch/cache plumbing as the printer-catalogue update.
+- **Quality:** dedup/consensus keyed by barcode (the same SKU converges to one size), plus light
+  moderation against junk submissions.
+- **License:** the shared dataset under an open data license (e.g. CC0 or ODbL) so it stays free and
+  reusable, consistent with the project's GPL/free-for-all stance (§10).
