@@ -7,6 +7,7 @@
     <Application.Resources>
         <conv:EqualityConverter x:Key="Eq" />
         <conv:BoolToBrushConverter x:Key="ConnDot" TrueBrush="#3FB950" FalseBrush="#555" />
+        <conv:BoolToCursorConverter x:Key="BusyCursor" />
 
         <!-- Line-art icons (stroked Paths, scaled to fit). Coordinates in a ~12-unit box. -->
         <StreamGeometry x:Key="IconAlignLeft">M0,0 H11 M0,4 H7 M0,8 H12</StreamGeometry>

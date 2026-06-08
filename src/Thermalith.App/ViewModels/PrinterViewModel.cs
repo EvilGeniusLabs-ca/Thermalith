@@ -36,6 +36,7 @@ public sealed partial class PrinterViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(DisconnectCommand))]
     [NotifyCanExecuteChangedFor(nameof(PrintCommand))]
     [NotifyCanExecuteChangedFor(nameof(RefreshStatusCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RefreshPortsCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -70,26 +71,32 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     // ── Discovery ────────────────────────────────────────────────────────────────────────────
 
-    // Scan is always available — you scan precisely when the printer might be off/unconnected.
-    [RelayCommand]
+    // Greys while any operation is in flight (the busy cursor + spinner give the visible feedback).
+    [RelayCommand(CanExecute = nameof(NotBusy))]
     private async Task RefreshPortsAsync()
     {
-        if (IsBusy) return;
         IsBusy = true;
         Message = "Scanning ports…";
         Ports.Clear();
         try
         {
+            var found = 0;
             foreach (var info in SerialPortEnumerator.Enumerate())
             {
+                Message = $"Probing {info.PortName}…";
                 var probe = await PrinterProbe.ProbeAsync(info.PortName);
+                if (probe is not null) found++;
                 Ports.Add(new PortItem(
                     info.PortName,
                     probe is null ? $"{info.PortName} — no printer" : $"{info.PortName} — {probe.Model}",
                     probe is not null));
             }
             SelectedPort = Ports.FirstOrDefault(p => p.IsNiimbot) ?? Ports.FirstOrDefault();
-            Message = Ports.Count == 0 ? "No serial ports found." : "";
+            Message = Ports.Count == 0
+                ? "No serial ports found."
+                : found > 0
+                    ? $"Found {found} printer(s) across {Ports.Count} port(s)."
+                    : $"Scanned {Ports.Count} port(s); no NIIMBOT found.";
         }
         catch (Exception ex)
         {
@@ -283,6 +290,7 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     // ── CanExecute ───────────────────────────────────────────────────────────────────────────
 
+    private bool NotBusy() => !IsBusy;
     private bool CanConnect() => !IsBusy && !IsConnected && SelectedPort is not null;
     private bool CanOperate() => !IsBusy && IsConnected;
 

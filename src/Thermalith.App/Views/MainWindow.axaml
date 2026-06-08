@@ -7,6 +7,7 @@
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
         Icon="/Assets/thermalith-256.png"
+        Cursor="{Binding Printer.IsBusy, Converter={StaticResource BusyCursor}}"
         Width="1200" Height="780"
         WindowStartupLocation="CenterScreen">
 
@@ -406,6 +407,7 @@
                 <TabItem Header="Printer">
                     <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled" DataContext="{Binding Printer}">
                         <StackPanel Spacing="6">
+                            <ProgressBar IsIndeterminate="True" Height="3" IsVisible="{Binding IsBusy}" />
                             <TextBlock Text="Connection" FontWeight="Bold" Foreground="#CCC" />
                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Ports}"
                                       SelectedItem="{Binding SelectedPort}">
