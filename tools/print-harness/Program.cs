@@ -204,7 +204,14 @@ void PrintCapabilities(NiimbotClient client, Niimbot.Net.Capabilities.PrinterCap
     Console.WriteLine($"  firmware       {caps.FirmwareVersion ?? "?"}");
     Console.WriteLine($"  serial         {caps.SerialNumber ?? "?"}");
     if (caps.LoadedLabel is { TagPresent: true } l)
+    {
         Console.WriteLine($"  RFID roll      {l.ConsumablesType}, {l.TotalLabels - l.UsedLabels}/{l.TotalLabels} labels left");
+        // Dump the raw RFID identity strings so we can compare them to what's printed on the roll's
+        // box (dimensions / id:NNNNN / part name like T40*20-320WHITE) and learn the join key.
+        Console.WriteLine($"    uuid         {l.Uuid}");
+        Console.WriteLine($"    barcode      {l.Barcode}");
+        Console.WriteLine($"    serial       {l.SerialNumber}");
+    }
     else if (caps.SupportsRfid)
         Console.WriteLine("  RFID roll      none detected");
 }
