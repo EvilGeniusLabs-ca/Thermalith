@@ -47,6 +47,9 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     [ObservableProperty] private string _connectionInfo = "Not connected.";
     [ObservableProperty] private string _statusInfo = "";
+
+    /// <summary>Concise loaded-roll summary for the main interface, e.g. "B1 · 59/96 labels".</summary>
+    [ObservableProperty] private string _loadedRollText = "No printer";
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private LabelType _selectedLabelType = LabelType.WithGaps;
     [ObservableProperty] private int _density = 3;
@@ -145,6 +148,7 @@ public sealed partial class PrinterViewModel : ObservableObject
             IsConnected = false;
             ConnectionInfo = "Not connected.";
             StatusInfo = "";
+            LoadedRollText = "No printer";
             IsBusy = false;
         }
     }
@@ -168,10 +172,33 @@ public sealed partial class PrinterViewModel : ObservableObject
                 $"paper: {Describe(s.PaperPresent, "present", "out")}",
                 $"battery: {(s.Battery is { } b ? b.ToString() : "—")}",
                 s.Temperature is { } t ? $"temp: {t}°C" : "");
+
+            // Refresh the loaded-roll label count (consumed labels change as you print).
+            try { UpdateLoadedRoll(await _client.GetRfidInfoAsync()); }
+            catch { UpdateLoadedRoll(null); }
         }
         catch (Exception ex)
         {
             StatusInfo = "status unavailable: " + ex.Message;
+        }
+    }
+
+    private void UpdateLoadedRoll(RfidInfo? rfid)
+    {
+        if (!IsConnected || _caps is null)
+        {
+            LoadedRollText = "No printer";
+            return;
+        }
+        var model = _caps.Model.ToString();
+        if (rfid is { TagPresent: true } r && r.TotalLabels > 0)
+        {
+            var used = r.UsedLabels < 0 ? 0 : r.UsedLabels;
+            LoadedRollText = $"{model} · {r.TotalLabels - used}/{r.TotalLabels} labels";
+        }
+        else
+        {
+            LoadedRollText = $"{model} connected";
         }
     }
 

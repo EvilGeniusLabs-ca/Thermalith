@@ -105,18 +105,26 @@
 
         <!-- Toolbar -->
         <Border DockPanel.Dock="Top" Background="#202020" Padding="6,4">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-                <Button Content="New" Command="{Binding NewCommand}" />
-                <Button Content="Open" Command="{Binding OpenCommand}" />
-                <Button Content="Save" Command="{Binding SaveCommand}" />
-                <Rectangle Width="1" Fill="#444" Margin="4,0" />
-                <Button Content="Undo" Command="{Binding UndoCommand}" />
-                <Button Content="Redo" Command="{Binding RedoCommand}" />
-                <Rectangle Width="1" Fill="#444" Margin="4,0" />
-                <Button Content="−" Command="{Binding ZoomOutCommand}" />
-                <Button Content="Fit" Command="{Binding ZoomFitCommand}" />
-                <Button Content="+" Command="{Binding ZoomInCommand}" />
-            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Content="New" Command="{Binding NewCommand}" />
+                    <Button Content="Open" Command="{Binding OpenCommand}" />
+                    <Button Content="Save" Command="{Binding SaveCommand}" />
+                    <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                    <Button Content="Undo" Command="{Binding UndoCommand}" />
+                    <Button Content="Redo" Command="{Binding RedoCommand}" />
+                    <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                    <Button Content="−" Command="{Binding ZoomOutCommand}" />
+                    <Button Content="Fit" Command="{Binding ZoomFitCommand}" />
+                    <Button Content="+" Command="{Binding ZoomInCommand}" />
+                </StackPanel>
+                <!-- Connected printer + remaining labels (from the RFID roll). -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="8,0,4,0">
+                    <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                             Fill="{Binding Printer.IsConnected, Converter={StaticResource ConnDot}}" />
+                    <TextBlock Text="{Binding Printer.LoadedRollText}" Foreground="#BBB" VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Status bar -->
