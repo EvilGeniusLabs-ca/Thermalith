@@ -16,6 +16,7 @@ public sealed class FontService : IDisposable
 
     private readonly SKTypeface _bundled;
     private readonly Dictionary<(string Family, bool Bold, bool Italic), SKTypeface> _cache = new();
+    private readonly Dictionary<int, SKTypeface?> _glyphFallback = new();
 
     public FontService()
     {
@@ -34,6 +35,17 @@ public sealed class FontService : IDisposable
         if (string.Equals(family, BundledFamily, StringComparison.OrdinalIgnoreCase)) return true;
         using var tf = SKFontManager.Default.MatchFamily(family, SKFontStyle.Normal);
         return tf is not null && string.Equals(tf.FamilyName, family, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>A typeface that can render <paramref name="codepoint"/> when the primary font can't —
+    /// asks the OS font manager (covers CJK and other scripts without bundling a large font), cached
+    /// per codepoint. Returns null if nothing on the host has the glyph (it then tofus, as before).</summary>
+    public SKTypeface? FallbackForCodepoint(int codepoint)
+    {
+        if (_glyphFallback.TryGetValue(codepoint, out var hit)) return hit;
+        var tf = SKFontManager.Default.MatchCharacter(codepoint);
+        _glyphFallback[codepoint] = tf;
+        return tf;
     }
 
     /// <summary>Resolve a typeface for the family + style, falling back to the bundled font when not installed.</summary>
@@ -75,5 +87,9 @@ public sealed class FontService : IDisposable
             if (!ReferenceEquals(tf, _bundled))
                 tf.Dispose();
         _cache.Clear();
+        foreach (var tf in _glyphFallback.Values)
+            if (tf is not null && !ReferenceEquals(tf, _bundled))
+                tf.Dispose();
+        _glyphFallback.Clear();
     }
 }

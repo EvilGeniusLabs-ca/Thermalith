@@ -1,3 +1,4 @@
+using System.Text;
 using Niimbot.Net.Encoding;
 using SkiaSharp;
 using Thermalith.Core.Fonts;
@@ -164,32 +165,70 @@ public sealed class LabelRenderer
 
     private static bool TypefaceIsBold(SKTypeface tf) => tf.FontWeight >= (int)SKFontStyleWeight.SemiBold;
 
-    private static void DrawLineText(SKCanvas canvas, string line, float x, float baseline, SKPaint paint, float letterSpacing)
+    private void DrawLineText(SKCanvas canvas, string line, float x, float baseline, SKPaint paint, float letterSpacing)
     {
-        if (letterSpacing == 0f)
-        {
-            canvas.DrawText(line, x, baseline, paint);
-            return;
-        }
+        var primary = paint.Typeface;
         var cursor = x;
-        foreach (var ch in line)
+        foreach (var (text, tf) in SplitRuns(line, primary))
         {
-            var s = ch.ToString();
-            canvas.DrawText(s, cursor, baseline, paint);
-            cursor += paint.MeasureText(s) + letterSpacing;
+            paint.Typeface = tf;
+            if (letterSpacing == 0f)
+            {
+                canvas.DrawText(text, cursor, baseline, paint);
+                cursor += paint.MeasureText(text);
+            }
+            else
+            {
+                foreach (var ch in text)
+                {
+                    var s = ch.ToString();
+                    canvas.DrawText(s, cursor, baseline, paint);
+                    cursor += paint.MeasureText(s) + letterSpacing;
+                }
+            }
         }
+        paint.Typeface = primary;
     }
 
-    private static float MeasureLine(SKPaint paint, string line, float letterSpacing)
+    private float MeasureLine(SKPaint paint, string line, float letterSpacing)
     {
-        if (letterSpacing == 0f || line.Length == 0) return paint.MeasureText(line);
+        if (line.Length == 0) return 0f;
+        var primary = paint.Typeface;
         var w = 0f;
-        foreach (var ch in line) w += paint.MeasureText(ch.ToString()) + letterSpacing;
-        return w - letterSpacing;
+        foreach (var (text, tf) in SplitRuns(line, primary))
+        {
+            paint.Typeface = tf;
+            if (letterSpacing == 0f) w += paint.MeasureText(text);
+            else foreach (var ch in text) w += paint.MeasureText(ch.ToString()) + letterSpacing;
+        }
+        paint.Typeface = primary;
+        return letterSpacing == 0f ? w : w - letterSpacing;
     }
 
-    // Auto-size (§6.2): binary-search the fitted point size in quarter-point steps for determinism.
-    private static double FitFontSize(SKPaint paint, ResolvedText t, float boxW, float boxH, float letterSpacing, double dpi)
+    // Per-glyph font fallback (§6.3.4): split a line into runs sharing a typeface — the primary where it
+    // has the glyph, else an OS fallback that does (covers CJK etc. without bundling a huge font). Latin
+    // text stays one run, so its draw/measure is byte-identical to drawing the whole string directly.
+    private IEnumerable<(string Text, SKTypeface Tf)> SplitRuns(string line, SKTypeface primary)
+    {
+        var sb = new StringBuilder();
+        SKTypeface? runTf = null;
+        var i = 0;
+        while (i < line.Length)
+        {
+            var cp = char.ConvertToUtf32(line, i);
+            var len = char.IsSurrogatePair(line, i) ? 2 : 1;
+            var tf = primary.ContainsGlyph(cp) ? primary : (_fonts.FallbackForCodepoint(cp) ?? primary);
+            if (runTf is null) runTf = tf;
+            else if (!ReferenceEquals(tf, runTf)) { yield return (sb.ToString(), runTf); sb.Clear(); runTf = tf; }
+            sb.Append(line, i, len);
+            i += len;
+        }
+        if (sb.Length > 0 && runTf is not null) yield return (sb.ToString(), runTf);
+    }
+
+    // Auto-size (§6.2) — dormant now the editor is fixed-only; still honoured for legacy shrink/fill
+    // labels. Binary-search the fitted point size in quarter-point steps for determinism.
+    private double FitFontSize(SKPaint paint, ResolvedText t, float boxW, float boxH, float letterSpacing, double dpi)
     {
         if (t.FontSizing is not ("shrink" or "fill"))
             return t.Style.FontSizePt;
@@ -219,7 +258,7 @@ public sealed class LabelRenderer
         return best / 4.0;
     }
 
-    private static bool Fits(SKPaint paint, ResolvedText t, float boxW, float boxH, float letterSpacing)
+    private bool Fits(SKPaint paint, ResolvedText t, float boxW, float boxH, float letterSpacing)
     {
         var wrap = t.Wrap != "none";
         var lines = WrapLines(paint, t.Text, boxW, letterSpacing, wrap);
@@ -231,7 +270,7 @@ public sealed class LabelRenderer
         return true;
     }
 
-    private static List<string> WrapLines(SKPaint paint, string text, float maxWidth, float letterSpacing, bool wrapWords)
+    private List<string> WrapLines(SKPaint paint, string text, float maxWidth, float letterSpacing, bool wrapWords)
     {
         var result = new List<string>();
         foreach (var paragraph in text.Replace("\r\n", "\n").Split('\n'))
@@ -246,7 +285,7 @@ public sealed class LabelRenderer
         return result;
     }
 
-    private static void WrapParagraph(SKPaint paint, string paragraph, float maxWidth, float letterSpacing, List<string> result)
+    private void WrapParagraph(SKPaint paint, string paragraph, float maxWidth, float letterSpacing, List<string> result)
     {
         if (paragraph.Length == 0) { result.Add(""); return; }
         var words = paragraph.Split(' ');
@@ -273,7 +312,7 @@ public sealed class LabelRenderer
         if (line.Length > 0) result.Add(line);
     }
 
-    private static void BreakWord(SKPaint paint, string word, float maxWidth, float letterSpacing, List<string> result, ref string line)
+    private void BreakWord(SKPaint paint, string word, float maxWidth, float letterSpacing, List<string> result, ref string line)
     {
         var chunk = "";
         foreach (var ch in word)
