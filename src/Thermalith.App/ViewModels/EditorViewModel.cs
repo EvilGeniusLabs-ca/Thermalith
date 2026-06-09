@@ -384,13 +384,17 @@ public sealed partial class EditorViewModel : ObservableObject
         if (_dragMode == DragMode.Move)
         {
             foreach (var (id, g) in _dragGeoms)
-                ReplaceIn(list, id, e => e with { X = Snap(g.X + dmx), Y = Snap(g.Y + dmy) });
+            {
+                var (nx, ny) = SnapMove(g.X + dmx, g.Y + dmy, g.W, g.H);
+                ReplaceIn(list, id, e => e with { X = nx, Y = ny });
+            }
         }
         else if (_dragGeoms.Count == 1)
         {
             var (id, g) = _dragGeoms.First();
             var (x, y, w, h) = ResizeGeom(_dragHandle, g, dmx, dmy);
-            ReplaceIn(list, id, e => e with { X = Snap(x), Y = Snap(y), W = Snap(w), H = Snap(h) });
+            var (sx, sy, sw, sh) = SnapResize(_dragHandle, x, y, w, h);
+            ReplaceIn(list, id, e => e with { X = sx, Y = sy, W = sw, H = sh });
         }
 
         _live = _live with { Elements = list };
@@ -847,6 +851,58 @@ public sealed partial class EditorViewModel : ObservableObject
     // Element positioning is whole-mm only (build decision 2026-06-08): snap to the grid when enabled,
     // otherwise round to the nearest mm so drags never leave sub-mm coordinates.
     private double Snap(double mm) => SnapEnabled ? Math.Round(mm / GridMm) * GridMm : Math.Round(mm);
+
+    // ── Snap to the print guide (safe-area edges) ────────────────────────────────────────────────
+    // The safe-area inset (e.g. 1.5 mm) isn't a whole-mm value, so plain Snap() can't land an edge on
+    // it. When the guide is shown, treat its four edges as magnetic targets so borders line up with it.
+    private const double GuideSnapMm = 0.75;
+
+    private IReadOnlyList<double> SafeGuides(double extentMm) =>
+        HasSafeArea && _live.Canvas.SafeAreaInsetMm is { } inset && inset > 0
+            ? [inset, extentMm - inset]
+            : [];
+
+    private static double? NearestGuide(double valueMm, IReadOnlyList<double> guides)
+    {
+        double? best = null;
+        var bestD = GuideSnapMm;
+        foreach (var g in guides)
+        {
+            var d = Math.Abs(valueMm - g);
+            if (d <= bestD) { bestD = d; best = g; }
+        }
+        return best;
+    }
+
+    /// <summary>Snap a moved element's position: a guide wins for either the leading or trailing edge,
+    /// otherwise fall back to whole-mm.</summary>
+    private (double X, double Y) SnapMove(double x, double y, double w, double h)
+    {
+        var xg = SafeGuides(_live.Canvas.WidthMm);
+        var yg = SafeGuides(_live.Canvas.HeightMm);
+        var nx = NearestGuide(x, xg) ?? (NearestGuide(x + w, xg) is { } r ? r - w : (double?)null);
+        var ny = NearestGuide(y, yg) ?? (NearestGuide(y + h, yg) is { } b ? b - h : (double?)null);
+        return (nx ?? Snap(x), ny ?? Snap(y));
+    }
+
+    /// <summary>Snap a resized element: the handle's active edges magnetize to the guide; inactive
+    /// edges keep whole-mm behaviour.</summary>
+    private (double X, double Y, double W, double H) SnapResize(Handle handle, double x, double y, double w, double h)
+    {
+        var xg = SafeGuides(_live.Canvas.WidthMm);
+        var yg = SafeGuides(_live.Canvas.HeightMm);
+        bool left = handle is Handle.TopLeft or Handle.Left or Handle.BottomLeft;
+        bool right = handle is Handle.TopRight or Handle.Right or Handle.BottomRight;
+        bool top = handle is Handle.TopLeft or Handle.Top or Handle.TopRight;
+        bool bottom = handle is Handle.BottomLeft or Handle.Bottom or Handle.BottomRight;
+
+        double rx = Snap(x), ry = Snap(y), rw = Snap(w), rh = Snap(h);
+        if (left && NearestGuide(x, xg) is { } nl) { rw = x + w - nl; rx = nl; }
+        else if (right && NearestGuide(x + w, xg) is { } nr) { rw = nr - x; rx = x; }
+        if (top && NearestGuide(y, yg) is { } nt) { rh = y + h - nt; ry = nt; }
+        else if (bottom && NearestGuide(y + h, yg) is { } nb) { rh = nb - y; ry = y; }
+        return (rx, ry, Math.Max(1, rw), Math.Max(1, rh));
+    }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────
 
