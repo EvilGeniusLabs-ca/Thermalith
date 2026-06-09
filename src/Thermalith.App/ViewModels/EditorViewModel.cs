@@ -577,8 +577,13 @@ public sealed partial class EditorViewModel : ObservableObject
         set { if (value > 0 && Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
     }
 
-    /// <summary>Print-area inset in mm (0 when none) — the canvas print-guide lines read this.</summary>
+    /// <summary>Print-area inset in mm (0 when none).</summary>
     public double SafeAreaInsetMm => _live.Canvas.SafeAreaInsetMm ?? 0;
+
+    /// <summary>Inset used for the drawn guide + edge snapping, rounded UP to a whole mm so it lands on
+    /// the same integer grid as element positions — a control at 2mm lines up with the guide instead of
+    /// the guide sitting at a fractional 1.5mm the control can't reach. (Interim until the bleed reframe.)</summary>
+    public double GuideInsetMm => Math.Ceiling(SafeAreaInsetMm);
 
     private void ResizeCanvas(double widthMm, double heightMm)
     {
@@ -901,10 +906,12 @@ public sealed partial class EditorViewModel : ObservableObject
     // it. When the guide is shown, treat its four edges as magnetic targets so borders line up with it.
     private const double GuideSnapMm = 0.75;
 
-    private IReadOnlyList<double> SafeGuides(double extentMm) =>
-        HasSafeArea && _live.Canvas.SafeAreaInsetMm is { } inset && inset > 0
-            ? [inset, extentMm - inset]
-            : [];
+    private IReadOnlyList<double> SafeGuides(double extentMm)
+    {
+        // Use the whole-mm guide inset so snap targets match the drawn lines (and the integer grid).
+        var inset = GuideInsetMm;
+        return HasSafeArea && inset > 0 ? [inset, extentMm - inset] : [];
+    }
 
     private static double? NearestGuide(double valueMm, IReadOnlyList<double> guides)
     {
@@ -972,6 +979,7 @@ public sealed partial class EditorViewModel : ObservableObject
         OnPropertyChanged(nameof(CanvasWidthMm));
         OnPropertyChanged(nameof(CanvasHeightMm));
         OnPropertyChanged(nameof(SafeAreaInsetMm));
+        OnPropertyChanged(nameof(GuideInsetMm));
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 }
