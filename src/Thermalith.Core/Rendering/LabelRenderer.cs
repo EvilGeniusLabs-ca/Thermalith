@@ -305,14 +305,21 @@ public sealed class LabelRenderer
     private void DrawBarcode(DrawContext ctx, ResolvedBarcode b)
     {
         if (string.IsNullOrEmpty(b.Value)) return;
-        bool[] pattern;
-        try { pattern = Barcodes.Encode1D(b.Symbology, b.Value); }
-        catch { return; } // invalid payload — validator surfaces it; don't crash the render
 
         var x = ctx.Px(b.XMm);
         var y = ctx.Px(b.YMm);
         var w = ctx.Px(b.WMm);
         var h = ctx.Px(b.HMm);
+
+        bool[] pattern;
+        try { pattern = Barcodes.Encode1D(b.Symbology, b.Value); }
+        catch
+        {
+            // Invalid payload for this symbology — show an inline placeholder instead of a blank gap,
+            // so it's obvious in the editor that the value won't encode. (Validator also flags it.)
+            DrawInvalidPlaceholder(x, y, w, h, ctx);
+            return;
+        }
 
         var moduleW = Math.Max(1, (int)Math.Round(b.ModuleWidthMm * ctx.PxPerMm));
         var quiet = (int)Math.Round(b.QuietZoneMm * ctx.PxPerMm);
@@ -359,6 +366,35 @@ public sealed class LabelRenderer
             var ty = (above ? y : barsTop + barsH) - textPaint.FontMetrics.Ascent;
             ctx.Canvas.DrawText(b.Value, tx, ty, textPaint);
         }
+    }
+
+    /// <summary>An outlined box with an X — drawn where a 1-D barcode (or QR) value fails to encode,
+    /// so the editor shows a clear "this won't render" marker rather than an empty space.</summary>
+    private void DrawInvalidPlaceholder(float x, float y, float w, float h, DrawContext ctx)
+    {
+        if (w < 2 || h < 2) return;
+        using var line = new SKPaint { Color = SKColors.Black, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f };
+        ctx.Canvas.DrawRect(x + 0.75f, y + 0.75f, w - 1.5f, h - 1.5f, line);
+        ctx.Canvas.DrawLine(x, y, x + w, y + h, line);
+        ctx.Canvas.DrawLine(x + w, y, x, y + h, line);
+
+        // A small centred "invalid" label, if there's vertical room for it.
+        var dpi = ctx.PxPerMm * 25.4;
+        var size = (float)(7 * dpi / 72.0);
+        if (h < size * 1.5f || w < size * 4) return;
+        using var bg = new SKPaint { Color = SKColors.White, IsAntialias = false, Style = SKPaintStyle.Fill };
+        using var text = new SKPaint
+        {
+            Color = SKColors.Black, IsAntialias = true,
+            Typeface = _fonts.Resolve(null, false, false), TextSize = size,
+            TextAlign = SKTextAlign.Center,
+        };
+        const string label = "invalid";
+        var tw = text.MeasureText(label);
+        var cx = x + w / 2;
+        var baseline = y + h / 2 - (text.FontMetrics.Ascent + text.FontMetrics.Descent) / 2;
+        ctx.Canvas.DrawRect(cx - tw / 2 - 2, baseline + text.FontMetrics.Ascent - 1, tw + 4, text.FontMetrics.Descent - text.FontMetrics.Ascent + 2, bg);
+        ctx.Canvas.DrawText(label, cx, baseline, text);
     }
 
     // ── QR ──────────────────────────────────────────────────────────────────────────────────
