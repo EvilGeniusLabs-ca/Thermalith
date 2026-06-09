@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Niimbot.Net.Encoding;
+using Thermalith.Core.Rendering;
 
 namespace Thermalith.App.Rendering;
 
@@ -38,6 +39,37 @@ public static class PreviewImage
                 row[o + 1] = (byte)(color >> 8);   // G
                 row[o + 2] = (byte)(color >> 16);  // R
                 row[o + 3] = (byte)(color >> 24);  // A
+            }
+            Marshal.Copy(row, 0, fb.Address + y * stride, stride);
+        }
+
+        return wb;
+    }
+
+    /// <summary>Converts Core's 8-bit <see cref="GrayBitmap"/> (the smooth stage-3 preview, §6.3.6) into
+    /// an Avalonia bitmap — anti-aliased edges shown as grey, a cleaner on-screen view than the exact
+    /// 1-bit raster. Display only; never the print path.</summary>
+    public static Bitmap FromGray(GrayBitmap gray)
+    {
+        var w = gray.WidthPx;
+        var h = gray.HeightPx;
+        var wb = new WriteableBitmap(new PixelSize(w, h), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Opaque);
+
+        using var fb = wb.Lock();
+        var stride = fb.RowBytes;
+        var row = new byte[stride];
+        var src = gray.Gray;
+
+        for (var y = 0; y < h; y++)
+        {
+            for (var x = 0; x < w; x++)
+            {
+                var g = src[y * w + x];
+                var o = x * 4;
+                row[o + 0] = g;     // B
+                row[o + 1] = g;     // G
+                row[o + 2] = g;     // R
+                row[o + 3] = 0xFF;  // A
             }
             Marshal.Copy(row, 0, fb.Address + y * stride, stride);
         }

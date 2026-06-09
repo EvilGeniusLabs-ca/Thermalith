@@ -58,6 +58,9 @@
                 <MenuItem Header="Show _Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.ShowGrid, Mode=TwoWay}" />
                 <MenuItem Header="_Snap to Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.SnapEnabled, Mode=TwoWay}" />
                 <MenuItem Header="Show _Printable Area" ToggleType="CheckBox" IsChecked="{Binding Editor.ShowSafeArea, Mode=TwoWay}" />
+                <Separator />
+                <MenuItem Header="S_mooth Preview" ToggleType="CheckBox" IsChecked="{Binding Editor.SmoothPreview, Mode=TwoWay}"
+                          ToolTip.Tip="Show the smooth grayscale preview (anti-aliased) instead of the exact 1-bit print raster" />
             </MenuItem>
             <MenuItem Header="_Insert">
                 <MenuItem Header="_Text" Command="{Binding InsertCommand}" CommandParameter="text" />

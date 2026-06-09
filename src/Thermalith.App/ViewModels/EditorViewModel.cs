@@ -80,6 +80,10 @@ public sealed partial class EditorViewModel : ObservableObject
     [ObservableProperty] private bool _showGrid;
     [ObservableProperty] private bool _snapEnabled;
     [ObservableProperty] private bool _showSafeArea = true;
+    [ObservableProperty] private bool _smoothPreview;
+
+    // Re-render when the preview mode flips (exact 1-bit ↔ smooth grayscale, §6.3.6).
+    partial void OnSmoothPreviewChanged(bool value) => RequestRender();
 
     /// <summary>Grid pitch in mm (also the snap increment).</summary>
     public double GridMm { get; } = 2.0;
@@ -820,14 +824,28 @@ public sealed partial class EditorViewModel : ObservableObject
         try
         {
             var ctx = new ResolveContext { Now = DateTimeOffset.Now, Assets = _assets, RowIndex = 0 };
-            var mono = _renderer.Render(_live, ctx);
-            Preview = PreviewImage.FromMonochrome(mono);
-            PreviewWidthPx = mono.WidthPx;
-            PreviewHeightPx = mono.HeightPx;
+            int wpx, hpx;
+            if (SmoothPreview)
+            {
+                var gray = _renderer.RenderGray(_live, ctx);
+                Preview = PreviewImage.FromGray(gray);
+                wpx = gray.WidthPx;
+                hpx = gray.HeightPx;
+            }
+            else
+            {
+                var mono = _renderer.Render(_live, ctx);
+                Preview = PreviewImage.FromMonochrome(mono);
+                wpx = mono.WidthPx;
+                hpx = mono.HeightPx;
+            }
+            PreviewWidthPx = wpx;
+            PreviewHeightPx = hpx;
             UpdateDisplaySize();
             UpdateSelectionVisuals();
             UpdateSafeArea();
-            StatusText = $"{_live.Canvas.WidthMm:0.#} × {_live.Canvas.HeightMm:0.#} mm · {_live.Canvas.Dpi} dpi · {mono.WidthPx}×{mono.HeightPx} px";
+            var mode = SmoothPreview ? "smooth" : "exact";
+            StatusText = $"{_live.Canvas.WidthMm:0.#} × {_live.Canvas.HeightMm:0.#} mm · {_live.Canvas.Dpi} dpi · {wpx}×{hpx} px · {mode}";
         }
         catch (Exception ex)
         {

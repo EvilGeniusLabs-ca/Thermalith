@@ -27,13 +27,47 @@ public sealed class LabelRenderer
     public MonochromeBitmap Render(ResolvedLabel label, RenderOptions? options = null)
     {
         options ??= RenderOptions.Default;
+        var (bmp, w, h) = Composite(label);
+        using (bmp)
+        {
+            // Stage 4: threshold to a burn mask, then apply whole-label orientation by exact pixel remap.
+            var burn = Threshold(bmp, w, h, options.TextThreshold);
+            return Orient(burn, w, h, label.Canvas.OrientationDeg);
+        }
+    }
+
+    /// <summary>Resolve then render the smooth grayscale preview in one call.</summary>
+    public GrayBitmap RenderGray(LabelDocument doc, ResolveContext resolve, RenderOptions? options = null) =>
+        RenderGray(LabelResolver.Resolve(doc, resolve), options);
+
+    /// <summary>Stage-3 smooth preview (§6.3.6): the 8-bit grayscale composite *before* the 1-bit
+    /// threshold, oriented. Text/shape edges stay anti-aliased (smoother on-screen than the exact
+    /// raster); images are already dithered by the crisp-vs-dither rule. Not for printing.</summary>
+    public GrayBitmap RenderGray(ResolvedLabel label, RenderOptions? options = null)
+    {
+        var (bmp, w, h) = Composite(label);
+        using (bmp)
+        {
+            var gray = new byte[w * h];
+            for (var y = 0; y < h; y++)
+                for (var x = 0; x < w; x++)
+                {
+                    var c = bmp.GetPixel(x, y);
+                    gray[y * w + x] = (byte)((c.Red * 299 + c.Green * 587 + c.Blue * 114) / 1000);
+                }
+            return OrientGray(gray, w, h, label.Canvas.OrientationDeg);
+        }
+    }
+
+    /// <summary>Stages 1–3: rasterize the z-ordered elements onto a white 8-bit-able surface.</summary>
+    private (SKBitmap Bmp, int W, int H) Composite(ResolvedLabel label)
+    {
         var canvas = label.Canvas;
         var pxPerMm = canvas.Dpi / 25.4;
-
         var w = Math.Max(1, (int)Math.Ceiling(canvas.WidthMm * pxPerMm));
         var h = Math.Max(1, (int)Math.Ceiling(canvas.HeightMm * pxPerMm));
 
-        using var bmp = new SKBitmap(w, h, SKColorType.Bgra8888, SKAlphaType.Opaque);
+        var bmp = new SKBitmap(w, h, SKColorType.Bgra8888, SKAlphaType.Opaque);
         using (var c = new SKCanvas(bmp))
         {
             c.Clear(SKColors.White);
@@ -41,10 +75,7 @@ public sealed class LabelRenderer
             foreach (var el in label.Elements) // already in z-order (back→front)
                 DrawElement(ctx, el);
         }
-
-        // Stage 4: threshold to a burn mask, then apply whole-label orientation by exact pixel remap.
-        var burn = Threshold(bmp, w, h, options.TextThreshold);
-        return Orient(burn, w, h, canvas.OrientationDeg);
+        return (bmp, w, h);
     }
 
     private readonly record struct DrawContext(SKCanvas Canvas, double PxPerMm)
@@ -673,5 +704,28 @@ public sealed class LabelRenderer
             }
 
         return new MonochromeBitmap(ow, oh, packed);
+    }
+
+    private static GrayBitmap OrientGray(byte[] gray, int w, int h, int orientationDeg)
+    {
+        var deg = ((orientationDeg % 360) + 360) % 360;
+        int ow, oh;
+        Func<int, int, (int X, int Y)> map;
+        switch (deg)
+        {
+            case 90: ow = h; oh = w; map = (x, y) => (h - 1 - y, x); break;
+            case 180: ow = w; oh = h; map = (x, y) => (w - 1 - x, h - 1 - y); break;
+            case 270: ow = h; oh = w; map = (x, y) => (y, w - 1 - x); break;
+            default: ow = w; oh = h; map = (x, y) => (x, y); break;
+        }
+
+        var outp = new byte[ow * oh]; // map is a bijection over the rect → every dest pixel is written
+        for (var y = 0; y < h; y++)
+            for (var x = 0; x < w; x++)
+            {
+                var (ox, oy) = map(x, y);
+                outp[oy * ow + ox] = gray[y * w + x];
+            }
+        return new GrayBitmap(ow, oh, outp);
     }
 }
