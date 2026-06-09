@@ -362,9 +362,7 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <TextBlock Classes="section" Text="Fitting" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Sizing" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.FontSizing}" SelectedItem="{Binding FontSizing}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*,46,*"><TextBlock Text="Min pt" /><NumericUpDown Grid.Column="1" Value="{Binding MinFontSizePt}" Minimum="1" /><TextBlock Grid.Column="2" Text="Max pt" Margin="8,0,4,0" /><NumericUpDown Grid.Column="3" Value="{Binding MaxFontSizePt}" Minimum="1" /></Grid>
+                                    <TextBlock Classes="section" Text="Paragraph" />
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line spacing" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
                                 </StackPanel>

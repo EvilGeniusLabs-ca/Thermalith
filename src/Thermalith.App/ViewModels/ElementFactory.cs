@@ -17,7 +17,7 @@ public static class ElementFactory
 
         return type switch
         {
-            "text" => new TextElement { Id = id, Name = "Text", X = x, Y = y, W = w, H = h, Justify = Center(), Props = new TextProps { Content = "Text", FontSizePt = 10, FontSizing = "shrink", MinFontSizePt = 6 } },
+            "text" => new TextElement { Id = id, Name = "Text", X = x, Y = y, W = w, H = h, Justify = Center(), Props = new TextProps { Content = "Text", FontSizePt = 10 } }, // fixed sizing (model default); size is honoured literally
             "barcode" => new BarcodeElement { Id = id, Name = "Barcode", X = x, Y = y, W = w, H = h, Justify = new Justify { H = "center" }, Props = new BarcodeProps { Symbology = "code128", Value = "12345" } },
             "qr" => new QrElement { Id = id, Name = "QR", X = x, Y = y, W = w, H = h, Props = new QrProps { Value = "https://example.com" } },
             "serial" => new SerialElement { Id = id, Name = "Serial", X = x, Y = y, W = w, H = h, Justify = Center(), Props = new SerialProps { Start = 1, PadLength = 4, Prefix = "SN" } },

@@ -34,7 +34,6 @@ public static class EditorOptions
     public static string[] JustifyH { get; } = ["left", "center", "right", "justify"];
     public static string[] JustifyV { get; } = ["top", "middle", "bottom"];
     public static string[] Wrap { get; } = ["none", "word"];
-    public static string[] FontSizing { get; } = ["fixed", "shrink", "fill"];
     public static string[] Symbology { get; } = ["code128", "code39", "ean13", "ean8", "upca", "upce", "itf", "codabar"];
     public static string[] TextPosition { get; } = ["above", "below", "none"];
     public static string[] QrEncoding { get; } = ["text", "hex"];

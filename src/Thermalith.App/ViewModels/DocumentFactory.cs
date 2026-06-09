@@ -23,7 +23,7 @@ public static class DocumentFactory
                 Name = "Text",
                 X = 4, Y = 10, W = 42, H = 10,
                 Justify = new Justify { H = "center", V = "middle" },
-                Props = new TextProps { Content = "Label", FontSizePt = 14, FontSizing = "shrink", MinFontSizePt = 6 },
+                Props = new TextProps { Content = "Label", FontSizePt = 14 }, // fixed sizing (model default)
             },
         ],
     };
