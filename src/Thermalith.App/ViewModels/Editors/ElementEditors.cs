@@ -198,6 +198,13 @@ public sealed partial class ShapeEditorViewModel : ElementEditorViewModel
         MarkLoaded();
     }
 
+    // Switching to roundedRect with a flat 0 radius hides the change; seed a visible 1mm so the
+    // rounding is obvious. (Backing field is set directly in the ctor, so this only fires on user edits.)
+    partial void OnShapeTypeChanged(string value)
+    {
+        if (value == "roundedRect" && CornerRadiusMm == 0) CornerRadiusMm = 1;
+    }
+
     public override LabelElement ToElement() => new ShapeElement
     {
         Id = Id, Name = Name, X = X, Y = Y, W = W, H = H, Rotation = Rotation, Locked = Locked, Visible = Visible, Justify = JustifyValue(),
