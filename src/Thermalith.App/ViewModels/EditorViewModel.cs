@@ -643,7 +643,7 @@ public sealed partial class EditorViewModel : ObservableObject
         SelectionRects.Clear();
         foreach (var id in _selectedIds)
             if (_live.Elements.FirstOrDefault(e => e.Id == id) is { } e)
-                SelectionRects.Add(new SelRect(e.X * s, e.Y * s, e.W * s, e.H * s));
+                SelectionRects.Add(new SelRect(e.X * s, e.Y * s, e.W * s, e.H * s, e.Locked));
 
         HasSelection = _selectedIds.Count > 0;
 

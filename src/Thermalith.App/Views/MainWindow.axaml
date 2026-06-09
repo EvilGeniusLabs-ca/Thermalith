@@ -244,7 +244,8 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SelRect">
                                     <Rectangle Width="{Binding Width}" Height="{Binding Height}"
-                                               Stroke="#2D7DF6" StrokeThickness="1.5" StrokeDashArray="3,2" />
+                                               Stroke="{Binding Locked, Converter={StaticResource LockStroke}}"
+                                               StrokeThickness="1.5" StrokeDashArray="3,2" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
