@@ -189,7 +189,8 @@
                     </Button>
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Top" Text="Elements" Margin="8,2" FontWeight="Bold" Foreground="#CCC" />
-                <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}">
+                <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}"
+                         SelectionChanged="OnElementsListSelectionChanged">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:LayerItemViewModel">
                             <Grid ColumnDefinitions="Auto,*,Auto">
@@ -309,7 +310,7 @@
                 <TabItem Header="Properties">
                     <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto" ScrollViewer.AllowAutoHide="False">
-                        <ContentControl Content="{Binding Editor.InspectorTarget}">
+                        <ContentControl Name="InspectorHost" Content="{Binding Editor.InspectorTarget}">
                         <ContentControl.DataTemplates>
 
                             <DataTemplate DataType="ed:CanvasEditorViewModel">
@@ -364,7 +365,7 @@
                                     <CheckBox IsChecked="{Binding ShowText}" Content="Show text" Margin="0,4" />
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleWidthMm}" Increment="0.1" Minimum="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
@@ -375,7 +376,7 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Encoding" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.QrEncoding}" SelectedItem="{Binding Encoding}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="EC level" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.EcLevel}" SelectedItem="{Binding EcLevel}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleSizeMm}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" ToolTip.Tip="Blank margin around the code, required for reliable scanning. The gap to the selection box is the quiet zone, not a bug; 0 hugs the box but can hurt scannability." /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" ToolTip.Tip="Blank margin around the code, required for reliable scanning. 0 hugs the box but can hurt scannability." /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 

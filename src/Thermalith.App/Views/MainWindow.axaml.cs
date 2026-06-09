@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Thermalith.App.Services;
 using Thermalith.App.ViewModels;
 
@@ -323,6 +324,21 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     }
 
     // ── IFilePicker (platform dialogs) ───────────────────────────────────────────────────────
+
+    // Selecting an element in the Elements list focuses its Name field so you can rename immediately.
+    private void OnElementsListSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (e.AddedItems.Count == 0) return;
+        // Defer so the inspector content has rebuilt for the new selection before we hunt for the box.
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (this.FindControl<ContentControl>("InspectorHost") is not { } host) return;
+            var nameBox = host.GetVisualDescendants().OfType<TextBox>().FirstOrDefault();
+            if (nameBox is null) return;
+            nameBox.Focus();
+            nameBox.SelectAll();
+        }, DispatcherPriority.Background);
+    }
 
     private static readonly FilePickerFileType NlblType = new("Thermalith label") { Patterns = ["*.nlbl"] };
     private static readonly FilePickerFileType ImageType =
