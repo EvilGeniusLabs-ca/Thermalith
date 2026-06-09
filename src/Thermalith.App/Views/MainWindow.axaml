@@ -368,7 +368,7 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Kind" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateKind}" SelectedItem="{Binding Kind}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Format" /><TextBox Grid.Column="1" Text="{Binding Format, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Source" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateSource}" SelectedItem="{Binding Source}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Fixed UTC" /><TextBox Grid.Column="1" Text="{Binding FixedValueUtc, UpdateSourceTrigger=PropertyChanged}" Watermark="ISO-8601" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Fixed value" /><TextBox Grid.Column="1" Text="{Binding FixedValueUtc, UpdateSourceTrigger=PropertyChanged}" Watermark="ISO-8601 UTC" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
