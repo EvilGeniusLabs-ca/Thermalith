@@ -328,13 +328,15 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (_selectedIds.Count == 0) return;
         FlushGesture();
-        _dragMode = mode;
         _dragHandle = handle;
         _dragMoved = false;
         _dragGeoms = new Dictionary<string, GeomMm>();
+        // Locked elements are immovable — exclude them so the gesture leaves them in place.
         foreach (var id in _selectedIds)
-            if (_live.Elements.FirstOrDefault(e => e.Id == id) is { } e)
+            if (_live.Elements.FirstOrDefault(e => e.Id == id) is { Locked: false } e)
                 _dragGeoms[id] = new GeomMm(e.X, e.Y, e.W, e.H);
+        // Nothing draggable (whole selection locked) → no gesture.
+        _dragMode = _dragGeoms.Count == 0 ? DragMode.None : mode;
     }
 
     /// <summary>Apply the running drag delta (display px) against the captured start geometry.</summary>
@@ -381,6 +383,7 @@ public sealed partial class EditorViewModel : ObservableObject
         var list = new List<LabelElement>(_live.Elements);
         foreach (var id in _selectedIds)
         {
+            if (_live.Elements.FirstOrDefault(e => e.Id == id) is { Locked: true }) continue; // locked = no scroll-resize
             ReplaceIn(list, id, e =>
             {
                 var nw = Math.Max(1, Math.Round(e.W * factor));
@@ -647,8 +650,10 @@ public sealed partial class EditorViewModel : ObservableObject
 
         HasSelection = _selectedIds.Count > 0;
 
-        // Resize handles only make sense for a single selection.
-        if (_selectedIds.Count == 1 && SelectedEditor is { } ed)
+        // Resize handles only make sense for a single, unlocked selection.
+        var primaryLocked = _selectedIds.Count == 1
+            && _live.Elements.FirstOrDefault(e => e.Id == _selectedIds.First()) is { Locked: true };
+        if (_selectedIds.Count == 1 && !primaryLocked && SelectedEditor is { } ed)
         {
             var r = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
             SelectionBounds = r;
