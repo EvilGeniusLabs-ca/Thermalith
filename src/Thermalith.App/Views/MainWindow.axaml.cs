@@ -347,6 +347,12 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             LeftRuler.PixelsPerMm = s;
             LeftRuler.Origin = lp.Y;
         }
+        if (CanvasHost.TranslatePoint(new Point(0, 0), PrintGuide) is { } gp)
+        {
+            PrintGuide.PixelsPerMm = s;
+            PrintGuide.OriginX = gp.X;
+            PrintGuide.OriginY = gp.Y;
+        }
     }
 
     // True when the current list press landed on a row action control (eye / lock) rather than the row

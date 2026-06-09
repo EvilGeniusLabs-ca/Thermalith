@@ -573,6 +573,9 @@ public sealed partial class EditorViewModel : ObservableObject
         set { if (value > 0 && Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
     }
 
+    /// <summary>Print-area inset in mm (0 when none) — the canvas print-guide lines read this.</summary>
+    public double SafeAreaInsetMm => _live.Canvas.SafeAreaInsetMm ?? 0;
+
     private void ResizeCanvas(double widthMm, double heightMm)
     {
         FlushGesture();
@@ -950,6 +953,7 @@ public sealed partial class EditorViewModel : ObservableObject
         OnPropertyChanged(nameof(DocumentName));
         OnPropertyChanged(nameof(CanvasWidthMm));
         OnPropertyChanged(nameof(CanvasHeightMm));
+        OnPropertyChanged(nameof(SafeAreaInsetMm));
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

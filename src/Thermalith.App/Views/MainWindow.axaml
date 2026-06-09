@@ -258,13 +258,9 @@
                                RenderOptions.BitmapInterpolationMode="None" />
                         <views:GridOverlay Spacing="{Binding Editor.GridSpacingDisplay}"
                                            IsVisible="{Binding Editor.ShowGrid}" />
+                        <!-- Print-area boundary is now drawn as full-span lines by PrintGuideOverlay
+                             (over the whole viewport), not a box hugging the label. -->
                         <Canvas>
-                            <Rectangle Canvas.Left="{Binding Editor.SafeAreaBounds.X}"
-                                       Canvas.Top="{Binding Editor.SafeAreaBounds.Y}"
-                                       Width="{Binding Editor.SafeAreaBounds.Width}"
-                                       Height="{Binding Editor.SafeAreaBounds.Height}"
-                                       Stroke="#E0A030" StrokeThickness="1" StrokeDashArray="4,3"
-                                       IsVisible="{Binding Editor.HasSafeArea}" IsHitTestVisible="False" />
                             <Rectangle Name="Marquee" Stroke="#2D7DF6" StrokeThickness="1" StrokeDashArray="2,2"
                                        Fill="#202D7DF6" IsVisible="False" IsHitTestVisible="False" />
                         </Canvas>
@@ -312,6 +308,12 @@
                     </Panel>
                 </Border>
                 </ScrollViewer>
+                <!-- Print-area guide lines, spanning the canvas viewport; origin/scale synced in code-behind. -->
+                <views:PrintGuideOverlay Grid.Row="1" Grid.Column="1" x:Name="PrintGuide"
+                                         IsVisible="{Binding Editor.ShowSafeArea}"
+                                         InsetMm="{Binding Editor.SafeAreaInsetMm}"
+                                         LabelWidthMm="{Binding Editor.CanvasWidthMm}"
+                                         LabelHeightMm="{Binding Editor.CanvasHeightMm}" />
             </Grid>
 
             <GridSplitter Grid.Column="3" Width="4" Background="#111" />
