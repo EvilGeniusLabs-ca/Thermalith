@@ -147,12 +147,31 @@ public sealed partial class EditorViewModel : ObservableObject
         return true;
     }
 
+    /// <summary>Resize every auto-size text element's box to its measured glyphs — applied on load so
+    /// the seed label (and any opened file) opens hugged, not just elements added/edited in-session.</summary>
+    private LabelDocument ApplyAutoSizeToText(LabelDocument doc)
+    {
+        var dpi = doc.Canvas.Dpi;
+        var changed = false;
+        var elements = doc.Elements.Select(e =>
+        {
+            if (e is TextElement t && t.Props.AutoSize)
+            {
+                var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, dpi);
+                double w = Math.Ceiling(wmm), h = Math.Ceiling(hmm);
+                if (Math.Abs(w - t.W) > 1e-6 || Math.Abs(h - t.H) > 1e-6) { changed = true; return t with { W = w, H = h }; }
+            }
+            return e;
+        }).ToList();
+        return changed ? doc with { Elements = elements } : doc;
+    }
+
     private void LoadInternal(LabelDocument doc, Manifest? manifest, string? path, IReadOnlyDictionary<string, byte[]> assets)
     {
-        _live = doc;
         _manifest = manifest ?? new Manifest { Id = DocumentFactory.NewId(), Name = doc.Metadata.Name };
         _assets = assets;
-        _history = new SnapshotHistory(doc);
+        _live = ApplyAutoSizeToText(doc); // hug auto-size text boxes (the seed label + any loaded file)
+        _history = new SnapshotHistory(_live);
         _gestureActive = false;
         FilePath = path;
         Dirty = false;
