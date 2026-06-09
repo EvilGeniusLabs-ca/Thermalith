@@ -23,7 +23,7 @@ public sealed partial class TextEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private string _wrap;
     [ObservableProperty] private bool _autoSize;
 
-    public TextEditorViewModel(TextElement el, Action onChanged) : base(el, onChanged)
+    public TextEditorViewModel(TextElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _content = el.Props.Content;
         _fontFamily = el.Props.FontFamily;
@@ -75,7 +75,7 @@ public sealed partial class BarcodeEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private double _moduleWidthMm;
     [ObservableProperty] private double _quietZoneMm;
 
-    public BarcodeEditorViewModel(BarcodeElement el, Action onChanged) : base(el, onChanged)
+    public BarcodeEditorViewModel(BarcodeElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _symbology = el.Props.Symbology;
         _value = el.Props.Value;
@@ -107,7 +107,7 @@ public sealed partial class QrEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private double? _moduleSizeMm;
     [ObservableProperty] private double _quietZoneMm;
 
-    public QrEditorViewModel(QrElement el, Action onChanged) : base(el, onChanged)
+    public QrEditorViewModel(QrElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _value = el.Props.Value;
         _encoding = el.Props.Encoding;
@@ -135,7 +135,7 @@ public sealed partial class SerialEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private string _prefix;
     [ObservableProperty] private string _suffix;
 
-    public SerialEditorViewModel(SerialElement el, Action onChanged) : base(el, onChanged)
+    public SerialEditorViewModel(SerialElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _start = el.Props.Start;
         _step = el.Props.Step;
@@ -162,7 +162,7 @@ public sealed partial class DateTimeEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private string _source;
     [ObservableProperty] private string? _fixedValueUtc;
 
-    public DateTimeEditorViewModel(DateTimeElement el, Action onChanged) : base(el, onChanged)
+    public DateTimeEditorViewModel(DateTimeElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _kind = el.Props.Kind;
         _format = el.Props.Format;
@@ -187,7 +187,7 @@ public sealed partial class ShapeEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private string _fill;
     [ObservableProperty] private double _cornerRadiusMm;
 
-    public ShapeEditorViewModel(ShapeElement el, Action onChanged) : base(el, onChanged)
+    public ShapeEditorViewModel(ShapeElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _shapeType = el.Props.ShapeType;
         _strokeWidthMm = el.Props.StrokeWidthMm;
@@ -223,7 +223,7 @@ public sealed partial class ImageEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private bool _flipH;
     [ObservableProperty] private bool _flipV;
 
-    public ImageEditorViewModel(ImageElement el, Action onChanged) : base(el, onChanged)
+    public ImageEditorViewModel(ImageElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _assetId = el.Props.AssetId;
         _fit = el.Props.Fit;
@@ -266,7 +266,7 @@ public sealed partial class TableEditorViewModel : ElementEditorViewModel
     /// <summary>Editable cell grid bound by the inspector; rebuilt when cols/rows change, preserving content.</summary>
     public ObservableCollection<TableRowViewModel> CellRows { get; } = [];
 
-    public TableEditorViewModel(TableElement el, Action onChanged) : base(el, onChanged)
+    public TableEditorViewModel(TableElement el, Action<string?> onChanged) : base(el, onChanged)
     {
         _cols = el.Props.Cols;
         _rows = el.Props.Rows;

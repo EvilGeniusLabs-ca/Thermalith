@@ -12,10 +12,10 @@ namespace Thermalith.App.ViewModels.Editors;
 /// </summary>
 public abstract partial class ElementEditorViewModel : ObservableObject
 {
-    private readonly Action _onChanged;
+    private readonly Action<string?> _onChanged;
     private bool _loaded;
 
-    protected ElementEditorViewModel(LabelElement el, Action onChanged)
+    protected ElementEditorViewModel(LabelElement el, Action<string?> onChanged)
     {
         _onChanged = onChanged;
         Id = el.Id;
@@ -62,13 +62,13 @@ public abstract partial class ElementEditorViewModel : ObservableObject
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (_loaded) _onChanged();
+        if (_loaded) _onChanged(e.PropertyName);
     }
 
     /// <summary>Fire the edit callback for changes that don't flow through an observable property (e.g. nested table cells).</summary>
     protected void RaiseEdited()
     {
-        if (_loaded) _onChanged();
+        if (_loaded) _onChanged(null);
     }
 
     /// <summary>Reconstruct the immutable element record from the current field values.</summary>
@@ -76,8 +76,9 @@ public abstract partial class ElementEditorViewModel : ObservableObject
 
     protected Justify JustifyValue() => new() { H = JustifyH, V = JustifyV };
 
-    /// <summary>Build the right editor for an element.</summary>
-    public static ElementEditorViewModel Create(LabelElement el, Action onChanged) => el switch
+    /// <summary>Build the right editor for an element. <paramref name="onChanged"/> receives the name of
+    /// the changed property (null for non-property edits) so multi-select can propagate just that field.</summary>
+    public static ElementEditorViewModel Create(LabelElement el, Action<string?> onChanged) => el switch
     {
         TextElement t => new TextEditorViewModel(t, onChanged),
         BarcodeElement b => new BarcodeEditorViewModel(b, onChanged),

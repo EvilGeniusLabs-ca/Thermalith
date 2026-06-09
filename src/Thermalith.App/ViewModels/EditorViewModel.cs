@@ -185,7 +185,10 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ── Editing ───────────────────────────────────────────────────────────────────────────────
 
-    private void OnElementEdited()
+    // Identity/position props that must NOT be propagated across a multi-select edit.
+    private static readonly HashSet<string> NoMultiApply = ["Name", "X", "Y"];
+
+    private void OnElementEdited(string? changedProp)
     {
         if (SelectedEditor is null) return;
         var existing = _live.Elements.FirstOrDefault(e => e.Id == SelectedEditor.Id);
@@ -198,15 +201,145 @@ public sealed partial class EditorViewModel : ObservableObject
             updated = t with { W = w, H = h };
             SelectedEditor.SetGeometrySilently(t.X, t.Y, w, h); // reflect measured size in the inspector
         }
-        ReplaceElement(updated);
 
-        var layer = Layers.FirstOrDefault(l => l.Id == updated.Id);
-        layer?.Sync(updated.Name ?? updated.Type, updated.Visible, updated.Locked);
+        // Multi-select: spread just the changed property to the other selected elements of the SAME type
+        // (so editing font size etc. affects the whole selection, not only the primary; each keeps its own
+        // content/position). Falls back to a single-element replace otherwise.
+        if (_selectedIds.Count > 1 && changedProp is not null && !NoMultiApply.Contains(changedProp))
+        {
+            var ids = new HashSet<string>(_selectedIds);
+            _live = _live with
+            {
+                Elements = _live.Elements.Select(e =>
+                {
+                    if (e.Id == updated.Id) return updated;
+                    if (!ids.Contains(e.Id) || e.GetType() != updated.GetType()) return e;
+                    return AutoSizeIfText(ApplyProperty(e, updated, changedProp));
+                }).ToList(),
+            };
+        }
+        else
+        {
+            ReplaceElement(updated);
+        }
+
+        foreach (var id in _selectedIds) // keep the Elements-list rows (name/visible/lock) in sync
+            if (_live.Elements.FirstOrDefault(e => e.Id == id) is { } el)
+                Layers.FirstOrDefault(l => l.Id == id)?.Sync(el.Name ?? el.Type, el.Visible, el.Locked);
 
         BeginGesture();
         MarkDirty();
         UpdateSelectionVisuals();
         RequestRender();
+    }
+
+    private LabelElement AutoSizeIfText(LabelElement el)
+    {
+        if (el is TextElement t && t.Props.AutoSize)
+        {
+            var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
+            return t with { W = Math.Ceiling(wmm), H = Math.Ceiling(hmm) };
+        }
+        return el;
+    }
+
+    /// <summary>Copy one changed property's value from <paramref name="src"/> onto a same-type sibling for
+    /// multi-select edits — without disturbing the sibling's other fields (content, position, etc.).</summary>
+    private static LabelElement ApplyProperty(LabelElement target, LabelElement src, string prop)
+    {
+        switch (prop)
+        {
+            case "W": return target with { W = src.W };
+            case "H": return target with { H = src.H };
+            case "Rotation": return target with { Rotation = src.Rotation };
+            case "Visible": return target with { Visible = src.Visible };
+            case "Locked": return target with { Locked = src.Locked };
+            case "JustifyH": return target with { Justify = new Justify { H = src.Justify?.H ?? "left", V = target.Justify?.V ?? "top" } };
+            case "JustifyV": return target with { Justify = new Justify { H = target.Justify?.H ?? "left", V = src.Justify?.V ?? "top" } };
+        }
+        return (target, src) switch
+        {
+            (TextElement t, TextElement s) => prop switch
+            {
+                "Content" => t with { Props = t.Props with { Content = s.Props.Content } },
+                "FontFamily" or "SelectedFont" => t with { Props = t.Props with { FontFamily = s.Props.FontFamily } },
+                "FontSizePt" => t with { Props = t.Props with { FontSizePt = s.Props.FontSizePt } },
+                "Bold" => t with { Props = t.Props with { Bold = s.Props.Bold } },
+                "Italic" => t with { Props = t.Props with { Italic = s.Props.Italic } },
+                "Underline" => t with { Props = t.Props with { Underline = s.Props.Underline } },
+                "LineSpacing" => t with { Props = t.Props with { LineSpacing = s.Props.LineSpacing } },
+                "LetterSpacing" => t with { Props = t.Props with { LetterSpacing = s.Props.LetterSpacing } },
+                "Wrap" => t with { Props = t.Props with { Wrap = s.Props.Wrap } },
+                "AutoSize" => t with { Props = t.Props with { AutoSize = s.Props.AutoSize } },
+                _ => target,
+            },
+            (BarcodeElement t, BarcodeElement s) => prop switch
+            {
+                "Symbology" => t with { Props = t.Props with { Symbology = s.Props.Symbology } },
+                "Value" => t with { Props = t.Props with { Value = s.Props.Value } },
+                "ShowText" => t with { Props = t.Props with { ShowText = s.Props.ShowText } },
+                "TextPosition" => t with { Props = t.Props with { TextPosition = s.Props.TextPosition } },
+                "ModuleWidthMm" => t with { Props = t.Props with { ModuleWidthMm = s.Props.ModuleWidthMm } },
+                "QuietZoneMm" => t with { Props = t.Props with { QuietZoneMm = s.Props.QuietZoneMm } },
+                _ => target,
+            },
+            (QrElement t, QrElement s) => prop switch
+            {
+                "Value" => t with { Props = t.Props with { Value = s.Props.Value } },
+                "Encoding" => t with { Props = t.Props with { Encoding = s.Props.Encoding } },
+                "EcLevel" => t with { Props = t.Props with { EcLevel = s.Props.EcLevel } },
+                "ModuleSizeMm" => t with { Props = t.Props with { ModuleSizeMm = s.Props.ModuleSizeMm } },
+                "QuietZoneMm" => t with { Props = t.Props with { QuietZoneMm = s.Props.QuietZoneMm } },
+                _ => target,
+            },
+            (SerialElement t, SerialElement s) => prop switch
+            {
+                "Start" => t with { Props = t.Props with { Start = s.Props.Start } },
+                "Step" => t with { Props = t.Props with { Step = s.Props.Step } },
+                "PadLength" => t with { Props = t.Props with { PadLength = s.Props.PadLength } },
+                "PadChar" => t with { Props = t.Props with { PadChar = s.Props.PadChar } },
+                "Prefix" => t with { Props = t.Props with { Prefix = s.Props.Prefix } },
+                "Suffix" => t with { Props = t.Props with { Suffix = s.Props.Suffix } },
+                _ => target,
+            },
+            (DateTimeElement t, DateTimeElement s) => prop switch
+            {
+                "Kind" => t with { Props = t.Props with { Kind = s.Props.Kind } },
+                "Format" => t with { Props = t.Props with { Format = s.Props.Format } },
+                "Source" => t with { Props = t.Props with { Source = s.Props.Source } },
+                "FixedValueUtc" => t with { Props = t.Props with { FixedValueUtc = s.Props.FixedValueUtc } },
+                _ => target,
+            },
+            (ShapeElement t, ShapeElement s) => prop switch
+            {
+                "ShapeType" => t with { Props = t.Props with { ShapeType = s.Props.ShapeType } },
+                "StrokeWidthMm" => t with { Props = t.Props with { StrokeWidthMm = s.Props.StrokeWidthMm } },
+                "Fill" => t with { Props = t.Props with { Fill = s.Props.Fill } },
+                "CornerRadiusMm" => t with { Props = t.Props with { CornerRadiusMm = s.Props.CornerRadiusMm } },
+                _ => target,
+            },
+            (ImageElement t, ImageElement s) => prop switch
+            {
+                "AssetId" => t with { Props = t.Props with { AssetId = s.Props.AssetId } },
+                "Fit" => t with { Props = t.Props with { Fit = s.Props.Fit } },
+                "Dither" => t with { Props = t.Props with { Dither = s.Props.Dither } },
+                "Threshold" => t with { Props = t.Props with { Threshold = s.Props.Threshold } },
+                "Invert" => t with { Props = t.Props with { Invert = s.Props.Invert } },
+                "RotateQuarters" => t with { Props = t.Props with { RotateQuarters = s.Props.RotateQuarters } },
+                "FlipH" => t with { Props = t.Props with { FlipH = s.Props.FlipH } },
+                "FlipV" => t with { Props = t.Props with { FlipV = s.Props.FlipV } },
+                _ => target,
+            },
+            (TableElement t, TableElement s) => prop switch
+            {
+                "Cols" => t with { Props = t.Props with { Cols = s.Props.Cols } },
+                "Rows" => t with { Props = t.Props with { Rows = s.Props.Rows } },
+                "BorderWidthMm" => t with { Props = t.Props with { BorderWidthMm = s.Props.BorderWidthMm } },
+                "HeaderRow" => t with { Props = t.Props with { HeaderRow = s.Props.HeaderRow } },
+                _ => target,
+            },
+            _ => target,
+        };
     }
 
     private void ReplaceElement(LabelElement el)
