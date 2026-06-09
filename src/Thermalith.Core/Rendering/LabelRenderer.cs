@@ -481,10 +481,13 @@ public sealed class LabelRenderer
 
         var mask = Dithering.Reduce(gray, dw, dh, im.Dither, im.Threshold);
 
-        using var bilevel = new SKBitmap(dw, dh, SKColorType.Bgra8888, SKAlphaType.Opaque);
+        // Only ink (black) pixels composite; non-ink pixels are transparent so the image doesn't paint
+        // an opaque white box over lower z-order content. On a thermal label white = bare substrate, so
+        // leaving it clear is visually identical for a standalone image but lets elements layer through.
+        using var bilevel = new SKBitmap(dw, dh, SKColorType.Bgra8888, SKAlphaType.Unpremul);
         for (var py = 0; py < dh; py++)
             for (var px = 0; px < dw; px++)
-                bilevel.SetPixel(px, py, mask[py * dw + px] ? SKColors.Black : SKColors.White);
+                bilevel.SetPixel(px, py, mask[py * dw + px] ? SKColors.Black : SKColors.Empty);
 
         // Drawn 1:1 at integer offset → stays bi-level (unless the element is rotated, which the
         // stage-4 threshold re-binarizes anyway).
