@@ -5,7 +5,6 @@
     <Project Path="src/Thermalith.Core/Thermalith.Core.csproj" />
     <Project Path="src/Thermalith.App/Thermalith.App.csproj" />
     <Project Path="src/Thermalith.Server/Thermalith.Server.csproj" />
-    <Project Path="src/EvilGeniusLabs.DonationWare/EvilGeniusLabs.DonationWare.csproj" />
   </Folder>
 
   <Folder Name="/tests/">
