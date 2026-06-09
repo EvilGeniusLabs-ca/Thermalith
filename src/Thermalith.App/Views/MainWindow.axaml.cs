@@ -53,6 +53,10 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         BuildRecentMenu(vm);
         vm.RecentFiles.CollectionChanged += (_, _) => BuildRecentMenu(vm);
 
+        // Keep the rulers aligned with the label as it scrolls, zooms, or the viewport resizes.
+        CanvasScroll.ScrollChanged += (_, _) => UpdateRulers();
+        CanvasHost.LayoutUpdated += (_, _) => UpdateRulers();
+
         // Persist geometry as it changes too — a debugger stop kills the process before a clean close.
         _persistDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
         _persistDebounce.Tick += (_, _) => { _persistDebounce!.Stop(); PersistWindowState(); };
@@ -325,6 +329,25 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     }
 
     // ── IFilePicker (platform dialogs) ───────────────────────────────────────────────────────
+
+    // Sync the mm rulers to the label: Origin = where the label's top-left sits in each ruler's pixel
+    // space (so it tracks centering + scroll), PixelsPerMm = the on-screen scale (dpi/25.4 × zoom).
+    // StyledProperty no-ops on unchanged values, so the frequent LayoutUpdated calls only redraw on change.
+    private void UpdateRulers()
+    {
+        if (Vm is not { } vm) return;
+        var s = vm.Editor.DisplayPxPerMm;
+        if (CanvasHost.TranslatePoint(new Point(0, 0), TopRuler) is { } tp)
+        {
+            TopRuler.PixelsPerMm = s;
+            TopRuler.Origin = tp.X;
+        }
+        if (CanvasHost.TranslatePoint(new Point(0, 0), LeftRuler) is { } lp)
+        {
+            LeftRuler.PixelsPerMm = s;
+            LeftRuler.Origin = lp.Y;
+        }
+    }
 
     // True when the current list press landed on a row action control (eye / lock) rather than the row
     // body — so the resulting selection change shouldn't steal focus to the Name field.

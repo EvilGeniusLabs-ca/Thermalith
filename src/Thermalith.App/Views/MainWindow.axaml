@@ -212,8 +212,12 @@
 
             <GridSplitter Grid.Column="1" Width="4" Background="#111" />
 
-            <!-- CENTER: WYSIWYG canvas -->
-            <ScrollViewer Grid.Column="2" Background="#3A3A3A"
+            <!-- CENTER: WYSIWYG canvas, framed by mm rulers (top + left) kept in sync with zoom/scroll. -->
+            <Grid Grid.Column="2" RowDefinitions="20,*" ColumnDefinitions="26,*">
+                <Border Grid.Row="0" Grid.Column="0" Background="#222" />
+                <views:Ruler Grid.Row="0" Grid.Column="1" x:Name="TopRuler" Orientation="Horizontal" />
+                <views:Ruler Grid.Row="1" Grid.Column="0" x:Name="LeftRuler" Orientation="Vertical" />
+                <ScrollViewer Grid.Row="1" Grid.Column="1" x:Name="CanvasScroll" Background="#3A3A3A"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <Border Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Panel Name="CanvasHost"
@@ -307,7 +311,8 @@
                         </ItemsControl>
                     </Panel>
                 </Border>
-            </ScrollViewer>
+                </ScrollViewer>
+            </Grid>
 
             <GridSplitter Grid.Column="3" Width="4" Background="#111" />
 

@@ -87,6 +87,9 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>Grid spacing in display pixels (mm pitch × pxPerMm × zoom).</summary>
     public double GridSpacingDisplay => _live.Canvas.Dpi / 25.4 * Zoom * GridMm;
 
+    /// <summary>On-screen pixels per mm (dpi/25.4 × zoom) — the canvas rulers read this for their scale.</summary>
+    public double DisplayPxPerMm => _live.Canvas.Dpi / 25.4 * Zoom;
+
     public int PreviewWidthPx { get; private set; }
     public int PreviewHeightPx { get; private set; }
 
