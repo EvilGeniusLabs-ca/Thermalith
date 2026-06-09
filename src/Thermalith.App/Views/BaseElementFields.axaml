@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ed="clr-namespace:Thermalith.App.ViewModels.Editors"
+             xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
              x:Class="Thermalith.App.Views.BaseElementFields"
              x:DataType="ed:ElementEditorViewModel">
 
@@ -59,6 +60,15 @@
             <Rectangle Width="1" Fill="#444" Margin="3,3" />
             <ToggleButton Classes="icon" ToolTip.Tip="Visible" IsChecked="{Binding Visible}"><Path Classes="icon" Data="{StaticResource IconEye}" /></ToggleButton>
             <ToggleButton Classes="icon" ToolTip.Tip="Locked" IsChecked="{Binding Locked}"><Path Classes="icon" Data="{StaticResource IconLock}" /></ToggleButton>
+        </StackPanel>
+
+        <!-- Distinct from the self-alignment row above: these centre the element ON THE LABEL. -->
+        <TextBlock Classes="section" Text="Form alignment" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Center H" ToolTip.Tip="Center horizontally on the label"
+                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CenterOnLabelHCommand}" />
+            <Button Content="Center V" ToolTip.Tip="Center vertically on the label"
+                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CenterOnLabelVCommand}" />
         </StackPanel>
 
         <Separator Margin="0,2" />

@@ -94,6 +94,11 @@
                     <MenuItem Header="Horizontally" Command="{Binding DistributeHCommand}" />
                     <MenuItem Header="Vertically" Command="{Binding DistributeVCommand}" />
                 </MenuItem>
+                <Separator />
+                <MenuItem Header="Center on _Label">
+                    <MenuItem Header="_Horizontally" Command="{Binding CenterOnLabelHCommand}" />
+                    <MenuItem Header="_Vertically" Command="{Binding CenterOnLabelVCommand}" />
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_Printer">
                 <MenuItem Header="_Refresh Ports" Command="{Binding Printer.RefreshPortsCommand}" />
@@ -254,6 +259,10 @@
                                     <MenuItem Header="Top" Command="{Binding AlignTopCommand}" />
                                     <MenuItem Header="Middle" Command="{Binding AlignMiddleVCommand}" />
                                     <MenuItem Header="Bottom" Command="{Binding AlignBottomCommand}" />
+                                </MenuItem>
+                                <MenuItem Header="Center on Label">
+                                    <MenuItem Header="Horizontally" Command="{Binding CenterOnLabelHCommand}" />
+                                    <MenuItem Header="Vertically" Command="{Binding CenterOnLabelVCommand}" />
                                 </MenuItem>
                             </ContextMenu>
                         </Panel.ContextMenu>

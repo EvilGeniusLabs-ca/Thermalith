@@ -275,6 +275,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanDistribute))] private void DistributeH() => Editor.DistributeH();
     [RelayCommand(CanExecute = nameof(CanDistribute))] private void DistributeV() => Editor.DistributeV();
 
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void CenterOnLabelH() => Editor.CenterOnLabelH();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void CenterOnLabelV() => Editor.CenterOnLabelV();
+
     private bool CanAlign() => Editor.SelectionCount >= 2;
     private bool CanDistribute() => Editor.SelectionCount >= 3;
 
@@ -350,6 +353,8 @@ public partial class MainWindowViewModel : ViewModelBase
             AlignMiddleVCommand.NotifyCanExecuteChanged();
             DistributeHCommand.NotifyCanExecuteChanged();
             DistributeVCommand.NotifyCanExecuteChanged();
+            CenterOnLabelHCommand.NotifyCanExecuteChanged();
+            CenterOnLabelVCommand.NotifyCanExecuteChanged();
             GroupCommand.NotifyCanExecuteChanged();
         }
         else if (e.PropertyName == nameof(EditorViewModel.HasGroupInSelection))

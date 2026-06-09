@@ -782,6 +782,33 @@ public sealed partial class EditorViewModel : ObservableObject
     public void DistributeH() => DistributeEdit(horizontal: true);
     public void DistributeV() => DistributeEdit(horizontal: false);
 
+    // ── Center on the label (Form Alignment) ─────────────────────────────────────────────────────
+    // Centre the selection's bounding box on the label, moving every selected element by the same delta
+    // so their relative layout is kept. Whole-mm math; when the gap doesn't divide evenly the box biases
+    // left (H) / top (V) — Floor leaves the spare mm on the right/bottom.
+
+    public void CenterOnLabelH()
+    {
+        if (_selectedIds.Count == 0) return;
+        var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
+        var left = sel.Min(e => e.X);
+        var bboxW = sel.Max(e => e.X + e.W) - left;
+        var dx = Math.Floor((_live.Canvas.WidthMm - bboxW) / 2.0) - left;
+        var ids = new HashSet<string>(_selectedIds);
+        CommitTransform(e => ids.Contains(e.Id) ? e with { X = e.X + dx } : e);
+    }
+
+    public void CenterOnLabelV()
+    {
+        if (_selectedIds.Count == 0) return;
+        var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
+        var top = sel.Min(e => e.Y);
+        var bboxH = sel.Max(e => e.Y + e.H) - top;
+        var dy = Math.Floor((_live.Canvas.HeightMm - bboxH) / 2.0) - top;
+        var ids = new HashSet<string>(_selectedIds);
+        CommitTransform(e => ids.Contains(e.Id) ? e with { Y = e.Y + dy } : e);
+    }
+
     private void AlignEdit(Func<IReadOnlyList<LabelElement>, Func<LabelElement, LabelElement>> build)
     {
         if (_selectedIds.Count < 2) return;
