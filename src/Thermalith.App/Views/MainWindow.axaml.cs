@@ -325,10 +325,14 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     // ── IFilePicker (platform dialogs) ───────────────────────────────────────────────────────
 
-    // Selecting an element in the Elements list focuses its Name field so you can rename immediately.
+    // Clicking an element in the Elements list focuses its Name field so you can rename immediately.
+    // Guard on IsPointerOver: canvas selection also updates the bound SelectedItem (firing this event),
+    // and stealing focus to the Name box then would make Delete edit the text field instead of the
+    // document (TextAwareCommand no-ops while a TextBox has focus). Only react to direct list clicks.
     private void OnElementsListSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (e.AddedItems.Count == 0) return;
+        if (sender is not ListBox { IsPointerOver: true }) return;
         // Defer so the inspector content has rebuilt for the new selection before we hunt for the box.
         Dispatcher.UIThread.Post(() =>
         {
