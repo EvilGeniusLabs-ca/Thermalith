@@ -325,6 +325,19 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     // ── IFilePicker (platform dialogs) ───────────────────────────────────────────────────────
 
     private static readonly FilePickerFileType NlblType = new("Thermalith label") { Patterns = ["*.nlbl"] };
+    private static readonly FilePickerFileType ImageType =
+        new("Images") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp"] };
+
+    public async Task<string?> OpenImageAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose image",
+            AllowMultiple = false,
+            FileTypeFilter = [ImageType],
+        });
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
 
     public async Task<string?> OpenLabelAsync()
     {

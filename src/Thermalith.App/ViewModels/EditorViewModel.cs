@@ -128,6 +128,18 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseState();
     }
 
+    /// <summary>Embed image bytes as a package asset and point the selected Image element at it. The
+    /// asset travels with the saved <c>.nlbl</c> (it goes into <see cref="LabelPackage.Assets"/>).</summary>
+    public bool SetImageAssetOnSelection(byte[] bytes, string fileExtension)
+    {
+        if (SelectedEditor is not ImageEditorViewModel img) return false;
+        var ext = string.IsNullOrWhiteSpace(fileExtension) ? ".png" : fileExtension.ToLowerInvariant();
+        var id = "img_" + Guid.NewGuid().ToString("N")[..8] + ext;
+        _assets = new Dictionary<string, byte[]>(_assets) { [id] = bytes };
+        img.AssetId = id; // fires OnElementEdited → rebuild + re-render with the new asset + history checkpoint
+        return true;
+    }
+
     private void LoadInternal(LabelDocument doc, Manifest? manifest, string? path, IReadOnlyDictionary<string, byte[]> assets)
     {
         _live = doc;

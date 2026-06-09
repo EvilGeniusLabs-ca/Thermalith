@@ -414,6 +414,9 @@
                             <DataTemplate DataType="ed:ImageEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
+                                    <Button HorizontalAlignment="Stretch" Margin="0,2"
+                                            Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ChooseImageCommand}"
+                                            Content="Choose image…" />
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Fit" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fit}" SelectedItem="{Binding Fit}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>

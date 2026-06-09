@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Niimbot.Net.Commands;
 using Thermalith.App.Services;
+using Thermalith.App.ViewModels.Editors;
 using Thermalith.Core.Catalog;
 using Thermalith.Core.Serialization;
 
@@ -222,6 +223,24 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanUngroup))] private void Ungroup() => Editor.Ungroup();
     [RelayCommand(CanExecute = nameof(CanDelete))] private void ToggleLock() => Editor.ToggleLock();
     [RelayCommand(CanExecute = nameof(CanDelete))] private void ToggleVisible() => Editor.ToggleVisible();
+
+    [RelayCommand]
+    private async Task ChooseImageAsync()
+    {
+        if (FilePicker is null || Editor.SelectedEditor is not ImageEditorViewModel) return;
+        var path = await FilePicker.OpenImageAsync();
+        if (path is null) return;
+        try
+        {
+            var bytes = File.ReadAllBytes(path);
+            if (Editor.SetImageAssetOnSelection(bytes, Path.GetExtension(path)))
+                StatusMessage = $"Embedded {Path.GetFileName(path)}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Image load failed: {ex.Message}";
+        }
+    }
 
     private bool CanPaste() => Editor.HasClipboard;
     private bool CanUngroup() => Editor.HasGroupInSelection;

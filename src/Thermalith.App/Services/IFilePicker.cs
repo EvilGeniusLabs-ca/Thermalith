@@ -8,4 +8,5 @@ public interface IFilePicker
 {
     Task<string?> OpenLabelAsync();
     Task<string?> SaveLabelAsync(string? suggestedName);
+    Task<string?> OpenImageAsync();
 }
