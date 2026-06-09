@@ -123,10 +123,10 @@
                     <Rectangle Width="1" Fill="#444" Margin="4,0" />
                     <!-- Quick canvas-size edit; bound to the same canvas as the Properties panel (§C). -->
                     <TextBlock Text="W" Foreground="#888" VerticalAlignment="Center" />
-                    <NumericUpDown Width="96" Value="{Binding Editor.CanvasWidthMm}" Minimum="1" FormatString="0.#"
+                    <NumericUpDown Width="140" Value="{Binding Editor.CanvasWidthMm}" Minimum="1" FormatString="0.#"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas width (mm)" />
                     <TextBlock Text="H" Foreground="#888" VerticalAlignment="Center" />
-                    <NumericUpDown Width="96" Value="{Binding Editor.CanvasHeightMm}" Minimum="1" FormatString="0.#"
+                    <NumericUpDown Width="140" Value="{Binding Editor.CanvasHeightMm}" Minimum="1" FormatString="0.#"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas height (mm)" />
                     <TextBlock Text="mm" Foreground="#888" VerticalAlignment="Center" />
                 </StackPanel>
