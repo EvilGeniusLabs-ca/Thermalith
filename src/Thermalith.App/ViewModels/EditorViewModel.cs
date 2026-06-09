@@ -208,6 +208,26 @@ public sealed partial class EditorViewModel : ObservableObject
         CommitTransform(e => e.GroupId is { } g && groups.Contains(g) ? e with { GroupId = null } : e);
     }
 
+    // ── Visibility / lock toggles (one toggle for the whole selection) ───────────────────────────
+
+    /// <summary>Lock the selection; if everything in it is already locked, unlock instead.</summary>
+    public void ToggleLock()
+    {
+        if (_selectedIds.Count == 0) return;
+        var sel = new HashSet<string>(_selectedIds);
+        var target = !_live.Elements.Where(e => sel.Contains(e.Id)).All(e => e.Locked);
+        CommitTransform(e => sel.Contains(e.Id) ? e with { Locked = target } : e);
+    }
+
+    /// <summary>Hide the selection; if everything in it is already hidden, show instead.</summary>
+    public void ToggleVisible()
+    {
+        if (_selectedIds.Count == 0) return;
+        var sel = new HashSet<string>(_selectedIds);
+        var target = !_live.Elements.Where(e => sel.Contains(e.Id)).All(e => e.Visible);
+        CommitTransform(e => sel.Contains(e.Id) ? e with { Visible = target } : e);
+    }
+
     // ── Clipboard (Copy/Cut/Paste/Duplicate, §7.2) ──────────────────────────────────────────────
 
     private readonly List<LabelElement> _clipboard = [];

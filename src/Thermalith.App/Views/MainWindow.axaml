@@ -214,6 +214,35 @@
                            Background="White"
                            PointerPressed="OnCanvasPressed" PointerMoved="OnCanvasMoved" PointerReleased="OnCanvasReleased"
                            PointerWheelChanged="OnCanvasWheel">
+                        <Panel.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Cut" Command="{Binding CutCommand}" />
+                                <MenuItem Header="Copy" Command="{Binding CopyCommand}" />
+                                <MenuItem Header="Paste" Command="{Binding PasteCommand}" />
+                                <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" />
+                                <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
+                                <Separator />
+                                <MenuItem Header="Lock / Unlock" Command="{Binding ToggleLockCommand}" />
+                                <MenuItem Header="Show / Hide" Command="{Binding ToggleVisibleCommand}" />
+                                <Separator />
+                                <MenuItem Header="Bring to Front" Command="{Binding BringToFrontCommand}" />
+                                <MenuItem Header="Bring Forward" Command="{Binding BringForwardCommand}" />
+                                <MenuItem Header="Send Backward" Command="{Binding SendBackwardCommand}" />
+                                <MenuItem Header="Send to Back" Command="{Binding SendToBackCommand}" />
+                                <Separator />
+                                <MenuItem Header="Group" Command="{Binding GroupCommand}" />
+                                <MenuItem Header="Ungroup" Command="{Binding UngroupCommand}" />
+                                <MenuItem Header="Align">
+                                    <MenuItem Header="Left" Command="{Binding AlignLeftCommand}" />
+                                    <MenuItem Header="Center" Command="{Binding AlignCenterHCommand}" />
+                                    <MenuItem Header="Right" Command="{Binding AlignRightCommand}" />
+                                    <Separator />
+                                    <MenuItem Header="Top" Command="{Binding AlignTopCommand}" />
+                                    <MenuItem Header="Middle" Command="{Binding AlignMiddleVCommand}" />
+                                    <MenuItem Header="Bottom" Command="{Binding AlignBottomCommand}" />
+                                </MenuItem>
+                            </ContextMenu>
+                        </Panel.ContextMenu>
                         <Image Source="{Binding Editor.Preview}" Stretch="Fill"
                                RenderOptions.BitmapInterpolationMode="None" />
                         <views:GridOverlay Spacing="{Binding Editor.GridSpacingDisplay}"

@@ -134,6 +134,14 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         var p = e.GetPosition(host);
         _pressPoint = p;
 
+        // Right-click selects the element under the cursor (so the context menu targets it) without
+        // starting a drag; clicking empty space leaves the current selection so the menu can act on it.
+        if (e.GetCurrentPoint(host).Properties.IsRightButtonPressed)
+        {
+            if (ed.HitTest(p.X, p.Y) is not null) ed.SelectAt(p.X, p.Y, false);
+            return;
+        }
+
         // A resize handle of a single selection takes priority.
         if (ed.HasSelection && ed.HitTestHandle(p.X, p.Y) is { } handle)
         {

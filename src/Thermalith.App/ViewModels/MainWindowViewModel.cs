@@ -220,6 +220,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanDelete))] private void Duplicate() => Editor.Duplicate();
     [RelayCommand(CanExecute = nameof(CanGroup))] private void Group() => Editor.Group();
     [RelayCommand(CanExecute = nameof(CanUngroup))] private void Ungroup() => Editor.Ungroup();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void ToggleLock() => Editor.ToggleLock();
+    [RelayCommand(CanExecute = nameof(CanDelete))] private void ToggleVisible() => Editor.ToggleVisible();
 
     private bool CanPaste() => Editor.HasClipboard;
     private bool CanUngroup() => Editor.HasGroupInSelection;
