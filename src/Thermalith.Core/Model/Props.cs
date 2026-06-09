@@ -20,9 +20,10 @@ public sealed record TextProps
     public double? LineSpacing { get; init; }
     public double LetterSpacing { get; init; }
     public string Wrap { get; init; } = "word";          // none | word
-    public string FontSizing { get; init; } = "fixed";   // fixed | shrink | fill
+    public string FontSizing { get; init; } = "fixed";   // fixed | shrink | fill (editor is fixed-only)
     public double? MinFontSizePt { get; init; }
     public double? MaxFontSizePt { get; init; }
+    public bool AutoSize { get; init; }                  // editor keeps W/H = the measured text (box hugs glyphs)
 
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extensions { get; init; }
 }

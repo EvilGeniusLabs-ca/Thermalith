@@ -366,7 +366,9 @@
                                     </Grid>
 
                                     <TextBlock Classes="section" Text="Paragraph" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
+                                    <CheckBox IsChecked="{Binding AutoSize}" Content="Auto-size box to text" Margin="0,2"
+                                              ToolTip.Tip="The box hugs the text (no resize handles). Turn off for a fixed box with word-wrap." />
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" IsEnabled="{Binding !AutoSize}"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line spacing" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
                                 </StackPanel>
                             </DataTemplate>

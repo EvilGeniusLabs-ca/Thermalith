@@ -21,6 +21,7 @@ public sealed partial class TextEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private double? _lineSpacing;
     [ObservableProperty] private double _letterSpacing;
     [ObservableProperty] private string _wrap;
+    [ObservableProperty] private bool _autoSize;
 
     public TextEditorViewModel(TextElement el, Action onChanged) : base(el, onChanged)
     {
@@ -33,6 +34,7 @@ public sealed partial class TextEditorViewModel : ElementEditorViewModel
         _lineSpacing = el.Props.LineSpacing;
         _letterSpacing = el.Props.LetterSpacing;
         _wrap = el.Props.Wrap;
+        _autoSize = el.Props.AutoSize;
         MarkLoaded();
     }
 
@@ -53,7 +55,7 @@ public sealed partial class TextEditorViewModel : ElementEditorViewModel
             Content = Content, FontFamily = NullIfEmpty(FontFamily), FontSizePt = FontSizePt,
             Bold = Bold, Italic = Italic, Underline = Underline,
             LineSpacing = LineSpacing, LetterSpacing = LetterSpacing,
-            Wrap = Wrap,
+            Wrap = Wrap, AutoSize = AutoSize,
             // FontSizing left at the model default ("fixed"); Min/Max dropped — the editor is fixed-size
             // only, so the pt size is honoured literally (text grows + bleeds past its box / the label).
         },

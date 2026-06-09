@@ -172,6 +172,13 @@ public sealed partial class EditorViewModel : ObservableObject
         var existing = _live.Elements.FirstOrDefault(e => e.Id == SelectedEditor.Id);
         var updated = SelectedEditor.ToElement();
         if (existing is not null) updated = updated with { GroupId = existing.GroupId }; // editors don't carry grouping
+        if (updated is TextElement t && t.Props.AutoSize) // box hugs the text: keep W/H = measured glyphs
+        {
+            var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
+            double w = Math.Ceiling(wmm), h = Math.Ceiling(hmm);
+            updated = t with { W = w, H = h };
+            SelectedEditor.SetGeometrySilently(t.X, t.Y, w, h); // reflect measured size in the inspector
+        }
         ReplaceElement(updated);
 
         var layer = Layers.FirstOrDefault(l => l.Id == updated.Id);
@@ -328,6 +335,11 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         FlushGesture();
         var el = ElementFactory.Create(type, _live.Canvas);
+        if (el is TextElement t && t.Props.AutoSize) // start an auto-size text already hugging its glyphs
+        {
+            var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
+            el = t with { W = Math.Ceiling(wmm), H = Math.Ceiling(hmm) };
+        }
         _live = _live with { Elements = _live.Elements.Append(el).ToList() };
         _history.Commit(_live);
         RebuildLayers();
@@ -721,10 +733,13 @@ public sealed partial class EditorViewModel : ObservableObject
 
         HasSelection = _selectedIds.Count > 0;
 
-        // Resize handles only make sense for a single, unlocked selection.
-        var primaryLocked = _selectedIds.Count == 1
-            && _live.Elements.FirstOrDefault(e => e.Id == _selectedIds.First()) is { Locked: true };
-        if (_selectedIds.Count == 1 && !primaryLocked && SelectedEditor is { } ed)
+        // Resize handles only make sense for a single, unlocked, manually-sized selection. An auto-size
+        // text box is driven by its glyphs, so it shows no handles (toggle Auto-size off to resize).
+        var primary = _selectedIds.Count == 1
+            ? _live.Elements.FirstOrDefault(e => e.Id == _selectedIds.First())
+            : null;
+        var noHandles = primary is { Locked: true } or TextElement { Props.AutoSize: true };
+        if (_selectedIds.Count == 1 && !noHandles && SelectedEditor is { } ed)
         {
             var r = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
             SelectionBounds = r;

@@ -163,6 +163,35 @@ public sealed class LabelRenderer
         }
     }
 
+    /// <summary>Natural size (mm) of a text block at its fixed font size — widest line × line count, no
+    /// word-wrap (explicit line breaks honoured). The editor uses this to auto-size a text box to its
+    /// glyphs (§6.2). Rounded up by the caller so the box never clips the text.</summary>
+    public (double WidthMm, double HeightMm) MeasureTextMm(TextProps props, double dpi)
+    {
+        var pxPerMm = dpi / 25.4;
+        var tf = _fonts.Resolve(props.FontFamily, props.Bold ?? false, props.Italic ?? false);
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            Typeface = tf,
+            FakeBoldText = (props.Bold ?? false) && !TypefaceIsBold(tf),
+            TextSkewX = (props.Italic ?? false) && !tf.IsItalic ? -0.22f : 0f,
+            SubpixelText = false,
+            TextSize = (float)((props.FontSizePt ?? 9) * dpi / 72.0),
+        };
+        var letterSpacingPx = (float)(props.LetterSpacing * dpi / 72.0);
+
+        var lines = (props.Content ?? "").Replace("\r\n", "\n").Split('\n');
+        var maxW = 0f;
+        foreach (var line in lines) maxW = Math.Max(maxW, MeasureLine(paint, line, letterSpacingPx));
+
+        var m = paint.FontMetrics;
+        var lineH = (m.Descent - m.Ascent) * (float)(props.LineSpacing ?? 1.0);
+        var totalH = lineH * Math.Max(1, lines.Length);
+
+        return (Math.Max(1.0, maxW / pxPerMm), Math.Max(1.0, totalH / pxPerMm));
+    }
+
     private static bool TypefaceIsBold(SKTypeface tf) => tf.FontWeight >= (int)SKFontStyleWeight.SemiBold;
 
     private void DrawLineText(SKCanvas canvas, string line, float x, float baseline, SKPaint paint, float letterSpacing)
