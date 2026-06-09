@@ -168,7 +168,7 @@ public sealed partial class EditorViewModel : ObservableObject
         ReplaceElement(updated);
 
         var layer = Layers.FirstOrDefault(l => l.Id == updated.Id);
-        if (layer is not null) { layer.Name = updated.Name ?? updated.Type; layer.Visible = updated.Visible; }
+        layer?.Sync(updated.Name ?? updated.Type, updated.Visible, updated.Locked);
 
         BeginGesture();
         MarkDirty();
@@ -238,6 +238,26 @@ public sealed partial class EditorViewModel : ObservableObject
         var sel = new HashSet<string>(_selectedIds);
         var target = !_live.Elements.Where(e => sel.Contains(e.Id)).All(e => e.Visible);
         CommitTransform(e => sel.Contains(e.Id) ? e with { Visible = target } : e);
+    }
+
+    /// <summary>Set one element's visibility from the Elements-list eye toggle. Commits history and
+    /// re-renders but does NOT rebuild the layer list — the toggled row already holds the new value, so
+    /// skipping the rebuild avoids selection churn (which would otherwise trip the list-click focus).</summary>
+    public void SetElementVisible(string id, bool visible) => SetElementFlag(id, e => e with { Visible = visible });
+
+    /// <summary>Set one element's lock state from the Elements-list lock toggle (see <see cref="SetElementVisible"/>).</summary>
+    public void SetElementLocked(string id, bool locked) => SetElementFlag(id, e => e with { Locked = locked });
+
+    private void SetElementFlag(string id, Func<LabelElement, LabelElement> map)
+    {
+        if (_live.Elements.FirstOrDefault(e => e.Id == id) is null) return;
+        FlushGesture();
+        _live = _live with { Elements = _live.Elements.Select(e => e.Id == id ? map(e) : e).ToList() };
+        _history.Commit(_live);
+        MarkDirty();
+        RenderNow();
+        UpdateSelectionVisuals(); // a locked/hidden change on the selected element refreshes its adorner
+        RaiseState();
     }
 
     // ── Clipboard (Copy/Cut/Paste/Duplicate, §7.2) ──────────────────────────────────────────────
@@ -910,7 +930,7 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         Layers.Clear();
         for (var i = _live.Elements.Count - 1; i >= 0; i--) // frontmost first
-            Layers.Add(new LayerItemViewModel(_live.Elements[i]));
+            Layers.Add(new LayerItemViewModel(_live.Elements[i], SetElementVisible, SetElementLocked));
     }
 
     private void MarkDirty()

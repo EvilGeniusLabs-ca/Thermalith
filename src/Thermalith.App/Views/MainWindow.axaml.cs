@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -325,14 +326,23 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     // ── IFilePicker (platform dialogs) ───────────────────────────────────────────────────────
 
+    // True when the current list press landed on a row action control (eye / lock) rather than the row
+    // body — so the resulting selection change shouldn't steal focus to the Name field.
+    private bool _suppressRenameFocus;
+
+    private void OnElementsListPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        _suppressRenameFocus = (e.Source as Visual)?.FindAncestorOfType<ToggleButton>(includeSelf: true) is not null;
+
     // Clicking an element in the Elements list focuses its Name field so you can rename immediately.
     // Guard on IsPointerOver: canvas selection also updates the bound SelectedItem (firing this event),
     // and stealing focus to the Name box then would make Delete edit the text field instead of the
-    // document (TextAwareCommand no-ops while a TextBox has focus). Only react to direct list clicks.
+    // document (TextAwareCommand no-ops while a TextBox has focus). Only react to direct list clicks,
+    // and not when the click was on a row's eye/lock toggle.
     private void OnElementsListSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (e.AddedItems.Count == 0) return;
         if (sender is not ListBox { IsPointerOver: true }) return;
+        if (_suppressRenameFocus) { _suppressRenameFocus = false; return; }
         // Defer so the inspector content has rebuilt for the new selection before we hunt for the box.
         Dispatcher.UIThread.Post(() =>
         {

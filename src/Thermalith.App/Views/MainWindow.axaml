@@ -190,14 +190,20 @@
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Top" Text="Elements" Margin="8,2" FontWeight="Bold" Foreground="#CCC" />
                 <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}"
-                         SelectionChanged="OnElementsListSelectionChanged">
+                         SelectionChanged="OnElementsListSelectionChanged"
+                         PointerPressed="OnElementsListPointerPressed">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:LayerItemViewModel">
-                            <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                                 <TextBlock Text="⛓" FontSize="11" Margin="0,0,4,0" Foreground="#E0A030"
                                            VerticalAlignment="Center" IsVisible="{Binding IsGrouped}" ToolTip.Tip="Grouped" />
-                                <TextBlock Grid.Column="1" Text="{Binding Name}" />
-                                <TextBlock Grid.Column="2" Text="{Binding TypeLabel}" Foreground="#777" FontSize="11" />
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{Binding TypeLabel}" Foreground="#777" FontSize="11"
+                                           VerticalAlignment="Center" Margin="0,0,4,0" />
+                                <ToggleButton Grid.Column="3" Classes="listicon" ToolTip.Tip="Visible"
+                                              IsChecked="{Binding Visible}"><Path Classes="icon" Data="{StaticResource IconEye}" /></ToggleButton>
+                                <ToggleButton Grid.Column="4" Classes="listicon" ToolTip.Tip="Locked"
+                                              IsChecked="{Binding Locked}"><Path Classes="icon" Data="{StaticResource IconLock}" /></ToggleButton>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
