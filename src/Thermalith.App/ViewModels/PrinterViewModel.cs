@@ -173,16 +173,24 @@ public sealed partial class PrinterViewModel : ObservableObject
     /// Runs off the UI thread (fire-and-forget) so the user can keep working while it scans.</summary>
     public async Task AutoConnectAsync(string? lastPort, string? lastModel)
     {
-        if (IsConnected || IsBusy) return;
-        await RefreshPortsAsync();
-        if (IsConnected || IsBusy) return; // user connected meanwhile
-        var target = Ports.FirstOrDefault(p => p.IsNiimbot && p.Port == lastPort)
-            ?? (lastModel is { Length: > 0 } && Ports.Count(p => p.IsNiimbot && p.Label.Contains(lastModel)) == 1
-                ? Ports.First(p => p.IsNiimbot && p.Label.Contains(lastModel))
-                : Ports.Count(p => p.IsNiimbot) == 1 ? Ports.First(p => p.IsNiimbot) : null);
-        if (target is null) return; // ambiguous or none — the list is pre-filled for a manual Connect
-        SelectedPort = target;
-        await ConnectAsync();
+        // Retry the scan a few times: right after a previous instance closes, the OS/driver can still be
+        // releasing the COM port (USB/Bluetooth serial), so the first probe may miss the printer.
+        for (var attempt = 0; attempt < 3 && !IsConnected; attempt++)
+        {
+            if (attempt > 0) await Task.Delay(1200);
+            if (IsConnected || IsBusy) return; // user connected/scanned meanwhile
+            await RefreshPortsAsync();
+            if (IsConnected || IsBusy) return;
+
+            var target = Ports.FirstOrDefault(p => p.IsNiimbot && p.Port == lastPort)
+                ?? (lastModel is { Length: > 0 } && Ports.Count(p => p.IsNiimbot && p.Label.Contains(lastModel)) == 1
+                    ? Ports.First(p => p.IsNiimbot && p.Label.Contains(lastModel))
+                    : Ports.Count(p => p.IsNiimbot) == 1 ? Ports.First(p => p.IsNiimbot) : null);
+            if (target is null) continue; // no NIIMBOT yet — retry (port may still be releasing)
+
+            SelectedPort = target;
+            await ConnectAsync();
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanOperate))]
