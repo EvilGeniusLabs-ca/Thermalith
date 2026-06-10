@@ -567,26 +567,8 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Cols}" Minimum="1" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Rows}" Minimum="1" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding BorderWidthMm}" Increment="0.1" Minimum="0" /></Grid>
-                                    <CheckBox IsChecked="{Binding HeaderRow}" Content="Header row" Margin="0,4" />
-                                    <TextBlock Text="Cells" Foreground="#888" Margin="0,4,0,2" />
-                                    <ItemsControl ItemsSource="{Binding CellRows}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="ed:TableRowViewModel">
-                                                <ItemsControl ItemsSource="{Binding Cells}" Margin="0,1">
-                                                    <ItemsControl.ItemsPanel>
-                                                        <ItemsPanelTemplate>
-                                                            <StackPanel Orientation="Horizontal" />
-                                                        </ItemsPanelTemplate>
-                                                    </ItemsControl.ItemsPanel>
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate x:DataType="ed:TableCellViewModel">
-                                                            <TextBox Width="58" Margin="1" Padding="3,1" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" />
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                    <TextBlock Text="Double-click the table to edit cells (select, type, merge, fill, header)."
+                                               Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,6" />
                                 </StackPanel>
                             </DataTemplate>
 

@@ -204,6 +204,20 @@ public sealed partial class EditorViewModel : ObservableObject
             updated = t with { W = w, H = h };
             SelectedEditor.SetGeometrySilently(t.X, t.Y, w, h); // reflect measured size in the inspector
         }
+        // Table cell data lives on the canvas, not the inspector — preserve the live cells/header/axis sizes
+        // through structural edits (Cols/Rows/Line-weight/geometry), resizing the grid for Cols/Rows changes.
+        if (updated is TableElement tabNew && existing is TableElement tabOld)
+            updated = tabNew with
+            {
+                Props = tabNew.Props with
+                {
+                    Cells = ResizeCells(tabOld.Props.Cells, tabNew.Props.Rows, tabNew.Props.Cols),
+                    HeaderRow = tabOld.Props.HeaderRow,
+                    HeaderColumn = tabOld.Props.HeaderColumn,
+                    ColumnWidthsMm = tabOld.Props.ColumnWidthsMm,
+                    RowHeightsMm = tabOld.Props.RowHeightsMm,
+                },
+            };
 
         // Multi-select: spread just the changed property to the other selected elements of the SAME type
         // (so editing font size etc. affects the whole selection, not only the primary; each keeps its own
@@ -1220,6 +1234,21 @@ public sealed partial class EditorViewModel : ObservableObject
             _cellAnchorC = _cellFocusC = cell.C;
             UpdateCellHighlight();
         }
+    }
+
+    /// <summary>Resize a cell grid to rows×cols, preserving overlapping cells and filling new ones.</summary>
+    private static List<List<TableCell>>? ResizeCells(List<List<TableCell>>? cells, int rows, int cols)
+    {
+        if (cells is null) return null;
+        var grid = new List<List<TableCell>>(rows);
+        for (var r = 0; r < rows; r++)
+        {
+            var row = new List<TableCell>(cols);
+            for (var c = 0; c < cols; c++)
+                row.Add(r < cells.Count && c < cells[r].Count ? cells[r][c] : new TableCell());
+            grid.Add(row);
+        }
+        return grid;
     }
 
     /// <summary>Materialize the (possibly jagged/sparse) cell grid into a full Rows×Cols list for editing.</summary>
