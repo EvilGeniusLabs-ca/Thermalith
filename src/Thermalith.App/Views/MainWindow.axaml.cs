@@ -227,6 +227,8 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
                 ed.CellRightClick(p.X, p.Y); // target the right-clicked cell, then the cell menu opens
                 return;
             }
+            // The table's own resize handles still work in cell mode (resize the whole table).
+            if (ed.HitTestHandle(p.X, p.Y) is { } th) { ed.BeginDrag(DragMode.Resize, th); _dragging = true; e.Pointer.Capture(host); return; }
             // Drag a column/row divider to resize (total table size stays fixed).
             if (ed.HitColumnDivider(p.X, p.Y, out var ci)) { ed.BeginAxisResize(true, ci); _axisResizing = true; e.Pointer.Capture(host); return; }
             if (ed.HitRowDivider(p.X, p.Y, out var ri)) { ed.BeginAxisResize(false, ri); _axisResizing = true; e.Pointer.Capture(host); return; }
@@ -294,11 +296,18 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             ShowMarquee(_pressPoint, p);
             return;
         }
-        if (vm.Editor.InCellMode) // divider-resize cursors while hovering a column/row boundary
+        if (vm.Editor.InCellMode) // table resize-handle cursors, then divider cursors
         {
-            var ct = vm.Editor.HitColumnDivider(p.X, p.Y, out _) ? StandardCursorType.SizeWestEast
-                : vm.Editor.HitRowDivider(p.X, p.Y, out _) ? StandardCursorType.SizeNorthSouth
-                : StandardCursorType.Arrow;
+            var ct = vm.Editor.HitTestHandle(p.X, p.Y) switch
+            {
+                Handle.TopLeft or Handle.BottomRight => StandardCursorType.TopLeftCorner,
+                Handle.TopRight or Handle.BottomLeft => StandardCursorType.TopRightCorner,
+                Handle.Top or Handle.Bottom => StandardCursorType.SizeNorthSouth,
+                Handle.Left or Handle.Right => StandardCursorType.SizeWestEast,
+                _ => vm.Editor.HitColumnDivider(p.X, p.Y, out _) ? StandardCursorType.SizeWestEast
+                    : vm.Editor.HitRowDivider(p.X, p.Y, out _) ? StandardCursorType.SizeNorthSouth
+                    : StandardCursorType.Arrow,
+            };
             SetHostCursor(host, ct);
             return;
         }

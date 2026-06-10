@@ -890,11 +890,18 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private void UpdateSelectionVisuals()
     {
-        if (InCellMode) // cell mode shows only the cell-block highlight, not element adorners
-        {
+        if (InCellMode) // cell mode keeps the table's resize handles (resize it while editing); the dashed
+        {               // element box is dropped (the edit frame outlines it) and the cell highlight is shown.
             SelectionRects.Clear();
-            SelectionHandles.Clear();
-            HasSelection = false;
+            HasSelection = true; // the handles' ItemsControl is gated on this; SelectionRects stays empty
+            if (CellTable is { } ct)
+            {
+                var cs = _live.Canvas.Dpi / 25.4 * Zoom;
+                var cr = new Rect(ct.X * cs, ct.Y * cs, ct.W * cs, ct.H * cs);
+                SelectionBounds = cr;
+                RebuildHandles(cr);
+            }
+            else SelectionHandles.Clear();
             UpdateCellHighlight();
             return;
         }
