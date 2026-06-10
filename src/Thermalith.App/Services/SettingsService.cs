@@ -14,6 +14,9 @@ public sealed record AppSettings
     public double LeftPanelWidth { get; init; } = 200;
     public double RightPanelWidth { get; init; } = 300;
 
+    /// <summary>UI theme: "Default" (follow OS), "Light", or "Dark". Applied at startup + on change.</summary>
+    public string Theme { get; init; } = "Default";
+
     // Last applied canvas (from a roll / printer attach) — seeds a new doc at the real printable size
     // (e.g. 48×30 for a B1) so designs don't start 2mm too wide. Null until a roll has been applied.
     public double? LastCanvasWidthMm { get; init; }

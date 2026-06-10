@@ -61,6 +61,18 @@
                 <Separator />
                 <MenuItem Header="S_mooth Preview" ToggleType="CheckBox" IsChecked="{Binding Editor.SmoothPreview, Mode=TwoWay}"
                           ToolTip.Tip="Show the smooth grayscale preview (anti-aliased) instead of the exact 1-bit print raster" />
+                <Separator />
+                <MenuItem Header="_Theme">
+                    <MenuItem Header="_System (follow OS)" ToggleType="Radio" GroupName="theme"
+                              Command="{Binding SetThemeCommand}" CommandParameter="Default"
+                              IsChecked="{Binding Theme, Converter={StaticResource Eq}, ConverterParameter=Default, Mode=OneWay}" />
+                    <MenuItem Header="_Light" ToggleType="Radio" GroupName="theme"
+                              Command="{Binding SetThemeCommand}" CommandParameter="Light"
+                              IsChecked="{Binding Theme, Converter={StaticResource Eq}, ConverterParameter=Light, Mode=OneWay}" />
+                    <MenuItem Header="_Dark" ToggleType="Radio" GroupName="theme"
+                              Command="{Binding SetThemeCommand}" CommandParameter="Dark"
+                              IsChecked="{Binding Theme, Converter={StaticResource Eq}, ConverterParameter=Dark, Mode=OneWay}" />
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_Insert">
                 <MenuItem Header="_Text" Command="{Binding InsertCommand}" CommandParameter="text" />

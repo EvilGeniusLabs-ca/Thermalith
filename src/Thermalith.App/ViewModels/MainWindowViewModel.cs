@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Avalonia;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Niimbot.Net.Commands;
@@ -44,6 +46,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         UpdateTitle();
 
+        // Apply the saved UI theme at startup (before the window shows, so there's no flash).
+        _theme = _settings.Theme;
+        ApplyTheme(_theme);
+
         // Background scan + reconnect to the last printer (fire-and-forget — never blocks startup/editing).
         _ = Printer.AutoConnectAsync(_settings.LastPrinterPort, _settings.LastPrinterModel);
     }
@@ -82,6 +88,33 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private string _title = "Thermalith";
     [ObservableProperty] private string _statusMessage = "";
     public bool HasRecentFiles => RecentFiles.Count > 0;
+
+    // ── Theme ─────────────────────────────────────────────────────────────────────────────────────
+
+    /// <summary>UI theme: "Default" (follow OS), "Light", or "Dark". Persisted; applied on change.</summary>
+    [ObservableProperty] private string _theme = "Default";
+
+    partial void OnThemeChanged(string value)
+    {
+        ApplyTheme(value);
+        _settings = _settings with { Theme = value };
+        _settingsService.Save(_settings);
+    }
+
+    /// <summary>Menu-bound: set the theme (parameter is "Default" | "Light" | "Dark").</summary>
+    [RelayCommand]
+    private void SetTheme(string theme) => Theme = theme;
+
+    private static void ApplyTheme(string theme)
+    {
+        if (Application.Current is not { } app) return;
+        app.RequestedThemeVariant = theme switch
+        {
+            "Light" => ThemeVariant.Light,
+            "Dark" => ThemeVariant.Dark,
+            _ => ThemeVariant.Default,
+        };
+    }
 
     // ── File ────────────────────────────────────────────────────────────────────────────────────
 

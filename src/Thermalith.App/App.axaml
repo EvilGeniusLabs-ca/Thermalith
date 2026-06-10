@@ -6,6 +6,17 @@
              RequestedThemeVariant="Default">
 
     <Application.Resources>
+        <ResourceDictionary>
+        <!-- Theme-varying brushes: resolved per light/dark variant so they flip with the chosen theme. -->
+        <ResourceDictionary.ThemeDictionaries>
+            <ResourceDictionary x:Key="Dark">
+                <SolidColorBrush x:Key="IconStroke" Color="#D0D0D0" />
+            </ResourceDictionary>
+            <ResourceDictionary x:Key="Light">
+                <SolidColorBrush x:Key="IconStroke" Color="#3A3A3A" />
+            </ResourceDictionary>
+        </ResourceDictionary.ThemeDictionaries>
+
         <conv:EqualityConverter x:Key="Eq" />
         <conv:NumericTextConverter x:Key="Num" />
         <conv:BoolToBrushConverter x:Key="ConnDot" TrueBrush="#3FB950" FalseBrush="#555" />
@@ -31,6 +42,7 @@
         <StreamGeometry x:Key="IconShape">M0,0 H11 V11 H0 Z</StreamGeometry>
         <StreamGeometry x:Key="IconImage">M0,1 H12 V11 H0 Z M3.5,4 A1,1 0 1 1 3.49,4 M0,11 L4,6 L7,9 L10,5 L12,7</StreamGeometry>
         <StreamGeometry x:Key="IconTable">M0,1 H12 V11 H0 Z M0,4.3 H12 M0,7.6 H12 M4,1 V11 M8,1 V11</StreamGeometry>
+        </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
@@ -42,7 +54,7 @@
 
         <!-- Stroked icon glyph used inside icon buttons. -->
         <Style Selector="Path.icon">
-            <Setter Property="Stroke" Value="#D0D0D0" />
+            <Setter Property="Stroke" Value="{DynamicResource IconStroke}" />
             <Setter Property="StrokeThickness" Value="1.3" />
             <Setter Property="StrokeLineCap" Value="Round" />
             <Setter Property="StrokeJoin" Value="Round" />
