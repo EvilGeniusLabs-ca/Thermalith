@@ -123,11 +123,9 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     public Task<bool> ConfirmDiscardAsync() => new ConfirmDialog().ShowDialog<bool>(this);
 
-    public Task<Services.NewLabelChoice?> DefineRollAsync(
-        Thermalith.Core.Catalog.RollDefinition seed, string title,
-        IReadOnlyList<Thermalith.Core.Catalog.PrinterEntry> printers, Thermalith.Core.Catalog.PrinterEntry? defaultTarget) =>
-        new RollDialog { DataContext = new ViewModels.RollDialogViewModel(seed, title, printers, defaultTarget) }
-            .ShowDialog<Services.NewLabelChoice?>(this);
+    public Task<Thermalith.Core.Catalog.RollDefinition?> DefineRollAsync(Thermalith.Core.Catalog.RollDefinition seed, string title) =>
+        new RollDialog { DataContext = new ViewModels.RollDialogViewModel(seed, title) }
+            .ShowDialog<Thermalith.Core.Catalog.RollDefinition?>(this);
 
     // ── Canvas interaction: select, drag-move, resize, marquee (§7) ──────────────────────────────
 
