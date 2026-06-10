@@ -34,6 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Editor.StateChanged += (_, _) => OnEditorStateChanged();
         Editor.PropertyChanged += OnEditorPropertyChanged;
         Printer.RollDetected += OnRollDetected;
+        Printer.Connected += OnPrinterConnected;
 
         // Seed the startup canvas to the last applied roll's (printable) size, so designs don't start at
         // the generic 50×30 and then jump when a printer with a narrower printhead is attached.
@@ -42,6 +43,16 @@ public partial class MainWindowViewModel : ViewModelBase
                 _settings.LastCanvasDpi ?? 203, _settings.LastCanvasShape ?? "rectangle", _settings.LastPrintheadWidthMm);
 
         UpdateTitle();
+
+        // Background scan + reconnect to the last printer (fire-and-forget — never blocks startup/editing).
+        _ = Printer.AutoConnectAsync(_settings.LastPrinterPort, _settings.LastPrinterModel);
+    }
+
+    /// <summary>Persist the connected printer so the next startup can scan + reconnect to it.</summary>
+    private void OnPrinterConnected(object? sender, EventArgs e)
+    {
+        _settings = _settings with { LastPrinterPort = Printer.ConnectedPort, LastPrinterModel = Printer.ConnectedModel };
+        _settingsService.Save(_settings);
     }
 
     /// <summary>Persist the current canvas size + printhead width as the last applied roll (seeds next startup).</summary>

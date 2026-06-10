@@ -72,6 +72,13 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     /// <summary>Raised after a connect/refresh so the shell can look up or prompt for the loaded roll.</summary>
     public event EventHandler? RollDetected;
+
+    /// <summary>Raised after a successful connect so the shell can persist the last printer (port + model).</summary>
+    public event EventHandler? Connected;
+
+    /// <summary>The port we connected on / the connected model — for persistence + startup reconnect.</summary>
+    public string? ConnectedPort { get; private set; }
+    public string? ConnectedModel => _caps?.Model.ToString();
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private LabelType _selectedLabelType = LabelType.WithGaps;
     [ObservableProperty] private int _density = 3;
@@ -144,6 +151,8 @@ public sealed partial class PrinterViewModel : ObservableObject
             ConnectionInfo = $"{_caps.Model} · {_caps.Dpi} dpi · head {_caps.PrintheadPixels}px"
                 + (_caps.FirmwareVersion is { Length: > 0 } fw ? $" · fw {fw}" : "");
             Message = "Connected.";
+            ConnectedPort = SelectedPort.Port;
+            Connected?.Invoke(this, EventArgs.Empty); // shell persists this printer for startup reconnect
             await RefreshStatusCoreAsync();
             RollDetected?.Invoke(this, EventArgs.Empty); // let the shell resolve/prompt the loaded roll
         }
@@ -157,6 +166,23 @@ public sealed partial class PrinterViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>Startup background scan + reconnect: pre-fills the port list, then connects if the last
+    /// printer is found (same port, or the single NIIMBOT matching its model). Otherwise just pre-selects.
+    /// Runs off the UI thread (fire-and-forget) so the user can keep working while it scans.</summary>
+    public async Task AutoConnectAsync(string? lastPort, string? lastModel)
+    {
+        if (IsConnected || IsBusy) return;
+        await RefreshPortsAsync();
+        if (IsConnected || IsBusy) return; // user connected meanwhile
+        var target = Ports.FirstOrDefault(p => p.IsNiimbot && p.Port == lastPort)
+            ?? (lastModel is { Length: > 0 } && Ports.Count(p => p.IsNiimbot && p.Label.Contains(lastModel)) == 1
+                ? Ports.First(p => p.IsNiimbot && p.Label.Contains(lastModel))
+                : Ports.Count(p => p.IsNiimbot) == 1 ? Ports.First(p => p.IsNiimbot) : null);
+        if (target is null) return; // ambiguous or none — the list is pre-filled for a manual Connect
+        SelectedPort = target;
+        await ConnectAsync();
     }
 
     [RelayCommand(CanExecute = nameof(CanOperate))]
