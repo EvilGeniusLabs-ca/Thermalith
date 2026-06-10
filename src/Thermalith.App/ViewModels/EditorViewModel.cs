@@ -1193,6 +1193,36 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void CancelCellEdit() => IsCellEditing = false;
 
+    /// <summary>Move the selected cell (commits any open edit first). Tab/Shift+Tab wrap across rows;
+    /// Enter/Shift+Enter move within a column. Movement is blocked at the grid edges (never off the
+    /// table) and skips merged-covered cells (lands on anchors).</summary>
+    public void NavigateCell(int dr, int dc, bool wrap)
+    {
+        CommitCellEdit();
+        if (CellTable is not { } t) return;
+        int rows = t.Props.Rows, cols = t.Props.Cols;
+        int r = _cellFocusR, c = _cellFocusC;
+        for (var guard = 0; guard < rows * cols + 1; guard++)
+        {
+            int nr = r + dr, nc = c + dc;
+            if (wrap)
+            {
+                if (nc >= cols) { nc = 0; nr = r + 1; }
+                else if (nc < 0) { nc = cols - 1; nr = r - 1; }
+            }
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) return; // at an edge → blocked
+            var (ar, ac) = AnchorOf(t.Props, nr, nc);
+            if (ar != _cellFocusR || ac != _cellFocusC)
+            {
+                _cellAnchorR = _cellFocusR = ar;
+                _cellAnchorC = _cellFocusC = ac;
+                UpdateCellHighlight();
+                return;
+            }
+            r = nr; c = nc; // stepped onto the same merged block → keep going
+        }
+    }
+
     // ── Cell operations on the selected block (right-click menu + Properties window mirror these) ──
 
     private void MutateSelectedCells(Func<TableCell, TableCell> map)

@@ -170,8 +170,13 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     private void OnCellEditorKeyDown(object? sender, KeyEventArgs e)
     {
         if (Vm is not { } vm) return;
-        if (e.Key == Key.Enter) { vm.Editor.CommitCellEdit(); CanvasHost.Focus(); e.Handled = true; }
-        else if (e.Key == Key.Escape) { vm.Editor.CancelCellEdit(); CanvasHost.Focus(); e.Handled = true; }
+        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        switch (e.Key)
+        {
+            case Key.Escape: vm.Editor.CancelCellEdit(); CanvasHost.Focus(); e.Handled = true; break;
+            case Key.Enter: vm.Editor.NavigateCell(shift ? -1 : 1, 0, false); CanvasHost.Focus(); e.Handled = true; break;
+            case Key.Tab: vm.Editor.NavigateCell(0, shift ? -1 : 1, true); CanvasHost.Focus(); e.Handled = true; break;
+        }
     }
 
     private void OnCellEditorLostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
@@ -181,12 +186,15 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     {
         if (Vm?.Editor is { } ed)
         {
-            if (ed.InCellMode && !ed.IsCellEditing && e.Key is Key.F2 or Key.Enter)
+            if (ed.InCellMode && !ed.IsCellEditing)
             {
-                ed.BeginCellEdit();
-                FocusCellEditor();
-                e.Handled = true;
-                return;
+                var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+                switch (e.Key)
+                {
+                    case Key.F2: ed.BeginCellEdit(); FocusCellEditor(); e.Handled = true; return;
+                    case Key.Tab: ed.NavigateCell(0, shift ? -1 : 1, true); e.Handled = true; return;
+                    case Key.Enter: ed.NavigateCell(shift ? -1 : 1, 0, false); e.Handled = true; return;
+                }
             }
             if (e.Key == Key.Escape)
             {
