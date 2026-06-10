@@ -63,6 +63,8 @@ Derivations (verified against our B1 profile):
 
 - B1: id 4096, default 50×30, stock max 50, printable `widthSetEnd` 48, paccuracy 8 → 203 dpi,
   printheadPx 384, density 1–5 (def 3), paperType `1,2,5`, rfidType 1.
+  **Dot ratio: ~8 dots/mm** (203 dpi → 203/25.4 = 7.99 dots/mm; 1 dot ≈ 0.125 mm). Printhead 384 dots ÷
+  8 ≈ 48 mm printable. So 1 mm of design ≈ 8 printer dots — placement is 8× coarser than the dot grid.
 - B21: 50×30, printable 48, density 1–5, paperType `1,2,3,5`.
 - D11 / B18: small — default 30×12, printable width 12–15 mm.
 - B50: printable 50, density 6–15 (def 10), rfidType 0.
