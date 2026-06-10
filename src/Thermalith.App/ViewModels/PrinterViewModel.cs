@@ -80,7 +80,9 @@ public sealed partial class PrinterViewModel : ObservableObject
     public string? ConnectedPort { get; private set; }
     public string? ConnectedModel => _caps?.Model.ToString();
     [ObservableProperty] private string _message = "";
-    [ObservableProperty] private LabelType _selectedLabelType = LabelType.WithGaps;
+    // Nullable so the bound ComboBox can briefly hold null while LabelTypes is cleared on reconnect
+    // (binding a null back into a non-nullable enum threw InvalidCastException on the interface).
+    [ObservableProperty] private LabelType? _selectedLabelType = LabelType.WithGaps;
     [ObservableProperty] private int _density = 3;
     [ObservableProperty] private int _densityMin = 1;
     [ObservableProperty] private int _densityMax = 5;
@@ -316,7 +318,7 @@ public sealed partial class PrinterViewModel : ObservableObject
             {
                 Density = Density,
                 Copies = Math.Max(1, Copies),
-                LabelType = SelectedLabelType,
+                LabelType = SelectedLabelType ?? LabelType.WithGaps,
                 HorizontalAlign = PrintAlignment.Center,
                 OffsetXPx = OffsetX,
                 OffsetYPx = OffsetY,
