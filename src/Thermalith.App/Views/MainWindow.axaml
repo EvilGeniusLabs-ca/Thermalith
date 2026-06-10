@@ -226,7 +226,8 @@
                 <views:Ruler Grid.Row="0" Grid.Column="1" x:Name="TopRuler" Orientation="Horizontal" />
                 <views:Ruler Grid.Row="1" Grid.Column="0" x:Name="LeftRuler" Orientation="Vertical" />
                 <ScrollViewer Grid.Row="1" Grid.Column="1" x:Name="CanvasScroll" Background="#3A3A3A"
-                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                          PointerPressed="OnCanvasBackgroundPressed">
                 <Border Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Panel Name="CanvasHost" Focusable="True"
                            Width="{Binding Editor.DisplayWidth}" Height="{Binding Editor.DisplayHeight}"
@@ -405,7 +406,11 @@
                         <StackPanel>
                         <!-- Table cell controls (mirror the right-click cell menu) — shown in cell-edit mode. -->
                         <StackPanel IsVisible="{Binding InspectorShowsCells}" Spacing="3">
-                            <TextBlock Text="Table cell" FontWeight="Bold" Margin="0,0,0,2" />
+                            <TextBlock Text="Table" FontWeight="Bold" Margin="0,0,0,2" />
+                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).Cols}" Minimum="1" FormatString="0" /></Grid>
+                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).Rows}" Minimum="1" FormatString="0" /></Grid>
+                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).BorderWidthMm}" Increment="0.1" Minimum="0" /></Grid>
+                            <TextBlock Classes="section" Text="Cell" />
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <Button Content="Merge" Command="{Binding CellMergeCommand}" />
                                 <Button Content="Unmerge" Command="{Binding CellUnmergeCommand}" />

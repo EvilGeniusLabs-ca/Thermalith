@@ -132,6 +132,7 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     private bool _dragging;
     private bool _marquee;
     private bool _cellDragging;
+    private bool _axisResizing;
     private Point _pressPoint;
 
     // Double-click a table → enter cell-edit mode (or edit the cell if already in it) (table-design.md §6).
@@ -222,7 +223,13 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
                 ed.CellRightClick(p.X, p.Y); // target the right-clicked cell, then the cell menu opens
                 return;
             }
+            // Drag a column/row divider to resize (total table size stays fixed).
+            if (ed.HitColumnDivider(p.X, p.Y, out var ci)) { ed.BeginAxisResize(true, ci); _axisResizing = true; e.Pointer.Capture(host); return; }
+            if (ed.HitRowDivider(p.X, p.Y, out var ri)) { ed.BeginAxisResize(false, ri); _axisResizing = true; e.Pointer.Capture(host); return; }
             if (ed.CellPointerDown(p.X, p.Y)) { _cellDragging = true; e.Pointer.Capture(host); return; }
+            // Clicked inside cell mode but outside the table → exit + select what's under the cursor (or clear).
+            ed.SelectAt(p.X, p.Y, false);
+            return;
         }
 
         // Right-click selects the element under the cursor (so the context menu targets it) without
@@ -263,6 +270,11 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         if (Vm is not { } vm || sender is not Control host) return;
         var p = e.GetPosition(host);
 
+        if (_axisResizing)
+        {
+            vm.Editor.AxisResizeTo(p.X, p.Y);
+            return;
+        }
         if (_cellDragging)
         {
             vm.Editor.CellDragTo(p.X, p.Y);
@@ -278,6 +290,14 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             ShowMarquee(_pressPoint, p);
             return;
         }
+        if (vm.Editor.InCellMode) // divider-resize cursors while hovering a column/row boundary
+        {
+            var ct = vm.Editor.HitColumnDivider(p.X, p.Y, out _) ? StandardCursorType.SizeWestEast
+                : vm.Editor.HitRowDivider(p.X, p.Y, out _) ? StandardCursorType.SizeNorthSouth
+                : StandardCursorType.Arrow;
+            SetHostCursor(host, ct);
+            return;
+        }
         UpdateCursor(vm.Editor, host, p);
     }
 
@@ -285,6 +305,13 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     {
         if (Vm is not { } vm || sender is not Control host) return;
 
+        if (_axisResizing)
+        {
+            _axisResizing = false;
+            vm.Editor.EndAxisResize();
+            e.Pointer.Capture(null);
+            return;
+        }
         if (_cellDragging)
         {
             _cellDragging = false;
@@ -310,6 +337,12 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             vm.Editor.SelectInRect(RectFrom(_pressPoint, e.GetPosition(host)));
             e.Pointer.Capture(null);
         }
+    }
+
+    // Click in the gray area outside the label (the ScrollViewer / padding) deselects everything.
+    private void OnCanvasBackgroundPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (Vm is { } vm && !CanvasHost.IsPointerOver) vm.Editor.DeselectAll();
     }
 
     private void OnCanvasWheel(object? sender, PointerWheelEventArgs e)
@@ -356,6 +389,11 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             }
             : StandardCursorType.Arrow;
 
+        SetHostCursor(host, type);
+    }
+
+    private void SetHostCursor(Control host, StandardCursorType type)
+    {
         if (type == _cursorType) return;
         _cursorType = type;
         host.Cursor = new Cursor(type);

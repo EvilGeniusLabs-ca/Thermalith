@@ -1074,6 +1074,13 @@ public sealed partial class EditorViewModel : ObservableObject
         UpdateSelectionVisuals();
     }
 
+    /// <summary>Exit cell mode (if any) and clear the element selection — clicking off the label.</summary>
+    public void DeselectAll()
+    {
+        ExitCellMode();
+        SetSelection([], null);
+    }
+
     /// <summary>Pointer-down in cell mode: select the cell under the point, or exit if outside the table.</summary>
     public bool CellPointerDown(double dx, double dy)
     {
@@ -1148,6 +1155,80 @@ public sealed partial class EditorViewModel : ObservableObject
                 }
         }
         return (r0, c0, Math.Min(r1, t.Props.Rows - 1), Math.Min(c1, t.Props.Cols - 1));
+    }
+
+    // ── Column / row resize (drag dividers in cell mode; total table size kept constant) ─────────────
+
+    private double[]? _axisResizeStart;
+    private int _axisResizeIndex = -1;
+    private bool _axisResizeIsColumn;
+    private const double DividerHitPx = 4;
+    private const double MinTrackMm = 2;
+
+    public bool HitColumnDivider(double dx, double dy, out int index) => HitDivider(true, dx, dy, out index);
+    public bool HitRowDivider(double dx, double dy, out int index) => HitDivider(false, dx, dy, out index);
+
+    private bool HitDivider(bool column, double dx, double dy, out int index)
+    {
+        index = -1;
+        if (CellTable is not { } t) return false;
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        var mmX = dx / s - t.X;
+        var mmY = dy / s - t.Y;
+        if (mmX < -1 || mmY < -1 || mmX > t.W + 1 || mmY > t.H + 1) return false;
+        if (column)
+        {
+            var edges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W));
+            for (var i = 0; i < t.Props.Cols - 1; i++)
+                if (Math.Abs(edges[i + 1] - mmX) * s <= DividerHitPx) { index = i; return true; }
+        }
+        else
+        {
+            var edges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H));
+            for (var i = 0; i < t.Props.Rows - 1; i++)
+                if (Math.Abs(edges[i + 1] - mmY) * s <= DividerHitPx) { index = i; return true; }
+        }
+        return false;
+    }
+
+    public void BeginAxisResize(bool column, int index)
+    {
+        if (CellTable is not { } t) return;
+        _axisResizeIsColumn = column;
+        _axisResizeIndex = index;
+        _axisResizeStart = column
+            ? TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W)
+            : TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H);
+    }
+
+    public void AxisResizeTo(double dx, double dy)
+    {
+        if (CellTable is not { } t || _axisResizeStart is null || _axisResizeIndex < 0) return;
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        var i = _axisResizeIndex;
+        var start = _axisResizeStart;
+        double leftEdge = 0;
+        for (var k = 0; k < i; k++) leftEdge += start[k];
+        var pair = start[i] + start[i + 1]; // the two tracks share their combined span (table size fixed)
+        var target = (_axisResizeIsColumn ? dx / s - t.X : dy / s - t.Y) - leftEdge;
+        target = Math.Clamp(target, MinTrackMm, pair - MinTrackMm);
+        var sizes = (double[])start.Clone();
+        sizes[i] = Math.Round(target, 1);
+        sizes[i + 1] = Math.Round(pair - sizes[i], 1);
+        var props = _axisResizeIsColumn ? t.Props with { ColumnWidthsMm = sizes } : t.Props with { RowHeightsMm = sizes };
+        ReplaceElement(t with { Props = props });
+        RenderNow();
+        UpdateCellHighlight();
+    }
+
+    public void EndAxisResize()
+    {
+        if (_axisResizeStart is null) return;
+        _axisResizeStart = null;
+        _axisResizeIndex = -1;
+        _history.Commit(_live);
+        MarkDirty();
+        RaiseState();
     }
 
     // ── In-place cell text editing ────────────────────────────────────────────────────────────────
