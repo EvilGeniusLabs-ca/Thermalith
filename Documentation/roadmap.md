@@ -75,20 +75,26 @@ NEEDS DISCUSSION before building (with §I drag-handle item): data model + UX fl
   *(DonationWare §4.2 build-out is no longer here — extracted to its own repo 2026-06-08; Thermalith just
   consumes the NuGet, §E.21.)*
 
-## Niimbot.Net broad-model support — hardware test matrix (APPROVED 2026-06-10)
+## Niimbot.Net broad-model support — hardware test matrix (ORDERED 2026-06-10)
 
 The Niimbot.Net v1 goal is "drive every catalogue printer" (release-plan.md §23; only B1 is
-hardware-verified today). **Decision (2026-06-10): buy the full 3-point matrix — ~$250 shipped, all
-three — for complete form-factor + print-path coverage** (12 / 48 / 104 mm, both feed directions, both
-print-tasks). At that price the "don't buy ahead of the code" caution doesn't apply (permanent assets,
-will be used). Units widen coverage when the v1 driver work starts; they don't change the current bench.
+hardware-verified today). **Ordered 2026-06-10, ~$250 shipped, all three** — and the "upgraded" units
+added a third coverage axis (dpi) on top of width + print-engine:
 
-- **Narrow end — D-series (D11/D110, ~12 mm).** Highest value, cheap. Covers the narrow form factor
-  *and* the different print engine (`PrintTaskVersion.D110` + `PrintDirection.Left` feed) — the path the
-  current generic-B1 fallback definitely gets wrong.
-- **Middle — B1 (48 mm).** The verified reference; 48 sits ~dead-centre of 12–104. "All 3" = a *second*
-  B1 as a dedicated test unit (leave it on a known firmware, don't disturb the daily printer) — a choice,
-  not redundancy.
+- **Width:** 12 / 48 / 104 mm · **Engine:** D110 + Left feed (D11) vs B1 + Top feed (B1, B4) ·
+  **dpi:** 203 (B1, B4) + 229 (upgraded D11) — first hardware off the all-203/8-dots-per-mm history.
+
+**Arrival task (each unit):** read its reported **model-id + dpi** and reconcile against the catalogue —
+same "confirm against hardware" discipline as the per-SKU roll key. The D11 especially (see below).
+
+- **Narrow end — D11 "upgraded" (~12 mm).** Ordered the higher-dpi variant — maps to catalogue
+  **D11_H / D11_Pro (229 dpi / 108 px, ids 528/531)**. NIIMBOT markets it "300 dpi" but `devices.json`
+  says **229** — CONFIRM the real reported dpi on arrival (drives render dot-pitch). Covers the narrow
+  form factor *and* the different engine (`PrintTaskVersion.D110` + `PrintDirection.Left`) — the path the
+  current generic-B1 fallback definitely gets wrong — *and* the non-203 dpi path.
+- **Middle — B1 #2 (old/cheap, 203 dpi / 384 px).** Identical to the verified daily unit, so it's a clean
+  dedicated test B1 (known firmware, don't disturb the daily printer). (B1 Pro at 229 dpi exists and was
+  skipped — not a hole, the upgraded D11 already exercises 229.)
 - **Wide end — B4 (4" / 104 mm).** Proves the driver holds at 104 mm. **No app-side "shipping" work
   exists to do:** a 4" label is just a 104 mm canvas the app already accepts (size fields take 3 digits),
   printed one at a time like any other size. The whole requirement is that **Niimbot.Net lets a developer
