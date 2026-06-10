@@ -122,7 +122,7 @@ public static class LabelResolver
                 Rows = tab.Props.Rows,
                 ColumnWidthsMm = tab.Props.ColumnWidthsMm,
                 RowHeightsMm = tab.Props.RowHeightsMm,
-                Cells = ResolveCells(tab.Props, justify, tokens, BuildStyle(doc, el, null, null, null, null, null, null, 0)),
+                Cells = ResolveCells(tab.Props, tokens, BuildStyle(doc, el, null, null, null, null, null, null, 0)),
                 BorderWidthMm = tab.Props.BorderWidthMm,
                 HeaderRow = tab.Props.HeaderRow,
                 HeaderColumn = tab.Props.HeaderColumn,
@@ -168,7 +168,7 @@ public static class LabelResolver
     private const int HeaderRowShade = 75;
     private const int HeaderColShade = 55;
 
-    private static ResolvedCell[][] ResolveCells(TableProps p, Justify elJustify, TokenResolver tokens, ResolvedTextStyle def)
+    private static ResolvedCell[][] ResolveCells(TableProps p, TokenResolver tokens, ResolvedTextStyle def)
     {
         var cells = p.Cells ?? [];
         var rows = p.Rows;
@@ -203,7 +203,9 @@ public static class LabelResolver
                     else if (p.HeaderColumn && c == 0) { fill = HeaderColShade; textWhite = true; bold ??= true; }
                 }
 
-                result[r][c] = new ResolvedCell(tokens.Substitute(src?.Content ?? ""), src?.Justify ?? elJustify)
+                // Table cell text defaults to centred on both axes (overridable per cell).
+                var cj = new Justify { H = src?.Justify?.H ?? "center", V = src?.Justify?.V ?? "middle" };
+                result[r][c] = new ResolvedCell(tokens.Substitute(src?.Content ?? ""), cj)
                 {
                     FillPercent = fill,
                     TextWhite = textWhite,
