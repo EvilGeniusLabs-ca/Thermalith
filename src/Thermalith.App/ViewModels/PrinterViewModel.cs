@@ -171,10 +171,15 @@ public sealed partial class PrinterViewModel : ObservableObject
     }
 
     /// <summary>Startup background scan + reconnect: pre-fills the port list, then connects if the last
-    /// printer is found (same port, or the single NIIMBOT matching its model). Otherwise just pre-selects.
-    /// Runs off the UI thread (fire-and-forget) so the user can keep working while it scans.</summary>
+    /// printer is found (same port, the single NIIMBOT matching its model, or — when we've connected
+    /// before and only one port exists — that lone port even if the probe didn't ID it). Otherwise just
+    /// pre-selects. Runs off the UI thread (fire-and-forget) so the user can keep working while it scans.</summary>
     public async Task AutoConnectAsync(string? lastPort, string? lastModel)
     {
+        // We've reconnected before iff there's a saved printer. Gates the lone-port fallback below so a
+        // first-ever run with one unrelated serial device doesn't blindly dial it.
+        var hasHistory = lastPort is { Length: > 0 } || lastModel is { Length: > 0 };
+
         // Retry the scan a few times: right after a previous instance closes, the OS/driver can still be
         // releasing the COM port (USB/Bluetooth serial), so the first probe may miss the printer.
         for (var attempt = 0; attempt < 3 && !IsConnected; attempt++)
@@ -187,8 +192,12 @@ public sealed partial class PrinterViewModel : ObservableObject
             var target = Ports.FirstOrDefault(p => p.IsNiimbot && p.Port == lastPort)
                 ?? (lastModel is { Length: > 0 } && Ports.Count(p => p.IsNiimbot && p.Label.Contains(lastModel)) == 1
                     ? Ports.First(p => p.IsNiimbot && p.Label.Contains(lastModel))
-                    : Ports.Count(p => p.IsNiimbot) == 1 ? Ports.First(p => p.IsNiimbot) : null);
-            if (target is null) continue; // no NIIMBOT yet — retry (port may still be releasing)
+                    : Ports.Count(p => p.IsNiimbot) == 1 ? Ports.First(p => p.IsNiimbot) : null)
+                // Connected before + exactly one port present → just try it, even if the probe came back
+                // "no printer". The probe is flaky right after a prior instance closes; a lone port is
+                // almost certainly the printer. A wrong guess just fails ConnectAsync and the loop retries.
+                ?? (hasHistory && Ports.Count == 1 ? Ports[0] : null);
+            if (target is null) continue; // nothing to try yet — retry (port may still be releasing)
 
             SelectedPort = target;
             await ConnectAsync();
