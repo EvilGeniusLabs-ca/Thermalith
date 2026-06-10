@@ -228,7 +228,7 @@
                 <ScrollViewer Grid.Row="1" Grid.Column="1" x:Name="CanvasScroll" Background="#3A3A3A"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <Border Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Panel Name="CanvasHost"
+                    <Panel Name="CanvasHost" Focusable="True"
                            Width="{Binding Editor.DisplayWidth}" Height="{Binding Editor.DisplayHeight}"
                            Background="White"
                            PointerPressed="OnCanvasPressed" PointerMoved="OnCanvasMoved" PointerReleased="OnCanvasReleased"
@@ -338,6 +338,15 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <!-- In-place cell editor (shown over the active cell while editing). -->
+                        <Canvas IsHitTestVisible="{Binding Editor.IsCellEditing}">
+                            <TextBox x:Name="CellEditor" IsVisible="{Binding Editor.IsCellEditing}"
+                                     Canvas.Left="{Binding Editor.CellEditorRect.X}" Canvas.Top="{Binding Editor.CellEditorRect.Y}"
+                                     Width="{Binding Editor.CellEditorRect.Width}" Height="{Binding Editor.CellEditorRect.Height}"
+                                     MinHeight="0" Padding="2,0" FontSize="11"
+                                     Text="{Binding Editor.CellEditText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     KeyDown="OnCellEditorKeyDown" LostFocus="OnCellEditorLostFocus" />
+                        </Canvas>
                     </Panel>
                 </Border>
                 </ScrollViewer>

@@ -1050,6 +1050,7 @@ public sealed partial class EditorViewModel : ObservableObject
     public void ExitCellMode()
     {
         if (!InCellMode) return;
+        CommitCellEdit(); // don't lose an open edit
         CellEditTableId = null;
         CellHighlights.Clear();
         UpdateSelectionVisuals();
@@ -1091,6 +1092,69 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         for (var i = count - 1; i >= 0; i--) if (pos >= edges[i]) return i;
         return 0;
+    }
+
+    // ── In-place cell text editing ────────────────────────────────────────────────────────────────
+
+    [ObservableProperty] private bool _isCellEditing;
+    [ObservableProperty] private string _cellEditText = "";
+    [ObservableProperty] private Rect _cellEditorRect;
+
+    /// <summary>Open the in-place editor over the active (focus) cell, seeded with its current content.</summary>
+    public void BeginCellEdit()
+    {
+        if (CellTable is not { } t) return;
+        var r = Math.Clamp(_cellFocusR, 0, t.Props.Rows - 1);
+        var c = Math.Clamp(_cellFocusC, 0, t.Props.Cols - 1);
+        var cells = t.Props.Cells;
+        CellEditText = cells is not null && r < cells.Count && c < cells[r].Count ? cells[r][c].Content : "";
+        CellEditorRect = ActiveCellDisplayRect(t, r, c);
+        IsCellEditing = true;
+    }
+
+    /// <summary>Commit the in-place editor's text to the active cell (one undo checkpoint).</summary>
+    public void CommitCellEdit()
+    {
+        if (!IsCellEditing) return;
+        IsCellEditing = false;
+        if (CellTable is not { } t) return;
+        var r = Math.Clamp(_cellFocusR, 0, t.Props.Rows - 1);
+        var c = Math.Clamp(_cellFocusC, 0, t.Props.Cols - 1);
+        var grid = Materialize(t.Props);
+        if (grid[r][c].Content == CellEditText) return; // no change
+        grid[r][c] = grid[r][c] with { Content = CellEditText };
+        FlushGesture();
+        ReplaceElement(t with { Props = t.Props with { Cells = grid } });
+        _history.Commit(_live);
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
+    public void CancelCellEdit() => IsCellEditing = false;
+
+    /// <summary>Materialize the (possibly jagged/sparse) cell grid into a full Rows×Cols list for editing.</summary>
+    private static List<List<TableCell>> Materialize(TableProps p)
+    {
+        var src = p.Cells;
+        var grid = new List<List<TableCell>>(p.Rows);
+        for (var r = 0; r < p.Rows; r++)
+        {
+            var row = new List<TableCell>(p.Cols);
+            for (var c = 0; c < p.Cols; c++)
+                row.Add(src is not null && r < src.Count && c < src[r].Count ? src[r][c] : new TableCell());
+            grid.Add(row);
+        }
+        return grid;
+    }
+
+    private Rect ActiveCellDisplayRect(TableElement t, int r, int c)
+    {
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        var colEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W));
+        var rowEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H));
+        return new Rect((t.X + colEdges[c]) * s, (t.Y + rowEdges[r]) * s,
+            (colEdges[c + 1] - colEdges[c]) * s, (rowEdges[r + 1] - rowEdges[r]) * s);
     }
 
     private void UpdateCellHighlight()

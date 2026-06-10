@@ -134,21 +134,48 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     private bool _cellDragging;
     private Point _pressPoint;
 
-    // Double-click a table → enter spreadsheet-style cell-edit mode (table-design.md §6).
+    // Double-click a table → enter cell-edit mode (or edit the cell if already in it) (table-design.md §6).
     private void OnCanvasDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (Vm is not { } vm || sender is not Control host) return;
         var p = e.GetPosition(host);
-        if (vm.Editor.TryEnterCellMode(p.X, p.Y)) e.Handled = true;
+        var ed = vm.Editor;
+        if (!ed.InCellMode) { if (!ed.TryEnterCellMode(p.X, p.Y)) return; }
+        else ed.CellPointerDown(p.X, p.Y);
+        ed.BeginCellEdit();
+        FocusCellEditor();
+        e.Handled = true;
     }
+
+    private void FocusCellEditor() =>
+        Dispatcher.UIThread.Post(() => { CellEditor.Focus(); CellEditor.SelectAll(); }, DispatcherPriority.Background);
+
+    private void OnCellEditorKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+        if (e.Key == Key.Enter) { vm.Editor.CommitCellEdit(); CanvasHost.Focus(); e.Handled = true; }
+        else if (e.Key == Key.Escape) { vm.Editor.CancelCellEdit(); CanvasHost.Focus(); e.Handled = true; }
+    }
+
+    private void OnCellEditorLostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
+        Vm?.Editor.CommitCellEdit();
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (e.Key == Key.Escape && Vm?.Editor.InCellMode == true)
+        if (Vm?.Editor is { } ed)
         {
-            Vm.Editor.ExitCellMode();
-            e.Handled = true;
-            return;
+            if (ed.InCellMode && !ed.IsCellEditing && e.Key is Key.F2 or Key.Enter)
+            {
+                ed.BeginCellEdit();
+                FocusCellEditor();
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.Escape)
+            {
+                if (ed.IsCellEditing) { ed.CancelCellEdit(); CanvasHost.Focus(); e.Handled = true; return; }
+                if (ed.InCellMode) { ed.ExitCellMode(); e.Handled = true; return; }
+            }
         }
         base.OnKeyDown(e);
     }
