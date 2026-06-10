@@ -24,20 +24,20 @@
 
         <TextBlock Classes="section" Text="Position &amp; size" />
 
-        <!-- Whole-mm positioning: integer format, 1-mm steps. X/Y allow negatives so elements can be
+        <!-- Decimal-mm positioning (0.5-mm spinner steps). X/Y allow negatives so elements can be
              positioned off the canvas edge (bleed model); W/H stay >= 1. -->
         <Grid ColumnDefinitions="90,*,22,*" Margin="0,1">
             <TextBlock Classes="lbl" Text="X" />
-            <NumericUpDown Grid.Column="1" Value="{Binding X}" FormatString="0" />
+            <NumericUpDown Grid.Column="1" Value="{Binding X}" FormatString="0.#" Increment="0.5" />
             <TextBlock Classes="lbl" Grid.Column="2" Text="Y" Margin="6,0,4,0" />
-            <NumericUpDown Grid.Column="3" Value="{Binding Y}" FormatString="0" />
+            <NumericUpDown Grid.Column="3" Value="{Binding Y}" FormatString="0.#" Increment="0.5" />
         </Grid>
 
         <Grid ColumnDefinitions="90,*,22,*" Margin="0,1">
             <TextBlock Classes="lbl" Text="W" />
-            <NumericUpDown Grid.Column="1" Value="{Binding W}" Minimum="1" FormatString="0" />
+            <NumericUpDown Grid.Column="1" Value="{Binding W}" Minimum="1" FormatString="0.#" Increment="0.5" />
             <TextBlock Classes="lbl" Grid.Column="2" Text="H" Margin="6,0,4,0" />
-            <NumericUpDown Grid.Column="3" Value="{Binding H}" Minimum="1" FormatString="0" />
+            <NumericUpDown Grid.Column="3" Value="{Binding H}" Minimum="1" FormatString="0.#" Increment="0.5" />
         </Grid>
 
         <Grid ColumnDefinitions="90,*" Margin="0,1">

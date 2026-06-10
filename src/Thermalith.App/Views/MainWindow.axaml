@@ -323,7 +323,7 @@
                 <!-- Print-area guide lines, spanning the canvas viewport; origin/scale synced in code-behind. -->
                 <views:PrintGuideOverlay Grid.Row="1" Grid.Column="1" x:Name="PrintGuide"
                                          IsVisible="{Binding Editor.ShowSafeArea}"
-                                         InsetMm="{Binding Editor.GuideInsetMm}"
+                                         InsetMm="{Binding Editor.SafeAreaInsetMm}"
                                          LabelWidthMm="{Binding Editor.CanvasWidthMm}"
                                          LabelHeightMm="{Binding Editor.CanvasHeightMm}" />
             </Grid>
