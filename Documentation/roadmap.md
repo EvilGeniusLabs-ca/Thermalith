@@ -75,19 +75,23 @@ NEEDS DISCUSSION before building (with §I drag-handle item): data model + UX fl
   *(DonationWare §4.2 build-out is no longer here — extracted to its own repo 2026-06-08; Thermalith just
   consumes the NuGet, §E.21.)*
 
-## Niimbot.Net broad-model support — hardware test matrix (when v1 driver work starts)
+## Niimbot.Net broad-model support — hardware test matrix (APPROVED 2026-06-10)
 
 The Niimbot.Net v1 goal is "drive every catalogue printer" (release-plan.md §23; only B1 is
-hardware-verified today). When that work is scheduled, a 3-point **form-factor + print-path** matrix
-gives near-full coverage with no redundancy — buy hardware *then*, not ahead of the code (idle units):
+hardware-verified today). **Decision (2026-06-10): buy the full 3-point matrix — ~$250 shipped, all
+three — for complete form-factor + print-path coverage** (12 / 48 / 104 mm, both feed directions, both
+print-tasks). At that price the "don't buy ahead of the code" caution doesn't apply (permanent assets,
+will be used). Units widen coverage when the v1 driver work starts; they don't change the current bench.
 
-- **Narrow end — D-series (D11/D110, ~12 mm).** Highest value, ~$15–30. Covers the narrow form factor
+- **Narrow end — D-series (D11/D110, ~12 mm).** Highest value, cheap. Covers the narrow form factor
   *and* the different print engine (`PrintTaskVersion.D110` + `PrintDirection.Left` feed) — the path the
-  current generic-B1 fallback definitely gets wrong. Low-regret; fine to buy early.
-- **Middle — B1 (48 mm).** Already owned + the verified reference. 48 sits ~dead-centre of 12–104, so
-  it's the anchor, not a unit to replace.
-- **Wide end — B4 (4" / 104 mm shipping).** The expensive corner *and* a market bet (shipping labels
-  may not be the r/niimbot crowd). **Hold** — let launch demand decide, not the wallet.
+  current generic-B1 fallback definitely gets wrong.
+- **Middle — B1 (48 mm).** The verified reference; 48 sits ~dead-centre of 12–104. "All 3" = a *second*
+  B1 as a dedicated test unit (leave it on a known firmware, don't disturb the daily printer) — a choice,
+  not redundancy.
+- **Wide end — B4 (4" / 104 mm).** Proves the driver holds at 104 mm. **Hardware = approved; shipping-label
+  *features* are NOT** — owning a B4 is a test target, not a reason to build a shipping module before
+  launch demand confirms it. Keep the purchase and the product scope separate.
 
 Note: the 25×78 mm "cable" labels already on order are B-series stock — the B1 prints them. A D-series is
 a *different* (narrow wire-marker) cable form factor, not a printer for those labels.
