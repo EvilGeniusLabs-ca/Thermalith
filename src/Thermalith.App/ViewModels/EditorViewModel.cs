@@ -755,6 +755,30 @@ public sealed partial class EditorViewModel : ObservableObject
         return printheadWidthMm is > 0 && w > printheadWidthMm.Value;
     }
 
+    /// <summary>True when the document has any elements (a design in progress to protect from auto-resize).</summary>
+    public bool HasElements => _live.Elements.Count > 0;
+
+    /// <summary>Target a printer without changing the canvas size: set the printhead width (for the
+    /// printable guide + print crop) and DPI, preserving the user's label dimensions/shape.</summary>
+    public void SetPrinterTarget(double? printheadWidthMm, int? dpi)
+    {
+        FlushGesture();
+        _live = _live with
+        {
+            Canvas = _live.Canvas with
+            {
+                PrintheadWidthMm = printheadWidthMm ?? _live.Canvas.PrintheadWidthMm,
+                Dpi = dpi is > 0 ? dpi.Value : _live.Canvas.Dpi,
+            },
+        };
+        _history.Commit(_live);
+        _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
+        if (SelectedEditor is null) OnPropertyChanged(nameof(InspectorTarget));
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
     /// <summary>Canvas width in mm, surfaced for the toolbar quick-edit (worklist §C). Setting it resizes the
     /// canvas as a committed change; the value stays in sync with the inspector via <see cref="RaiseState"/>.</summary>
     public double CanvasWidthMm

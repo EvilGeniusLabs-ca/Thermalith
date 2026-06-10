@@ -116,10 +116,10 @@ public partial class MainWindowViewModel : ViewModelBase
         var known = _rollStore.FindByBarcode(r.Barcode);
         if (known is not null)
         {
-            var clamped = ApplyResolvedRoll(known);
+            var hasMargin = ApplyResolvedRoll(known);
             _rollStore.Remember(known); // refresh last-used
             StatusMessage = $"Loaded roll: {known.Name} ({known.WidthMm:0.#}×{known.HeightMm:0.#} mm)"
-                + (clamped ? $" — canvas width limited to {Printer.ConnectedPrintableWidthMm:0.#} mm (printable area)." : "");
+                + (hasMargin ? $" — printable width {Printer.ConnectedPrintableWidthMm:0.#} mm; the rest crops at print." : "");
             return;
         }
 
@@ -145,10 +145,15 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Returns true if the canvas width was clamped below the roll's stock width.</summary>
     private bool ApplyResolvedRoll(RollDefinition roll)
     {
-        var clamped = Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
+        // Canvas = label model: a roll only sizes the canvas for a *fresh* (empty) doc. If the user has
+        // a design, preserve their size and just target the printer (printhead width + dpi) + paper type.
+        if (Editor.HasElements)
+            Editor.SetPrinterTarget(Printer.ConnectedPrintableWidthMm, Printer.ConnectedDpi);
+        else
+            Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
         Printer.ApplyPaperType(roll.PaperType);
-        RememberCanvas(); // persist the applied (printable) size to seed the next startup
-        return clamped;
+        RememberCanvas();
+        return Editor.PrintableInsetXMm > 0; // a printable margin exists (label wider than the head)
     }
 
     private static string MapPaper(LabelType t) => t switch
