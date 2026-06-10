@@ -1037,6 +1037,10 @@ public sealed partial class EditorViewModel : ObservableObject
     [ObservableProperty] private string? _cellEditTableId;
     private int _cellAnchorR, _cellAnchorC, _cellFocusR, _cellFocusC;
 
+    /// <summary>True when exactly one table element is selected (so a plain click can drop into cell mode).</summary>
+    public bool SelectedIsTable =>
+        _selectedIds.Count == 1 && _live.Elements.FirstOrDefault(e => e.Id == _selectedIds[0]) is TableElement;
+
     /// <summary>True while a table is in cell-edit mode — pointer events select/edit cells, not elements.</summary>
     public bool InCellMode => CellEditTableId is not null;
     partial void OnCellEditTableIdChanged(string? value) => OnPropertyChanged(nameof(InCellMode));
@@ -1099,7 +1103,9 @@ public sealed partial class EditorViewModel : ObservableObject
         if (mmX < 0 || mmY < 0 || mmX > t.W || mmY > t.H) return null;
         var colEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W));
         var rowEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H));
-        return (AxisIndex(rowEdges, mmY, t.Props.Rows), AxisIndex(colEdges, mmX, t.Props.Cols));
+        var r = AxisIndex(rowEdges, mmY, t.Props.Rows);
+        var c = AxisIndex(colEdges, mmX, t.Props.Cols);
+        return AnchorOf(t.Props, r, c); // a click inside a merged block selects/edits its anchor cell
     }
 
     private static int AxisIndex(double[] edges, double pos, int count)
@@ -1108,20 +1114,60 @@ public sealed partial class EditorViewModel : ObservableObject
         return 0;
     }
 
+    /// <summary>The anchor (top-left) cell of the merged block covering (r,c), or (r,c) itself.</summary>
+    private static (int R, int C) AnchorOf(TableProps p, int r, int c)
+    {
+        var cells = p.Cells;
+        if (cells is null) return (r, c);
+        for (var ar = 0; ar <= r; ar++)
+            for (var ac = 0; ac <= c; ac++)
+            {
+                if (ar >= cells.Count || ac >= cells[ar].Count) continue;
+                var cell = cells[ar][ac];
+                if ((cell.ColSpan > 1 || cell.RowSpan > 1) && ar + cell.RowSpan > r && ac + cell.ColSpan > c)
+                    return (ar, ac);
+            }
+        return (r, c);
+    }
+
+    /// <summary>Grow a cell-index block to cover the full spans of any merged anchors inside it.</summary>
+    private (int R0, int C0, int R1, int C1) ExpandSpans(TableElement t, int r0, int c0, int r1, int c1)
+    {
+        var cells = t.Props.Cells;
+        var changed = true;
+        while (changed)
+        {
+            changed = false;
+            for (var r = r0; r <= r1; r++)
+                for (var c = c0; c <= c1; c++)
+                {
+                    if (cells is null || r >= cells.Count || c >= cells[r].Count) continue;
+                    var cell = cells[r][c];
+                    if (r + cell.RowSpan - 1 > r1) { r1 = r + cell.RowSpan - 1; changed = true; }
+                    if (c + cell.ColSpan - 1 > c1) { c1 = c + cell.ColSpan - 1; changed = true; }
+                }
+        }
+        return (r0, c0, Math.Min(r1, t.Props.Rows - 1), Math.Min(c1, t.Props.Cols - 1));
+    }
+
     // ── In-place cell text editing ────────────────────────────────────────────────────────────────
 
     [ObservableProperty] private bool _isCellEditing;
     [ObservableProperty] private string _cellEditText = "";
     [ObservableProperty] private Rect _cellEditorRect;
 
-    /// <summary>Open the in-place editor over the active (focus) cell, seeded with its current content.</summary>
-    public void BeginCellEdit()
+    /// <summary>Display rect of the whole table while in cell mode — drawn as a distinct "editing" frame.</summary>
+    [ObservableProperty] private Rect _cellModeFrame;
+
+    /// <summary>Open the in-place editor over the active (focus) cell. Seeded with the cell's content, or
+    /// with <paramref name="initial"/> (type-to-edit: the keystroke that started editing replaces it).</summary>
+    public void BeginCellEdit(string? initial = null)
     {
         if (CellTable is not { } t) return;
         var r = Math.Clamp(_cellFocusR, 0, t.Props.Rows - 1);
         var c = Math.Clamp(_cellFocusC, 0, t.Props.Cols - 1);
         var cells = t.Props.Cells;
-        CellEditText = cells is not null && r < cells.Count && c < cells[r].Count ? cells[r][c].Content : "";
+        CellEditText = initial ?? (cells is not null && r < cells.Count && c < cells[r].Count ? cells[r][c].Content : "");
         CellEditorRect = ActiveCellDisplayRect(t, r, c);
         IsCellEditing = true;
     }
@@ -1266,30 +1312,33 @@ public sealed partial class EditorViewModel : ObservableObject
         return grid;
     }
 
-    private Rect ActiveCellDisplayRect(TableElement t, int r, int c)
+    private Rect BlockRect(TableElement t, int r0, int c0, int r1, int c1)
     {
         var s = _live.Canvas.Dpi / 25.4 * Zoom;
         var colEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W));
         var rowEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H));
-        return new Rect((t.X + colEdges[c]) * s, (t.Y + rowEdges[r]) * s,
-            (colEdges[c + 1] - colEdges[c]) * s, (rowEdges[r + 1] - rowEdges[r]) * s);
+        return new Rect((t.X + colEdges[c0]) * s, (t.Y + rowEdges[r0]) * s,
+            (colEdges[c1 + 1] - colEdges[c0]) * s, (rowEdges[r1 + 1] - rowEdges[r0]) * s);
+    }
+
+    private Rect ActiveCellDisplayRect(TableElement t, int r, int c)
+    {
+        var (er0, ec0, er1, ec1) = ExpandSpans(t, r, c, r, c); // cover the merged block if (r,c) is an anchor
+        return BlockRect(t, er0, ec0, er1, ec1);
     }
 
     private void UpdateCellHighlight()
     {
         CellHighlights.Clear();
         if (CellTable is not { } t) return;
-        var s = _live.Canvas.Dpi / 25.4 * Zoom;
-        var colEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W));
-        var rowEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H));
         var (r0, c0, r1, c1) = CellBlock;
-        c1 = Math.Min(c1, t.Props.Cols - 1);
         r1 = Math.Min(r1, t.Props.Rows - 1);
-        var left = (t.X + colEdges[c0]) * s;
-        var top = (t.Y + rowEdges[r0]) * s;
-        var w = (colEdges[c1 + 1] - colEdges[c0]) * s;
-        var h = (rowEdges[r1 + 1] - rowEdges[r0]) * s;
-        CellHighlights.Add(new SelRect(left, top, w, h));
+        c1 = Math.Min(c1, t.Props.Cols - 1);
+        (r0, c0, r1, c1) = ExpandSpans(t, r0, c0, r1, c1); // highlight covers full merged spans
+        var rect = BlockRect(t, r0, c0, r1, c1);
+        CellHighlights.Add(new SelRect(rect.X, rect.Y, rect.Width, rect.Height));
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        CellModeFrame = new Rect(t.X * s, t.Y * s, t.W * s, t.H * s);
     }
 
     // ── Rendering ───────────────────────────────────────────────────────────────────────────────

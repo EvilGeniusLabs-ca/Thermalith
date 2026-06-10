@@ -348,6 +348,12 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <!-- Edit-mode indicator: distinct accent frame around the whole table. -->
+                        <Canvas IsVisible="{Binding Editor.InCellMode}" IsHitTestVisible="False">
+                            <Rectangle Canvas.Left="{Binding Editor.CellModeFrame.X}" Canvas.Top="{Binding Editor.CellModeFrame.Y}"
+                                       Width="{Binding Editor.CellModeFrame.Width}" Height="{Binding Editor.CellModeFrame.Height}"
+                                       Stroke="#2D7DF6" StrokeThickness="2.5" />
+                        </Canvas>
                         <!-- Table cell-edit mode: highlight for the selected cell block. -->
                         <ItemsControl ItemsSource="{Binding Editor.CellHighlights}"
                                       IsVisible="{Binding Editor.InCellMode}" IsHitTestVisible="False">
@@ -406,28 +412,29 @@
                             </StackPanel>
                             <TextBlock Classes="section" Text="Fill" />
                             <StackPanel Orientation="Horizontal" Spacing="3">
-                                <Button Content="0" Width="34" Command="{Binding CellFillCommand}" CommandParameter="0" />
-                                <Button Content="25" Width="34" Command="{Binding CellFillCommand}" CommandParameter="25" />
-                                <Button Content="50" Width="34" Command="{Binding CellFillCommand}" CommandParameter="50" />
-                                <Button Content="75" Width="34" Command="{Binding CellFillCommand}" CommandParameter="75" />
-                                <Button Content="100" Width="40" Command="{Binding CellFillCommand}" CommandParameter="100" />
+                                <Button Classes="icon" ToolTip.Tip="No fill" Command="{Binding CellFillCommand}" CommandParameter="0"><Rectangle Width="16" Height="13" Fill="White" Stroke="#888" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="25%" Command="{Binding CellFillCommand}" CommandParameter="25"><Rectangle Width="16" Height="13" Fill="#BFBFBF" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="50%" Command="{Binding CellFillCommand}" CommandParameter="50"><Rectangle Width="16" Height="13" Fill="#808080" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="75%" Command="{Binding CellFillCommand}" CommandParameter="75"><Rectangle Width="16" Height="13" Fill="#404040" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="100%" Command="{Binding CellFillCommand}" CommandParameter="100"><Rectangle Width="16" Height="13" Fill="Black" /></Button>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Text" />
                             <StackPanel Orientation="Horizontal" Spacing="3">
-                                <Button Content="Black" Command="{Binding CellTextBlackCommand}" />
-                                <Button Content="White" Command="{Binding CellTextWhiteCommand}" />
-                                <Button Content="B" FontWeight="Bold" Command="{Binding CellBoldCommand}" />
-                                <Button Content="I" FontStyle="Italic" Command="{Binding CellItalicCommand}" />
+                                <Button Classes="icon" ToolTip.Tip="Black text" Command="{Binding CellTextBlackCommand}"><Border Background="White" Padding="4,0"><TextBlock Text="A" Foreground="Black" /></Border></Button>
+                                <Button Classes="icon" ToolTip.Tip="White text" Command="{Binding CellTextWhiteCommand}"><Border Background="Black" Padding="4,0"><TextBlock Text="A" Foreground="White" /></Border></Button>
+                                <Rectangle Width="1" Fill="#444" Margin="3,2" />
+                                <Button Classes="icon" ToolTip.Tip="Bold" Command="{Binding CellBoldCommand}"><TextBlock Text="B" FontWeight="Bold" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="Italic" Command="{Binding CellItalicCommand}"><TextBlock Text="I" FontStyle="Italic" /></Button>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Align" />
                             <StackPanel Orientation="Horizontal" Spacing="3">
-                                <Button Content="L" Width="30" Command="{Binding CellAlignHCommand}" CommandParameter="left" />
-                                <Button Content="C" Width="30" Command="{Binding CellAlignHCommand}" CommandParameter="center" />
-                                <Button Content="R" Width="30" Command="{Binding CellAlignHCommand}" CommandParameter="right" />
+                                <Button Classes="icon" ToolTip.Tip="Left" Command="{Binding CellAlignHCommand}" CommandParameter="left"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="Center" Command="{Binding CellAlignHCommand}" CommandParameter="center"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="Right" Command="{Binding CellAlignHCommand}" CommandParameter="right"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></Button>
                                 <Rectangle Width="1" Fill="#444" Margin="3,2" />
-                                <Button Content="T" Width="30" Command="{Binding CellAlignVCommand}" CommandParameter="top" />
-                                <Button Content="M" Width="30" Command="{Binding CellAlignVCommand}" CommandParameter="middle" />
-                                <Button Content="B" Width="30" Command="{Binding CellAlignVCommand}" CommandParameter="bottom" />
+                                <Button Classes="icon" ToolTip.Tip="Top" Command="{Binding CellAlignVCommand}" CommandParameter="top"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="Middle" Command="{Binding CellAlignVCommand}" CommandParameter="middle"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></Button>
+                                <Button Classes="icon" ToolTip.Tip="Bottom" Command="{Binding CellAlignVCommand}" CommandParameter="bottom"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></Button>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Header" />
                             <StackPanel Orientation="Horizontal" Spacing="4">

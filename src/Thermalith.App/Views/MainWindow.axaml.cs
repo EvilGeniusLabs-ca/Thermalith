@@ -150,6 +150,23 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     private void FocusCellEditor() =>
         Dispatcher.UIThread.Post(() => { CellEditor.Focus(); CellEditor.SelectAll(); }, DispatcherPriority.Background);
 
+    private void FocusCellEditorEnd() =>
+        Dispatcher.UIThread.Post(() => { CellEditor.Focus(); CellEditor.CaretIndex = CellEditor.Text?.Length ?? 0; }, DispatcherPriority.Background);
+
+    // Type-to-edit: in cell mode, a printable keystroke starts editing the active cell with that char.
+    protected override void OnTextInput(TextInputEventArgs e)
+    {
+        if (Vm?.Editor is { } ed && ed.InCellMode && !ed.IsCellEditing
+            && !string.IsNullOrEmpty(e.Text) && !char.IsControl(e.Text[0]))
+        {
+            ed.BeginCellEdit(e.Text);
+            FocusCellEditorEnd();
+            e.Handled = true;
+            return;
+        }
+        base.OnTextInput(e);
+    }
+
     private void OnCellEditorKeyDown(object? sender, KeyEventArgs e)
     {
         if (Vm is not { } vm) return;
@@ -268,9 +285,14 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         }
         if (_dragging)
         {
+            var p = e.GetPosition(host);
+            var moved = Math.Abs(p.X - _pressPoint.X) > 3 || Math.Abs(p.Y - _pressPoint.Y) > 3;
             vm.Editor.EndDrag();
             _dragging = false;
             e.Pointer.Capture(null);
+            // A plain click (no drag) on a single table drops into cell-edit mode — no double-click needed.
+            if (!moved && vm.Editor.SelectedIsTable && !vm.Editor.InCellMode)
+                vm.Editor.TryEnterCellMode(p.X, p.Y);
             return;
         }
         if (_marquee)
