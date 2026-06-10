@@ -123,7 +123,7 @@ public sealed record TableProps
     public double[]? RowHeightsMm { get; init; }
 
     public List<List<TableCell>>? Cells { get; init; }
-    public double BorderWidthMm { get; init; } = 0.2;
+    public double BorderWidthMm { get; init; } = 0.1;
     public bool HeaderRow { get; init; }
     public bool HeaderColumn { get; init; }
 

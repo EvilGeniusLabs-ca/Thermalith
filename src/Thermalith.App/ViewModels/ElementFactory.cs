@@ -48,7 +48,7 @@ public static class ElementFactory
     {
         Cols = 2,
         Rows = 2,
-        BorderWidthMm = 0.2,
+        BorderWidthMm = 0.1,
         Cells =
         [
             [new TableCell { Content = "A1" }, new TableCell { Content = "B1" }],

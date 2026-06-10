@@ -1380,6 +1380,38 @@ public sealed partial class EditorViewModel : ObservableObject
         if (CellTable is { } t) CommitTable(t, t.Props with { HeaderColumn = !t.Props.HeaderColumn });
     }
 
+    // Read/write cell state for the Properties panel toggles (radio/checkbox by current focus cell).
+    // Getters read the focus cell; setters apply to the selected block; RaiseCellState() refreshes them.
+    private TableCell FocusCell()
+    {
+        if (CellTable is not { } t) return new TableCell();
+        var cells = t.Props.Cells;
+        var r = Math.Clamp(_cellFocusR, 0, t.Props.Rows - 1);
+        var c = Math.Clamp(_cellFocusC, 0, t.Props.Cols - 1);
+        return cells is not null && r < cells.Count && c < cells[r].Count ? cells[r][c] : new TableCell();
+    }
+
+    public string CellFill { get => FocusCell().Fill.ToString(); set { if (int.TryParse(value, out var p)) SetCellFill(p); } }
+    public string CellTextColor { get => FocusCell().TextColor; set => SetCellTextColor(value == "white"); }
+    public bool CellBold { get => FocusCell().Bold ?? false; set => MutateSelectedCells(c => c with { Bold = value }); }
+    public bool CellItalic { get => FocusCell().Italic ?? false; set => MutateSelectedCells(c => c with { Italic = value }); }
+    public string CellAlignH { get => FocusCell().Justify?.H ?? "center"; set => SetCellAlignH(value); }
+    public string CellAlignV { get => FocusCell().Justify?.V ?? "middle"; set => SetCellAlignV(value); }
+    public bool CellHeaderRow { get => CellTable?.Props.HeaderRow ?? false; set { if (CellTable is { } t) CommitTable(t, t.Props with { HeaderRow = value }); } }
+    public bool CellHeaderColumn { get => CellTable?.Props.HeaderColumn ?? false; set { if (CellTable is { } t) CommitTable(t, t.Props with { HeaderColumn = value }); } }
+
+    private void RaiseCellState()
+    {
+        OnPropertyChanged(nameof(CellFill));
+        OnPropertyChanged(nameof(CellTextColor));
+        OnPropertyChanged(nameof(CellBold));
+        OnPropertyChanged(nameof(CellItalic));
+        OnPropertyChanged(nameof(CellAlignH));
+        OnPropertyChanged(nameof(CellAlignV));
+        OnPropertyChanged(nameof(CellHeaderRow));
+        OnPropertyChanged(nameof(CellHeaderColumn));
+    }
+
     /// <summary>Right-click in cell mode: select the clicked cell if it's outside the current block.</summary>
     public void CellRightClick(double dx, double dy)
     {
@@ -1450,6 +1482,7 @@ public sealed partial class EditorViewModel : ObservableObject
         CellHighlights.Add(new SelRect(rect.X, rect.Y, rect.Width, rect.Height));
         var s = _live.Canvas.Dpi / 25.4 * Zoom;
         CellModeFrame = new Rect(t.X * s, t.Y * s, t.W * s, t.H * s);
+        RaiseCellState(); // refresh the Properties panel toggles to the focus cell
     }
 
     // ── Rendering ───────────────────────────────────────────────────────────────────────────────

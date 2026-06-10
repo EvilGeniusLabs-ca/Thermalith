@@ -417,34 +417,34 @@
                             </StackPanel>
                             <TextBlock Classes="section" Text="Fill" />
                             <StackPanel Orientation="Horizontal" Spacing="3">
-                                <Button Classes="icon" ToolTip.Tip="No fill" Command="{Binding CellFillCommand}" CommandParameter="0"><Rectangle Width="16" Height="13" Fill="White" Stroke="#888" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="25%" Command="{Binding CellFillCommand}" CommandParameter="25"><Rectangle Width="16" Height="13" Fill="#BFBFBF" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="50%" Command="{Binding CellFillCommand}" CommandParameter="50"><Rectangle Width="16" Height="13" Fill="#808080" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="75%" Command="{Binding CellFillCommand}" CommandParameter="75"><Rectangle Width="16" Height="13" Fill="#404040" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="100%" Command="{Binding CellFillCommand}" CommandParameter="100"><Rectangle Width="16" Height="13" Fill="Black" /></Button>
+                                <ToggleButton Classes="icon" ToolTip.Tip="No fill" IsChecked="{Binding Editor.CellFill, Converter={StaticResource Eq}, ConverterParameter=0}"><Rectangle Width="16" Height="13" Fill="White" Stroke="#888" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="25%" IsChecked="{Binding Editor.CellFill, Converter={StaticResource Eq}, ConverterParameter=25}"><Rectangle Width="16" Height="13" Fill="#BFBFBF" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="50%" IsChecked="{Binding Editor.CellFill, Converter={StaticResource Eq}, ConverterParameter=50}"><Rectangle Width="16" Height="13" Fill="#808080" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="75%" IsChecked="{Binding Editor.CellFill, Converter={StaticResource Eq}, ConverterParameter=75}"><Rectangle Width="16" Height="13" Fill="#404040" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="100%" IsChecked="{Binding Editor.CellFill, Converter={StaticResource Eq}, ConverterParameter=100}"><Rectangle Width="16" Height="13" Fill="Black" /></ToggleButton>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Text" />
                             <StackPanel Orientation="Horizontal" Spacing="3">
-                                <Button Classes="icon" ToolTip.Tip="Black text" Command="{Binding CellTextBlackCommand}"><Border Background="White" Padding="4,0"><TextBlock Text="A" Foreground="Black" /></Border></Button>
-                                <Button Classes="icon" ToolTip.Tip="White text" Command="{Binding CellTextWhiteCommand}"><Border Background="Black" Padding="4,0"><TextBlock Text="A" Foreground="White" /></Border></Button>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Black text" IsChecked="{Binding Editor.CellTextColor, Converter={StaticResource Eq}, ConverterParameter=black}"><Border Background="White" Padding="4,0"><TextBlock Text="A" Foreground="Black" /></Border></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="White text" IsChecked="{Binding Editor.CellTextColor, Converter={StaticResource Eq}, ConverterParameter=white}"><Border Background="Black" Padding="4,0"><TextBlock Text="A" Foreground="White" /></Border></ToggleButton>
                                 <Rectangle Width="1" Fill="#444" Margin="3,2" />
-                                <Button Classes="icon" ToolTip.Tip="Bold" Command="{Binding CellBoldCommand}"><TextBlock Text="B" FontWeight="Bold" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="Italic" Command="{Binding CellItalicCommand}"><TextBlock Text="I" FontStyle="Italic" /></Button>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Editor.CellBold}"><TextBlock Text="B" FontWeight="Bold" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Editor.CellItalic}"><TextBlock Text="I" FontStyle="Italic" /></ToggleButton>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Align" />
                             <StackPanel Orientation="Horizontal" Spacing="3">
-                                <Button Classes="icon" ToolTip.Tip="Left" Command="{Binding CellAlignHCommand}" CommandParameter="left"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="Center" Command="{Binding CellAlignHCommand}" CommandParameter="center"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="Right" Command="{Binding CellAlignHCommand}" CommandParameter="right"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></Button>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Left" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=left}"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Center" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=center}"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Right" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=right}"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></ToggleButton>
                                 <Rectangle Width="1" Fill="#444" Margin="3,2" />
-                                <Button Classes="icon" ToolTip.Tip="Top" Command="{Binding CellAlignVCommand}" CommandParameter="top"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="Middle" Command="{Binding CellAlignVCommand}" CommandParameter="middle"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></Button>
-                                <Button Classes="icon" ToolTip.Tip="Bottom" Command="{Binding CellAlignVCommand}" CommandParameter="bottom"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></Button>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Top" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=top}"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Middle" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=middle}"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Bottom" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></ToggleButton>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Header" />
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <Button Content="Row" Command="{Binding CellHeaderRowCommand}" />
-                                <Button Content="Column" Command="{Binding CellHeaderColumnCommand}" />
+                                <ToggleButton Content="Row" IsChecked="{Binding Editor.CellHeaderRow}" />
+                                <ToggleButton Content="Column" IsChecked="{Binding Editor.CellHeaderColumn}" />
                             </StackPanel>
                             <TextBlock Text="Double-click a cell to edit · Esc to exit" Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
                             <Separator Margin="0,4" />
