@@ -53,6 +53,9 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>A dashed outline rectangle per selected element (display coords) — supports multi-select.</summary>
     public ObservableCollection<SelRect> SelectionRects { get; } = [];
 
+    /// <summary>Highlight rect for the selected cell block while a table is in cell-edit mode (display coords).</summary>
+    public ObservableCollection<SelRect> CellHighlights { get; } = [];
+
     private const double HandleSize = 9;
 
     private readonly List<string> _selectedIds = [];
@@ -873,6 +876,15 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private void UpdateSelectionVisuals()
     {
+        if (InCellMode) // cell mode shows only the cell-block highlight, not element adorners
+        {
+            SelectionRects.Clear();
+            SelectionHandles.Clear();
+            HasSelection = false;
+            UpdateCellHighlight();
+            return;
+        }
+
         var s = _live.Canvas.Dpi / 25.4 * Zoom;
         SelectionRects.Clear();
         foreach (var id in _selectedIds)
@@ -1004,6 +1016,98 @@ public sealed partial class EditorViewModel : ObservableObject
             if (dx >= h.Left - pad && dx <= h.Left + h.Size + pad && dy >= h.Top - pad && dy <= h.Top + h.Size + pad)
                 return h.Kind;
         return null;
+    }
+
+    // ── Table cell-edit mode (spreadsheet-style, see table-design.md) ────────────────────────────
+
+    [ObservableProperty] private string? _cellEditTableId;
+    private int _cellAnchorR, _cellAnchorC, _cellFocusR, _cellFocusC;
+
+    /// <summary>True while a table is in cell-edit mode — pointer events select/edit cells, not elements.</summary>
+    public bool InCellMode => CellEditTableId is not null;
+    partial void OnCellEditTableIdChanged(string? value) => OnPropertyChanged(nameof(InCellMode));
+
+    private TableElement? CellTable =>
+        CellEditTableId is { } id ? _live.Elements.FirstOrDefault(e => e.Id == id) as TableElement : null;
+
+    /// <summary>Selected cell block (normalized): top-left + bottom-right inclusive cell indices.</summary>
+    public (int R0, int C0, int R1, int C1) CellBlock => (
+        Math.Min(_cellAnchorR, _cellFocusR), Math.Min(_cellAnchorC, _cellFocusC),
+        Math.Max(_cellAnchorR, _cellFocusR), Math.Max(_cellAnchorC, _cellFocusC));
+
+    /// <summary>Enter cell mode for a table under the display point (if any) and select the cell there.</summary>
+    public bool TryEnterCellMode(double dx, double dy)
+    {
+        if (HitTest(dx, dy) is not { } id) return false;
+        if (_live.Elements.FirstOrDefault(e => e.Id == id) is not TableElement t) return false;
+        CellEditTableId = t.Id;
+        SetSelection([t.Id], t.Id); // keep the table the selected element (inspector context)
+        if (HitCell(t, dx, dy) is { } cell) { _cellAnchorR = _cellFocusR = cell.R; _cellAnchorC = _cellFocusC = cell.C; }
+        UpdateCellHighlight();
+        return true;
+    }
+
+    public void ExitCellMode()
+    {
+        if (!InCellMode) return;
+        CellEditTableId = null;
+        CellHighlights.Clear();
+        UpdateSelectionVisuals();
+    }
+
+    /// <summary>Pointer-down in cell mode: select the cell under the point, or exit if outside the table.</summary>
+    public bool CellPointerDown(double dx, double dy)
+    {
+        if (CellTable is not { } t || HitCell(t, dx, dy) is not { } cell) { ExitCellMode(); return false; }
+        _cellAnchorR = _cellFocusR = cell.R;
+        _cellAnchorC = _cellFocusC = cell.C;
+        UpdateCellHighlight();
+        return true;
+    }
+
+    public void CellDragTo(double dx, double dy)
+    {
+        if (CellTable is { } t && HitCell(t, dx, dy) is { } cell)
+        {
+            _cellFocusR = cell.R;
+            _cellFocusC = cell.C;
+            UpdateCellHighlight();
+        }
+    }
+
+    private (int R, int C)? HitCell(TableElement t, double dx, double dy)
+    {
+        if (t.Props.Cols <= 0 || t.Props.Rows <= 0) return null;
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        var mmX = dx / s - t.X;
+        var mmY = dy / s - t.Y;
+        if (mmX < 0 || mmY < 0 || mmX > t.W || mmY > t.H) return null;
+        var colEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W));
+        var rowEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H));
+        return (AxisIndex(rowEdges, mmY, t.Props.Rows), AxisIndex(colEdges, mmX, t.Props.Cols));
+    }
+
+    private static int AxisIndex(double[] edges, double pos, int count)
+    {
+        for (var i = count - 1; i >= 0; i--) if (pos >= edges[i]) return i;
+        return 0;
+    }
+
+    private void UpdateCellHighlight()
+    {
+        CellHighlights.Clear();
+        if (CellTable is not { } t) return;
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        var colEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.ColumnWidthsMm, t.Props.Cols, t.W));
+        var rowEdges = TableMetrics.Edges(TableMetrics.AxisMm(t.Props.RowHeightsMm, t.Props.Rows, t.H));
+        var (r0, c0, r1, c1) = CellBlock;
+        c1 = Math.Min(c1, t.Props.Cols - 1);
+        r1 = Math.Min(r1, t.Props.Rows - 1);
+        var left = (t.X + colEdges[c0]) * s;
+        var top = (t.Y + rowEdges[r0]) * s;
+        var w = (colEdges[c1 + 1] - colEdges[c0]) * s;
+        var h = (rowEdges[r1 + 1] - rowEdges[r0]) * s;
+        CellHighlights.Add(new SelRect(left, top, w, h));
     }
 
     // ── Rendering ───────────────────────────────────────────────────────────────────────────────

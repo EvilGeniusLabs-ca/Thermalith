@@ -232,7 +232,7 @@
                            Width="{Binding Editor.DisplayWidth}" Height="{Binding Editor.DisplayHeight}"
                            Background="White"
                            PointerPressed="OnCanvasPressed" PointerMoved="OnCanvasMoved" PointerReleased="OnCanvasReleased"
-                           PointerWheelChanged="OnCanvasWheel">
+                           PointerWheelChanged="OnCanvasWheel" DoubleTapped="OnCanvasDoubleTapped">
                         <Panel.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Cut" Command="{Binding CutCommand}" />
@@ -314,6 +314,27 @@
                                 <DataTemplate x:DataType="vm:HandleSpec">
                                     <Rectangle Width="{Binding Size}" Height="{Binding Size}"
                                                Fill="White" Stroke="#2D7DF6" StrokeThickness="1" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <!-- Table cell-edit mode: highlight for the selected cell block. -->
+                        <ItemsControl ItemsSource="{Binding Editor.CellHighlights}"
+                                      IsVisible="{Binding Editor.InCellMode}" IsHitTestVisible="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.Styles>
+                                <Style Selector="ContentPresenter" x:DataType="vm:SelRect">
+                                    <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                    <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                </Style>
+                            </ItemsControl.Styles>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SelRect">
+                                    <Rectangle Width="{Binding Width}" Height="{Binding Height}"
+                                               Fill="#332D7DF6" Stroke="#2D7DF6" StrokeThickness="1.5" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

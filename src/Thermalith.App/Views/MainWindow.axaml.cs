@@ -131,7 +131,27 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     private bool _dragging;
     private bool _marquee;
+    private bool _cellDragging;
     private Point _pressPoint;
+
+    // Double-click a table → enter spreadsheet-style cell-edit mode (table-design.md §6).
+    private void OnCanvasDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (Vm is not { } vm || sender is not Control host) return;
+        var p = e.GetPosition(host);
+        if (vm.Editor.TryEnterCellMode(p.X, p.Y)) e.Handled = true;
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && Vm?.Editor.InCellMode == true)
+        {
+            Vm.Editor.ExitCellMode();
+            e.Handled = true;
+            return;
+        }
+        base.OnKeyDown(e);
+    }
 
     private void OnCanvasPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -139,6 +159,13 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         var ed = vm.Editor;
         var p = e.GetPosition(host);
         _pressPoint = p;
+
+        // In cell-edit mode, pointer events select cells (drag = block). Clicking outside the table exits
+        // cell mode and falls through to normal element handling.
+        if (ed.InCellMode && !e.GetCurrentPoint(host).Properties.IsRightButtonPressed)
+        {
+            if (ed.CellPointerDown(p.X, p.Y)) { _cellDragging = true; e.Pointer.Capture(host); return; }
+        }
 
         // Right-click selects the element under the cursor (so the context menu targets it) without
         // starting a drag; clicking empty space leaves the current selection so the menu can act on it.
@@ -178,6 +205,11 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         if (Vm is not { } vm || sender is not Control host) return;
         var p = e.GetPosition(host);
 
+        if (_cellDragging)
+        {
+            vm.Editor.CellDragTo(p.X, p.Y);
+            return;
+        }
         if (_dragging)
         {
             vm.Editor.DragTo(p.X - _pressPoint.X, p.Y - _pressPoint.Y);
@@ -195,6 +227,12 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     {
         if (Vm is not { } vm || sender is not Control host) return;
 
+        if (_cellDragging)
+        {
+            _cellDragging = false;
+            e.Pointer.Capture(null);
+            return;
+        }
         if (_dragging)
         {
             vm.Editor.EndDrag();
