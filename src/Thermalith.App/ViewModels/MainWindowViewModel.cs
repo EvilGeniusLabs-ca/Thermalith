@@ -34,7 +34,22 @@ public partial class MainWindowViewModel : ViewModelBase
         Editor.StateChanged += (_, _) => OnEditorStateChanged();
         Editor.PropertyChanged += OnEditorPropertyChanged;
         Printer.RollDetected += OnRollDetected;
+
+        // Seed the startup canvas to the last applied roll's (printable) size, so designs don't start at
+        // the generic 50×30 and then jump when a printer with a narrower printhead is attached.
+        if (_settings.LastCanvasWidthMm is > 0 && _settings.LastCanvasHeightMm is > 0)
+            Editor.NewDocument(_settings.LastCanvasWidthMm.Value, _settings.LastCanvasHeightMm.Value,
+                _settings.LastCanvasDpi ?? 203, _settings.LastCanvasShape ?? "rectangle");
+
         UpdateTitle();
+    }
+
+    /// <summary>Persist the current canvas size as the last applied roll size (seeds the next startup).</summary>
+    private void RememberCanvas()
+    {
+        var (w, h, dpi, shape) = Editor.CurrentCanvas();
+        _settings = _settings with { LastCanvasWidthMm = w, LastCanvasHeightMm = h, LastCanvasDpi = dpi, LastCanvasShape = shape };
+        _settingsService.Save(_settings);
     }
 
     public EditorViewModel Editor { get; }
@@ -80,6 +95,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Editor.ApplyRoll(def.WidthMm, def.HeightMm, def.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
         Printer.ApplyPaperType(def.PaperType);
         _rollStore.Remember(def);
+        RememberCanvas();
     }
 
     // ── Loaded-roll detection (worklist §B) ───────────────────────────────────────────────────────
@@ -128,6 +144,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         var clamped = Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
         Printer.ApplyPaperType(roll.PaperType);
+        RememberCanvas(); // persist the applied (printable) size to seed the next startup
         return clamped;
     }
 

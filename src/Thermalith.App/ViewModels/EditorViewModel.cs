@@ -120,6 +120,15 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void NewDocument() => LoadInternal(DocumentFactory.New(), new Manifest { Id = DocumentFactory.NewId(), Name = "Untitled" }, null, new Dictionary<string, byte[]>());
 
+    /// <summary>New empty document at a specific canvas size (clean, not dirty) — used at startup to seed
+    /// the last applied roll's printable size.</summary>
+    public void NewDocument(double widthMm, double heightMm, int dpi, string shape) =>
+        LoadInternal(DocumentFactory.New(widthMm, heightMm, dpi, shape), new Manifest { Id = DocumentFactory.NewId(), Name = "Untitled" }, null, new Dictionary<string, byte[]>());
+
+    /// <summary>Current canvas geometry (for persisting the last applied size).</summary>
+    public (double WidthMm, double HeightMm, int Dpi, string Shape) CurrentCanvas() =>
+        (_live.Canvas.WidthMm, _live.Canvas.HeightMm, _live.Canvas.Dpi, _live.Canvas.Shape);
+
     public void LoadPackage(LabelPackage package, string path) =>
         LoadInternal(package.Document, package.Manifest, path, package.Assets);
 

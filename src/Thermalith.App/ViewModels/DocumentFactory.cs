@@ -18,6 +18,12 @@ public static class DocumentFactory
         Elements = [], // start empty — add elements from the Insert palette
     };
 
+    /// <summary>A new empty document sized to a specific canvas (e.g. the last applied roll's printable size).</summary>
+    public static LabelDocument New(double widthMm, double heightMm, int dpi, string shape) => New() with
+    {
+        Canvas = new Canvas { WidthMm = widthMm, HeightMm = heightMm, Dpi = dpi, Shape = shape, SafeAreaInsetMm = 1.5 },
+    };
+
     /// <summary>A stable, collision-resistant element id (§6.1: ids survive undo/copy/binding).</summary>
     public static string NewId() => "el_" + Guid.NewGuid().ToString("N")[..8];
 }
