@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
         xmlns:ed="clr-namespace:Thermalith.App.ViewModels.Editors"
+        xmlns:cat="clr-namespace:Thermalith.Core.Catalog;assembly=Thermalith.Core"
         x:Class="Thermalith.App.Views.RollDialog"
         x:DataType="vm:RollDialogViewModel"
         Title="{Binding Title}"
@@ -41,6 +42,20 @@
         </Grid>
         <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Shape" /><ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
         <Grid Classes="r" ColumnDefinitions="92,*"><TextBlock Text="Density" /><TextBox Grid.Column="1" Text="{Binding Density, Converter={StaticResource Num}}" Watermark="optional" /></Grid>
+
+        <Grid Classes="r" ColumnDefinitions="92,*" IsVisible="{Binding HasPrinters}">
+            <TextBlock Text="Target printer" ToolTip.Tip="Sets the printable width + dpi (the print-crop guide). Pick the printer you'll print on — even one you don't have connected." />
+            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Printers}" SelectedItem="{Binding TargetPrinter}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="cat:PrinterEntry">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{Binding Model}" />
+                            <TextBlock Text="{Binding PrintableWidthMm, StringFormat='· {0:0.#} mm'}" Foreground="#888" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,14,0,0">
             <Button Content="Cancel" Click="OnCancel" MinWidth="80" />

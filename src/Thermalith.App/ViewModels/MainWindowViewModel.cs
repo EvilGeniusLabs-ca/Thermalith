@@ -27,6 +27,12 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _settingsService = settingsService;
         _settings = settingsService.Load();
+
+        // Design-target catalog (worklist §A): lets a label be aimed at any model's printable width/dpi
+        // even when that printer isn't connected. Embedded baseline (or app-data refresh); never blocks.
+        try { TargetPrinters = new PrinterCatalogService().Load().Printers.OrderBy(p => p.Model, StringComparer.OrdinalIgnoreCase).ToList(); }
+        catch { TargetPrinters = []; }
+
         Editor = new EditorViewModel();
         Printer = new PrinterViewModel(Editor);
         RecentFiles = new ObservableCollection<string>(_settings.RecentFiles);
@@ -70,6 +76,32 @@ public partial class MainWindowViewModel : ViewModelBase
     public PrinterViewModel Printer { get; }
     public ObservableCollection<string> RecentFiles { get; }
 
+    /// <summary>Catalog models offered as a design target in the new-label dialog (worklist §A).</summary>
+    public IReadOnlyList<PrinterEntry> TargetPrinters { get; }
+
+    /// <summary>
+    /// The catalog entry to pre-select as the design target. Prefers the <i>connected</i> printer (matched
+    /// by its reported printable width + dpi), then the current canvas target, then the B1, then the first
+    /// model. Null only when the catalog is empty.
+    /// </summary>
+    public PrinterEntry? CurrentTargetPrinter()
+    {
+        if (TargetPrinters.Count == 0) return null;
+
+        // A connected printer self-reports its geometry on connect — default the dropdown to it.
+        if (Printer.IsConnected && Printer.ConnectedPrintableWidthMm is { } cw && Printer.ConnectedDpi is { } cd
+            && Match(cw, cd) is { } connected)
+            return connected;
+
+        var (_, _, dpi, _, head) = Editor.CurrentCanvas();
+        return (head is { } h ? Match(h, dpi) : null)
+            ?? TargetPrinters.FirstOrDefault(p => string.Equals(p.Model, "B1", StringComparison.OrdinalIgnoreCase))
+            ?? TargetPrinters[0];
+
+        PrinterEntry? Match(double widthMm, int dpi) =>
+            TargetPrinters.FirstOrDefault(p => p.Dpi == dpi && Math.Abs(p.PrintableWidthMm - widthMm) < 0.6);
+    }
+
     /// <summary>Set by the view before first use.</summary>
     public IFilePicker? FilePicker { get; set; }
 
@@ -102,11 +134,15 @@ public partial class MainWindowViewModel : ViewModelBase
             Shape = last?.Shape ?? "rectangle",
             Density = last?.Density,
         };
-        var def = Dialogs is null ? seed : await Dialogs.DefineRollAsync(seed, "New label");
-        if (def is null) return; // cancelled
+        var choice = Dialogs is null
+            ? new NewLabelChoice(seed, Printer.ConnectedPrintableWidthMm, Printer.ConnectedDpi)
+            : await Dialogs.DefineRollAsync(seed, "New label", TargetPrinters, CurrentTargetPrinter());
+        if (choice is null) return; // cancelled
+        var def = choice.Roll;
 
         Editor.NewDocument();
-        Editor.ApplyRoll(def.WidthMm, def.HeightMm, def.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
+        Editor.ApplyRoll(def.WidthMm, def.HeightMm, def.Shape,
+            choice.TargetDpi ?? Printer.ConnectedDpi, choice.TargetPrintableWidthMm ?? Printer.ConnectedPrintableWidthMm);
         Printer.ApplyPaperType(def.PaperType);
         _rollStore.Remember(def);
         RememberCanvas();
@@ -127,7 +163,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var known = _rollStore.FindByBarcode(r.Barcode);
         if (known is not null)
         {
-            var hasMargin = ApplyResolvedRoll(known);
+            var hasMargin = ApplyResolvedRoll(known, Printer.ConnectedPrintableWidthMm, Printer.ConnectedDpi);
             _rollStore.Remember(known); // refresh last-used
             StatusMessage = $"Loaded roll: {known.Name} ({known.WidthMm:0.#}×{known.HeightMm:0.#} mm)"
                 + (hasMargin ? $" — printable width {Printer.ConnectedPrintableWidthMm:0.#} mm; the rest crops at print." : "");
@@ -144,24 +180,26 @@ public partial class MainWindowViewModel : ViewModelBase
             PaperType = MapPaper(r.ConsumablesType),
             Shape = "rectangle",
         };
-        var defined = await Dialogs.DefineRollAsync(seed, "New label roll detected");
-        if (defined is null) return;
+        var choice = await Dialogs.DefineRollAsync(seed, "New label roll detected", TargetPrinters, CurrentTargetPrinter());
+        if (choice is null) return;
+        var defined = choice.Roll;
 
         _rollStore.Remember(defined);
-        ApplyResolvedRoll(defined);
+        ApplyResolvedRoll(defined, choice.TargetPrintableWidthMm ?? Printer.ConnectedPrintableWidthMm,
+            choice.TargetDpi ?? Printer.ConnectedDpi);
         StatusMessage = $"Saved roll: {defined.Name}";
     }
 
     /// <summary>Apply a roll to the canvas, clamping width to the connected printer's printable area.
     /// Returns true if the canvas width was clamped below the roll's stock width.</summary>
-    private bool ApplyResolvedRoll(RollDefinition roll)
+    private bool ApplyResolvedRoll(RollDefinition roll, double? printableWidthMm, int? dpi)
     {
         // Canvas = label model: a roll only sizes the canvas for a *fresh* (empty) doc. If the user has
         // a design, preserve their size and just target the printer (printhead width + dpi) + paper type.
         if (Editor.HasElements)
-            Editor.SetPrinterTarget(Printer.ConnectedPrintableWidthMm, Printer.ConnectedDpi);
+            Editor.SetPrinterTarget(printableWidthMm, dpi);
         else
-            Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
+            Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, dpi, printableWidthMm);
         Printer.ApplyPaperType(roll.PaperType);
         RememberCanvas();
         return Editor.PrintableInsetXMm > 0; // a printable margin exists (label wider than the head)

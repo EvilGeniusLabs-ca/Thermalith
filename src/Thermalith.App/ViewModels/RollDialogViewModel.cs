@@ -15,11 +15,16 @@ public sealed partial class RollDialogViewModel : ObservableObject
     private readonly string? _serial;
     private readonly string? _consumablesType;
 
-    public RollDialogViewModel() : this(new RollDefinition(), "New label") { }
+    public RollDialogViewModel() : this(new RollDefinition(), "New label", [], null) { }
 
     public RollDialogViewModel(RollDefinition seed, string title)
+        : this(seed, title, [], null) { }
+
+    public RollDialogViewModel(RollDefinition seed, string title, IReadOnlyList<PrinterEntry> printers, PrinterEntry? target)
     {
         Title = title;
+        Printers = printers;
+        _targetPrinter = target ?? (printers.Count > 0 ? printers[0] : null);
         _barcode = seed.Barcode;
         _uuid = seed.Uuid;
         _serial = seed.Serial;
@@ -49,6 +54,19 @@ public sealed partial class RollDialogViewModel : ObservableObject
     [ObservableProperty] private double _height;
     [ObservableProperty] private string _shape;
     [ObservableProperty] private int? _density;
+
+    // ── Design target (catalog) ────────────────────────────────────────────────────────────────
+    /// <summary>Catalog models the label can be designed for (sets the print-crop guide), incl. printers
+    /// the user doesn't have connected. Empty when the catalog couldn't load.</summary>
+    public IReadOnlyList<PrinterEntry> Printers { get; }
+    public bool HasPrinters => Printers.Count > 0;
+
+    [ObservableProperty] private PrinterEntry? _targetPrinter;
+
+    /// <summary>Chosen target's printable width (printhead limit) in mm, or null if none chosen.</summary>
+    public double? TargetPrintableWidthMm => TargetPrinter?.PrintableWidthMm;
+    /// <summary>Chosen target's dpi, or null if none chosen.</summary>
+    public int? TargetDpi => TargetPrinter?.Dpi;
 
     // Typing/pasting the part name pre-fills the size from its W*H pattern.
     partial void OnPartNameChanged(string value)
