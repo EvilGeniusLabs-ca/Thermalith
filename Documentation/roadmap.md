@@ -89,9 +89,12 @@ will be used). Units widen coverage when the v1 driver work starts; they don't c
 - **Middle — B1 (48 mm).** The verified reference; 48 sits ~dead-centre of 12–104. "All 3" = a *second*
   B1 as a dedicated test unit (leave it on a known firmware, don't disturb the daily printer) — a choice,
   not redundancy.
-- **Wide end — B4 (4" / 104 mm).** Proves the driver holds at 104 mm. **Hardware = approved; shipping-label
-  *features* are NOT** — owning a B4 is a test target, not a reason to build a shipping module before
-  launch demand confirms it. Keep the purchase and the product scope separate.
+- **Wide end — B4 (4" / 104 mm).** Proves the driver holds at 104 mm. **No app-side "shipping" work
+  exists to do:** a 4" label is just a 104 mm canvas the app already accepts (size fields take 3 digits),
+  printed one at a time like any other size. The whole requirement is that **Niimbot.Net lets a developer
+  drive the printer** (the v1 NuGet goal) — the app comes along for free. The only additive "shipping-ish"
+  capability, printing many labels in a run, is **data-merge / variable-data (§J)** — printer-agnostic and
+  orthogonal to the B4, not a shipping feature. So this purchase is purely a *library* test target.
 
 Note: the 25×78 mm "cable" labels already on order are B-series stock — the B1 prints them. A D-series is
 a *different* (narrow wire-marker) cable form factor, not a printer for those labels.
