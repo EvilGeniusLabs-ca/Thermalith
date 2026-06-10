@@ -10,10 +10,39 @@
         <!-- Theme-varying brushes: resolved per light/dark variant so they flip with the chosen theme. -->
         <ResourceDictionary.ThemeDictionaries>
             <ResourceDictionary x:Key="Dark">
+                <!-- Text tiers (dim → strong) -->
+                <SolidColorBrush x:Key="TextStrong" Color="#CCCCCC" />
+                <SolidColorBrush x:Key="TextPrimary" Color="#B0B0B0" />
+                <SolidColorBrush x:Key="TextSecondary" Color="#8C8C8C" />
+                <SolidColorBrush x:Key="TextHint" Color="#777777" />
+                <SolidColorBrush x:Key="TextInfo" Color="#88AACC" />
+                <!-- Chrome surfaces -->
+                <SolidColorBrush x:Key="SurfaceBar" Color="#202020" />
+                <SolidColorBrush x:Key="SurfacePanel" Color="#262626" />
+                <SolidColorBrush x:Key="SurfaceCanvas" Color="#3A3A3A" />
+                <SolidColorBrush x:Key="SurfaceSplitter" Color="#111111" />
+                <SolidColorBrush x:Key="DividerWeak" Color="#444444" />
+                <!-- Icon glyph stroke + ruler chrome -->
                 <SolidColorBrush x:Key="IconStroke" Color="#D0D0D0" />
+                <SolidColorBrush x:Key="RulerBg" Color="#2A2A2A" />
+                <SolidColorBrush x:Key="RulerTick" Color="#777777" />
+                <SolidColorBrush x:Key="RulerText" Color="#AAAAAA" />
             </ResourceDictionary>
             <ResourceDictionary x:Key="Light">
+                <SolidColorBrush x:Key="TextStrong" Color="#1E1E1E" />
+                <SolidColorBrush x:Key="TextPrimary" Color="#2A2A2A" />
+                <SolidColorBrush x:Key="TextSecondary" Color="#5C5C5C" />
+                <SolidColorBrush x:Key="TextHint" Color="#8A8A8A" />
+                <SolidColorBrush x:Key="TextInfo" Color="#2A6CA8" />
+                <SolidColorBrush x:Key="SurfaceBar" Color="#E6E6E6" />
+                <SolidColorBrush x:Key="SurfacePanel" Color="#F0F0F0" />
+                <SolidColorBrush x:Key="SurfaceCanvas" Color="#B8B8B8" />
+                <SolidColorBrush x:Key="SurfaceSplitter" Color="#C0C0C0" />
+                <SolidColorBrush x:Key="DividerWeak" Color="#CFCFCF" />
                 <SolidColorBrush x:Key="IconStroke" Color="#3A3A3A" />
+                <SolidColorBrush x:Key="RulerBg" Color="#E6E6E6" />
+                <SolidColorBrush x:Key="RulerTick" Color="#9A9A9A" />
+                <SolidColorBrush x:Key="RulerText" Color="#5C5C5C" />
             </ResourceDictionary>
         </ResourceDictionary.ThemeDictionaries>
 
@@ -104,7 +133,7 @@
         <!-- Inspector section header (Position / Alignment / Font / …). -->
         <Style Selector="TextBlock.section">
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#9AA0A6" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Margin" Value="0,8,0,2" />
         </Style>

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 
 namespace Thermalith.App.Views;
 
@@ -24,14 +25,22 @@ public sealed class Ruler : Control
 
     private static readonly double[] StepsMm = [1, 2, 5, 10, 20, 50, 100, 200, 500];
 
-    private readonly IBrush _bg = new SolidColorBrush(Color.FromRgb(0x2A, 0x2A, 0x2A));
-    private readonly IPen _tick = new Pen(new SolidColorBrush(Color.FromRgb(0x77, 0x77, 0x77)));
-    private readonly IBrush _text = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
     private readonly Typeface _face = new("Segoe UI");
 
     static Ruler() => AffectsRender<Ruler>(OrientationProperty, OriginProperty, PixelsPerMmProperty);
 
     public Ruler() => IsHitTestVisible = false;
+
+    // Repaint when the effective theme flips so the strip re-resolves its chrome brushes.
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property.Name == nameof(ActualThemeVariant)) InvalidateVisual();
+    }
+
+    /// <summary>Resolve a theme brush by key for the current variant; fall back to a fixed colour.</summary>
+    private IBrush ThemeBrush(string key, Color fallback) =>
+        this.TryFindResource(key, ActualThemeVariant, out var v) && v is IBrush b ? b : new SolidColorBrush(fallback);
 
     public Orientation Orientation { get => GetValue(OrientationProperty); set => SetValue(OrientationProperty, value); }
     public double Origin { get => GetValue(OriginProperty); set => SetValue(OriginProperty, value); }
@@ -39,10 +48,14 @@ public sealed class Ruler : Control
 
     public override void Render(DrawingContext context)
     {
+        var bg = ThemeBrush("RulerBg", Color.FromRgb(0x2A, 0x2A, 0x2A));
+        var tick = new Pen(ThemeBrush("RulerTick", Color.FromRgb(0x77, 0x77, 0x77)));
+        var textBrush = ThemeBrush("RulerText", Color.FromRgb(0xAA, 0xAA, 0xAA));
+
         var horizontal = Orientation == Orientation.Horizontal;
         var length = horizontal ? Bounds.Width : Bounds.Height;
         var thickness = horizontal ? Bounds.Height : Bounds.Width;
-        context.FillRectangle(_bg, new Rect(Bounds.Size));
+        context.FillRectangle(bg, new Rect(Bounds.Size));
 
         var s = PixelsPerMm;
         if (s <= 0 || length <= 0) return;
@@ -62,8 +75,8 @@ public sealed class Ruler : Control
         for (var mm = firstMinor; mm <= mmEnd; mm += minor)
         {
             var p = origin + mm * s;
-            if (horizontal) context.DrawLine(_tick, new Point(p, thickness - 4), new Point(p, thickness));
-            else context.DrawLine(_tick, new Point(thickness - 4, p), new Point(thickness, p));
+            if (horizontal) context.DrawLine(tick, new Point(p, thickness - 4), new Point(p, thickness));
+            else context.DrawLine(tick, new Point(thickness - 4, p), new Point(thickness, p));
         }
 
         // Major ticks + labels.
@@ -73,16 +86,16 @@ public sealed class Ruler : Control
             var p = origin + mm * s;
             var label = ((int)Math.Round(mm)).ToString();
             var ft = new FormattedText(label, System.Globalization.CultureInfo.InvariantCulture,
-                FlowDirection.LeftToRight, _face, 9, _text);
+                FlowDirection.LeftToRight, _face, 9, textBrush);
 
             if (horizontal)
             {
-                context.DrawLine(_tick, new Point(p, thickness - 9), new Point(p, thickness));
+                context.DrawLine(tick, new Point(p, thickness - 9), new Point(p, thickness));
                 context.DrawText(ft, new Point(p + 2, 1));
             }
             else
             {
-                context.DrawLine(_tick, new Point(thickness - 9, p), new Point(thickness, p));
+                context.DrawLine(tick, new Point(thickness - 9, p), new Point(thickness, p));
                 context.DrawText(ft, new Point(Math.Max(1, thickness - ft.Width - 4), p + 1));
             }
         }

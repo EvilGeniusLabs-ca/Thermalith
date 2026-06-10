@@ -18,7 +18,7 @@
         </Style>
         <Style Selector="Grid.frow > TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="#888" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
         </Style>
         <Style Selector="ComboBox.fld">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -127,45 +127,45 @@
         </Menu>
 
         <!-- Toolbar -->
-        <Border DockPanel.Dock="Top" Background="#202020" Padding="6,4">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource SurfaceBar}" Padding="6,4">
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <Button Content="New" Command="{Binding NewCommand}" />
                     <Button Content="Open" Command="{Binding OpenCommand}" />
                     <Button Content="Save" Command="{Binding SaveCommand}" />
-                    <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                    <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="4,0" />
                     <Button Content="Undo" Command="{Binding UndoCommand}" />
                     <Button Content="Redo" Command="{Binding RedoCommand}" />
-                    <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                    <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="4,0" />
                     <Button Content="−" Command="{Binding ZoomOutCommand}" />
                     <Button Content="Fit" Command="{Binding ZoomFitCommand}" />
                     <Button Content="+" Command="{Binding ZoomInCommand}" />
-                    <Rectangle Width="1" Fill="#444" Margin="4,0" />
+                    <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="4,0" />
                     <!-- Quick canvas-size edit; bound to the same canvas as the Properties panel (§C). -->
-                    <TextBlock Text="W" Foreground="#888" VerticalAlignment="Center" />
+                    <TextBlock Text="W" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                     <NumericUpDown Width="140" Value="{Binding Editor.CanvasWidthMm}" Minimum="1" FormatString="0.#"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas width (mm)" />
-                    <TextBlock Text="H" Foreground="#888" VerticalAlignment="Center" />
+                    <TextBlock Text="H" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                     <NumericUpDown Width="140" Value="{Binding Editor.CanvasHeightMm}" Minimum="1" FormatString="0.#"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas height (mm)" />
-                    <TextBlock Text="mm" Foreground="#888" VerticalAlignment="Center" />
+                    <TextBlock Text="mm" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                 </StackPanel>
                 <!-- Right: connected printer + remaining labels (from the RFID roll), then Print pinned far-right. -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="8,0,0,0">
                     <Ellipse Width="9" Height="9" VerticalAlignment="Center"
                              Fill="{Binding Printer.IsConnected, Converter={StaticResource ConnDot}}" />
-                    <TextBlock Text="{Binding Printer.LoadedRollText}" Foreground="#BBB" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Printer.LoadedRollText}" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
                     <Button Content="Print" Command="{Binding Printer.PrintCommand}" Classes="accent" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Status bar -->
-        <Border DockPanel.Dock="Bottom" Background="#202020" Padding="8,3">
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource SurfaceBar}" Padding="8,3">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <TextBlock Text="{Binding Editor.StatusText}" Foreground="#AAA" />
-                <TextBlock Grid.Column="1" Text="{Binding StatusMessage, UpdateSourceTrigger=PropertyChanged}" Foreground="#8AC" HorizontalAlignment="Center" />
-                <TextBlock Grid.Column="2" Text="{Binding Editor.Dirty, StringFormat='dirty: {0}'}" Foreground="#777" />
+                <TextBlock Text="{Binding Editor.StatusText}" Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock Grid.Column="1" Text="{Binding StatusMessage, UpdateSourceTrigger=PropertyChanged}" Foreground="{DynamicResource TextInfo}" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{Binding Editor.Dirty, StringFormat='dirty: {0}'}" Foreground="{DynamicResource TextHint}" />
             </Grid>
         </Border>
 
@@ -180,8 +180,8 @@
             </Grid.ColumnDefinitions>
 
             <!-- LEFT: insert palette + layers -->
-            <DockPanel Grid.Column="0" Background="#262626">
-                <TextBlock DockPanel.Dock="Top" Text="Insert" Margin="8,6,8,2" FontWeight="Bold" Foreground="#CCC" />
+            <DockPanel Grid.Column="0" Background="{DynamicResource SurfacePanel}">
+                <TextBlock DockPanel.Dock="Top" Text="Insert" Margin="8,6,8,2" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
                 <StackPanel DockPanel.Dock="Top" Margin="6,0,6,6">
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="text">
                         <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconText}" /><TextBlock Text="Text" VerticalAlignment="Center" /></StackPanel>
@@ -208,7 +208,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconTable}" /><TextBlock Text="Table" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                 </StackPanel>
-                <TextBlock DockPanel.Dock="Top" Text="Elements" Margin="8,2" FontWeight="Bold" Foreground="#CCC" />
+                <TextBlock DockPanel.Dock="Top" Text="Elements" Margin="8,2" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
                 <ListBox ItemsSource="{Binding Editor.Layers}" SelectedItem="{Binding Editor.SelectedLayer}"
                          SelectionChanged="OnElementsListSelectionChanged"
                          PointerPressed="OnElementsListPointerPressed">
@@ -218,7 +218,7 @@
                                 <TextBlock Text="⛓" FontSize="11" Margin="0,0,4,0" Foreground="#E0A030"
                                            VerticalAlignment="Center" IsVisible="{Binding IsGrouped}" ToolTip.Tip="Grouped" />
                                 <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="2" Text="{Binding TypeLabel}" Foreground="#777" FontSize="11"
+                                <TextBlock Grid.Column="2" Text="{Binding TypeLabel}" Foreground="{DynamicResource TextHint}" FontSize="11"
                                            VerticalAlignment="Center" Margin="0,0,4,0" />
                                 <ToggleButton Grid.Column="3" Classes="listicon" ToolTip.Tip="Visible"
                                               IsChecked="{Binding Visible}"><Path Classes="icon" Data="{StaticResource IconEye}" /></ToggleButton>
@@ -230,14 +230,14 @@
                 </ListBox>
             </DockPanel>
 
-            <GridSplitter Grid.Column="1" Width="4" Background="#111" />
+            <GridSplitter Grid.Column="1" Width="4" Background="{DynamicResource SurfaceSplitter}" />
 
             <!-- CENTER: WYSIWYG canvas, framed by mm rulers (top + left) kept in sync with zoom/scroll. -->
             <Grid Grid.Column="2" RowDefinitions="20,*" ColumnDefinitions="26,*">
-                <Border Grid.Row="0" Grid.Column="0" Background="#222" />
+                <Border Grid.Row="0" Grid.Column="0" Background="{DynamicResource SurfacePanel}" />
                 <views:Ruler Grid.Row="0" Grid.Column="1" x:Name="TopRuler" Orientation="Horizontal" />
                 <views:Ruler Grid.Row="1" Grid.Column="0" x:Name="LeftRuler" Orientation="Vertical" />
-                <ScrollViewer Grid.Row="1" Grid.Column="1" x:Name="CanvasScroll" Background="#3A3A3A"
+                <ScrollViewer Grid.Row="1" Grid.Column="1" x:Name="CanvasScroll" Background="{DynamicResource SurfaceCanvas}"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                           PointerPressed="OnCanvasBackgroundPressed">
                 <Border Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -409,10 +409,10 @@
                                          LabelHeightMm="{Binding Editor.CanvasHeightMm}" />
             </Grid>
 
-            <GridSplitter Grid.Column="3" Width="4" Background="#111" />
+            <GridSplitter Grid.Column="3" Width="4" Background="{DynamicResource SurfaceSplitter}" />
 
             <!-- RIGHT: inspector + printer tabs -->
-            <TabControl Grid.Column="4" Background="#262626">
+            <TabControl Grid.Column="4" Background="{DynamicResource SurfacePanel}">
                 <TabItem Header="Properties">
                     <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto" ScrollViewer.AllowAutoHide="False">
@@ -440,7 +440,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="3">
                                 <ToggleButton Classes="icon" ToolTip.Tip="Black text" IsChecked="{Binding Editor.CellTextColor, Converter={StaticResource Eq}, ConverterParameter=black}"><Border Background="White" Padding="4,0"><TextBlock Text="A" Foreground="Black" /></Border></ToggleButton>
                                 <ToggleButton Classes="icon" ToolTip.Tip="White text" IsChecked="{Binding Editor.CellTextColor, Converter={StaticResource Eq}, ConverterParameter=white}"><Border Background="Black" Padding="4,0"><TextBlock Text="A" Foreground="White" /></Border></ToggleButton>
-                                <Rectangle Width="1" Fill="#444" Margin="3,2" />
+                                <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="3,2" />
                                 <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Editor.CellBold}"><TextBlock Text="B" FontWeight="Bold" /></ToggleButton>
                                 <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Editor.CellItalic}"><TextBlock Text="I" FontStyle="Italic" /></ToggleButton>
                             </StackPanel>
@@ -449,7 +449,7 @@
                                 <ToggleButton Classes="icon" ToolTip.Tip="Left" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=left}"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></ToggleButton>
                                 <ToggleButton Classes="icon" ToolTip.Tip="Center" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=center}"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></ToggleButton>
                                 <ToggleButton Classes="icon" ToolTip.Tip="Right" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=right}"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></ToggleButton>
-                                <Rectangle Width="1" Fill="#444" Margin="3,2" />
+                                <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="3,2" />
                                 <ToggleButton Classes="icon" ToolTip.Tip="Top" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=top}"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></ToggleButton>
                                 <ToggleButton Classes="icon" ToolTip.Tip="Middle" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=middle}"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></ToggleButton>
                                 <ToggleButton Classes="icon" ToolTip.Tip="Bottom" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></ToggleButton>
@@ -459,7 +459,7 @@
                                 <ToggleButton Content="Row" IsChecked="{Binding Editor.CellHeaderRow}" />
                                 <ToggleButton Content="Column" IsChecked="{Binding Editor.CellHeaderColumn}" />
                             </StackPanel>
-                            <TextBlock Text="Double-click a cell to edit · Esc to exit" Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+                            <TextBlock Text="Double-click a cell to edit · Esc to exit" Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
                             <Separator Margin="0,4" />
                         </StackPanel>
                         <ContentControl Name="InspectorHost" Content="{Binding Editor.InspectorTarget}"
@@ -478,7 +478,7 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Bleed mm" /><NumericUpDown Grid.Column="1" Value="{Binding BleedMm}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Printhead W" /><NumericUpDown Grid.Column="1" Value="{Binding PrintheadWidthMm}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
-                                    <TextBlock Text="Printable area = min(label, printhead) width, centred; the rest is cropped at print." Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
+                                    <TextBlock Text="Printable area = min(label, printhead) width, centred; the rest is cropped at print." Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
                                 </StackPanel>
                             </DataTemplate>
 
@@ -576,12 +576,12 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Threshold" /><NumericUpDown Grid.Column="1" Value="{Binding Threshold}" Minimum="0" Maximum="255" FormatString="0" /></Grid>
                                     <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" />
-                                    <TextBlock Text="Transform" Foreground="#888" Margin="0,4,0,0" />
+                                    <TextBlock Text="Transform" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <Button Classes="icon" Command="{Binding RotateCcwCommand}" ToolTip.Tip="Rotate counter-clockwise 90°"><mi:MaterialIcon Kind="RotateLeft" Width="16" Height="16" Foreground="#D0D0D0" /></Button>
-                                        <Button Classes="icon" Command="{Binding RotateCwCommand}" ToolTip.Tip="Rotate clockwise 90°"><mi:MaterialIcon Kind="RotateRight" Width="16" Height="16" Foreground="#D0D0D0" /></Button>
-                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipH}" ToolTip.Tip="Mirror (flip horizontal)"><mi:MaterialIcon Kind="FlipHorizontal" Width="16" Height="16" Foreground="#D0D0D0" /></ToggleButton>
-                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipV}" ToolTip.Tip="Flip (vertical)"><mi:MaterialIcon Kind="FlipVertical" Width="16" Height="16" Foreground="#D0D0D0" /></ToggleButton>
+                                        <Button Classes="icon" Command="{Binding RotateCcwCommand}" ToolTip.Tip="Rotate counter-clockwise 90°"><mi:MaterialIcon Kind="RotateLeft" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></Button>
+                                        <Button Classes="icon" Command="{Binding RotateCwCommand}" ToolTip.Tip="Rotate clockwise 90°"><mi:MaterialIcon Kind="RotateRight" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></Button>
+                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipH}" ToolTip.Tip="Mirror (flip horizontal)"><mi:MaterialIcon Kind="FlipHorizontal" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></ToggleButton>
+                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipV}" ToolTip.Tip="Flip (vertical)"><mi:MaterialIcon Kind="FlipVertical" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></ToggleButton>
                                     </StackPanel>
                                 </StackPanel>
                             </DataTemplate>
@@ -593,7 +593,7 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Rows}" Minimum="1" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding BorderWidthMm}" Increment="0.1" Minimum="0" /></Grid>
                                     <TextBlock Text="Double-click the table to edit cells (select, type, merge, fill, header)."
-                                               Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,6" />
+                                               Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap" Margin="0,6" />
                                 </StackPanel>
                             </DataTemplate>
 
@@ -607,7 +607,7 @@
                     <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled" DataContext="{Binding Printer}">
                         <StackPanel Spacing="6">
                             <ProgressBar IsIndeterminate="True" Height="3" IsVisible="{Binding IsBusy}" />
-                            <TextBlock Text="Connection" FontWeight="Bold" Foreground="#CCC" />
+                            <TextBlock Text="Connection" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Ports}"
                                       SelectedItem="{Binding SelectedPort}">
                                 <ComboBox.ItemTemplate>
@@ -621,11 +621,11 @@
                                 <Button Content="Connect" Command="{Binding ConnectCommand}" />
                                 <Button Content="Disconnect" Command="{Binding DisconnectCommand}" />
                             </StackPanel>
-                            <TextBlock Text="{Binding ConnectionInfo, UpdateSourceTrigger=PropertyChanged}" Foreground="#AAA" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding ConnectionInfo, UpdateSourceTrigger=PropertyChanged}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
 
                             <Separator />
-                            <TextBlock Text="Status" FontWeight="Bold" Foreground="#CCC" />
-                            <TextBlock Text="{Binding StatusInfo, UpdateSourceTrigger=PropertyChanged}" Foreground="#AAA" TextWrapping="Wrap" />
+                            <TextBlock Text="Status" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
+                            <TextBlock Text="{Binding StatusInfo, UpdateSourceTrigger=PropertyChanged}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Button Content="Refresh status" Command="{Binding RefreshStatusCommand}" />
                                 <Button Content="Change labels" Command="{Binding ChangeLabelsCommand}"
@@ -633,35 +633,35 @@
                             </StackPanel>
 
                             <Separator />
-                            <TextBlock Text="Print" FontWeight="Bold" Foreground="#CCC" />
+                            <TextBlock Text="Print" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
-                                <TextBlock Text="Density" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBlock Text="Density" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                                     <Slider Width="150" Minimum="{Binding DensityMin}" Maximum="{Binding DensityMax}"
                                             Value="{Binding Density}" TickFrequency="1" IsSnapToTickEnabled="True" />
-                                    <TextBlock Text="{Binding Density, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="#AAA" />
+                                    <TextBlock Text="{Binding Density, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
                                 </StackPanel>
                             </Grid>
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
-                                <TextBlock Text="Label type" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBlock Text="Label type" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                                 <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
                                           ItemsSource="{Binding LabelTypes}" SelectedItem="{Binding SelectedLabelType}" />
                             </Grid>
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
-                                <TextBlock Text="Copies" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBlock Text="Copies" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                                 <NumericUpDown Grid.Column="1" Value="{Binding Copies}" Minimum="1" FormatString="0" />
                             </Grid>
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
-                                <TextBlock Text="Offset X px" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBlock Text="Offset X px" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                                 <NumericUpDown Grid.Column="1" Value="{Binding OffsetX}" FormatString="0" />
                             </Grid>
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
-                                <TextBlock Text="Offset Y px" Foreground="#888" VerticalAlignment="Center" />
+                                <TextBlock Text="Offset Y px" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                                 <NumericUpDown Grid.Column="1" Value="{Binding OffsetY}" FormatString="0" />
                             </Grid>
                             <Button Content="Print" Command="{Binding PrintCommand}" HorizontalAlignment="Stretch" Margin="0,6" />
 
-                            <TextBlock Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" Foreground="#8AC" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" Foreground="{DynamicResource TextInfo}" TextWrapping="Wrap" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
