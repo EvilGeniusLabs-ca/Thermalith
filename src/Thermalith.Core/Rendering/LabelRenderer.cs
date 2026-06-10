@@ -668,40 +668,71 @@ public sealed class LabelRenderer
         var colW = AxisSizes(tab.ColumnWidthsMm, tab.Cols, w, ctx.PxPerMm);
         var rowH = AxisSizes(tab.RowHeightsMm, tab.Rows, h, ctx.PxPerMm);
 
+        // Column/row edge positions (prefix sums) so a merged cell can span to colX[c+colSpan].
+        var colX = new float[tab.Cols + 1];
+        for (var i = 0; i < tab.Cols; i++) colX[i + 1] = colX[i] + colW[i];
+        var rowY = new float[tab.Rows + 1];
+        for (var i = 0; i < tab.Rows; i++) rowY[i + 1] = rowY[i] + rowH[i];
+
         var border = tab.BorderWidthMm > 0 ? Math.Max(1f, (float)Math.Round(tab.BorderWidthMm * ctx.PxPerMm)) : 0f;
         using var borderPaint = border > 0 ? new SKPaint { Color = SKColors.Black, IsAntialias = false, Style = SKPaintStyle.Stroke, StrokeWidth = border } : null;
 
-        var cellY = y;
         for (var r = 0; r < tab.Rows; r++)
-        {
-            var cellX = x;
             for (var c = 0; c < tab.Cols; c++)
             {
-                var rect = new SKRect(cellX, cellY, cellX + colW[c], cellY + rowH[r]);
-                if (borderPaint is not null) ctx.Canvas.DrawRect(rect, borderPaint);
+                if (r >= tab.Cells.Length || c >= tab.Cells[r].Length) continue;
+                var cell = tab.Cells[r][c];
+                if (cell.Covered) continue; // sits under a merge
 
-                var cell = r < tab.Cells.Length && c < tab.Cells[r].Length ? tab.Cells[r][c] : null;
-                if (cell is not null && cell.Text.Length > 0)
-                    DrawCellText(ctx, cell, rect, tab.Style, tab.HeaderRow && r == 0, dpi);
-                cellX += colW[c];
+                var cEnd = Math.Min(tab.Cols, c + cell.ColSpan);
+                var rEnd = Math.Min(tab.Rows, r + cell.RowSpan);
+                var rect = new SKRect(x + colX[c], y + rowY[r], x + colX[cEnd], y + rowY[rEnd]);
+
+                if (cell.FillPercent > 0) FillDithered(ctx.Canvas, rect, cell.FillPercent);
+                if (borderPaint is not null) ctx.Canvas.DrawRect(rect, borderPaint);
+                if (cell.Text.Length > 0) DrawCellText(ctx, cell, rect, dpi);
             }
-            cellY += rowH[r];
-        }
     }
 
-    private void DrawCellText(DrawContext ctx, ResolvedCell cell, SKRect rect, ResolvedTextStyle style, bool header, double dpi)
+    // Ordered (Bayer 4×4) dither for flat cell fills — uniform tone, unlike noisy error diffusion.
+    private static readonly int[,] Bayer4 =
     {
+        { 0, 8, 2, 10 }, { 12, 4, 14, 6 }, { 3, 11, 1, 9 }, { 15, 7, 13, 5 },
+    };
+
+    private static void FillDithered(SKCanvas canvas, SKRect rect, int coveragePercent)
+    {
+        var cov = Math.Clamp(coveragePercent, 0, 100) / 100.0;
+        if (cov <= 0) return;
+        if (cov >= 1)
+        {
+            using var solid = new SKPaint { Color = SKColors.Black, IsAntialias = false };
+            canvas.DrawRect(rect, solid);
+            return;
+        }
+        using var tile = new SKBitmap(4, 4, SKColorType.Bgra8888, SKAlphaType.Opaque);
+        for (var y = 0; y < 4; y++)
+            for (var x = 0; x < 4; x++)
+                tile.SetPixel(x, y, cov > (Bayer4[y, x] + 0.5) / 16.0 ? SKColors.Black : SKColors.White);
+        using var shader = SKShader.CreateBitmap(tile, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
+        using var paint = new SKPaint { Shader = shader, IsAntialias = false };
+        canvas.DrawRect(rect, paint); // tiles from canvas origin → patterns stay continuous across cells
+    }
+
+    private void DrawCellText(DrawContext ctx, ResolvedCell cell, SKRect rect, double dpi)
+    {
+        var tf = _fonts.Resolve(cell.FontFamily, cell.Bold, cell.Italic);
         using var paint = new SKPaint
         {
-            Color = SKColors.Black,
+            Color = cell.TextWhite ? SKColors.White : SKColors.Black,
             IsAntialias = true,
-            Typeface = _fonts.Resolve(style.FontFamily, header || style.Bold, style.Italic),
-            FakeBoldText = header,
-            TextSize = (float)(style.FontSizePt * dpi / 72.0),
+            Typeface = tf,
+            FakeBoldText = cell.Bold && !TypefaceIsBold(tf),
+            TextSize = (float)(cell.FontSizePt * dpi / 72.0),
         };
         const float pad = 1.5f;
         var m = paint.FontMetrics;
-        var tw = paint.MeasureText(cell.Text);
+        var tw = MeasureLine(paint, cell.Text, 0f);
         var tx = cell.Justify.H switch
         {
             "center" => rect.Left + (rect.Width - tw) / 2,
@@ -715,7 +746,7 @@ public sealed class LabelRenderer
             "bottom" => rect.Bottom - m.Descent - pad,
             _ => rect.MidY + (lineH / 2 - m.Descent),
         };
-        ctx.Canvas.DrawText(cell.Text, tx, ty, paint);
+        DrawLineText(ctx.Canvas, cell.Text, tx, ty, paint, 0f); // fallback-aware (CJK etc.)
     }
 
     private static float[] AxisSizes(double[]? explicitMm, int count, float totalPx, double pxPerMm)

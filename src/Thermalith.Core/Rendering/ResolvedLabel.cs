@@ -85,7 +85,18 @@ public sealed record ResolvedImage : ResolvedElement
     public bool FlipV { get; init; }
 }
 
-public sealed record ResolvedCell(string Text, Justify Justify);
+public sealed record ResolvedCell(string Text, Justify Justify)
+{
+    public int FillPercent { get; init; }       // 0 = none .. 100 = solid; ordered-dithered to grey
+    public bool TextWhite { get; init; }         // crisp text colour (black default)
+    public string FontFamily { get; init; } = "Roboto";
+    public double FontSizePt { get; init; } = 9;
+    public bool Bold { get; init; }
+    public bool Italic { get; init; }
+    public int ColSpan { get; init; } = 1;
+    public int RowSpan { get; init; } = 1;
+    public bool Covered { get; init; }           // sits under a merge → skipped in layout/render
+}
 
 public sealed record ResolvedTable : ResolvedElement
 {
@@ -96,5 +107,6 @@ public sealed record ResolvedTable : ResolvedElement
     public ResolvedCell[][] Cells { get; init; } = [];
     public double BorderWidthMm { get; init; } = 0.2;
     public bool HeaderRow { get; init; }
+    public bool HeaderColumn { get; init; }
     public ResolvedTextStyle Style { get; init; } = new();
 }

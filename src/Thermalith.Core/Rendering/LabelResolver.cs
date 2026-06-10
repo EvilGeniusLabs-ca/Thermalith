@@ -122,9 +122,10 @@ public static class LabelResolver
                 Rows = tab.Props.Rows,
                 ColumnWidthsMm = tab.Props.ColumnWidthsMm,
                 RowHeightsMm = tab.Props.RowHeightsMm,
-                Cells = ResolveCells(tab.Props, justify, tokens),
+                Cells = ResolveCells(tab.Props, justify, tokens, BuildStyle(doc, el, null, null, null, null, null, null, 0)),
                 BorderWidthMm = tab.Props.BorderWidthMm,
                 HeaderRow = tab.Props.HeaderRow,
+                HeaderColumn = tab.Props.HeaderColumn,
                 Style = BuildStyle(doc, el, null, null, null, null, null, null, 0),
             }, el, justify),
 
@@ -163,22 +164,59 @@ public static class LabelResolver
         return string.Equals(fill, "solid", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static ResolvedCell[][] ResolveCells(TableProps p, Justify elJustify, TokenResolver tokens)
+    // Header preset shades (ink-coverage %): row slightly darker than column so the two read distinctly.
+    private const int HeaderRowShade = 75;
+    private const int HeaderColShade = 55;
+
+    private static ResolvedCell[][] ResolveCells(TableProps p, Justify elJustify, TokenResolver tokens, ResolvedTextStyle def)
     {
         var cells = p.Cells ?? [];
-        var rows = new ResolvedCell[p.Rows][];
-        for (var r = 0; r < p.Rows; r++)
-        {
-            var row = new ResolvedCell[p.Cols];
-            for (var c = 0; c < p.Cols; c++)
+        var rows = p.Rows;
+        var cols = p.Cols;
+        var covered = new bool[rows, cols];
+        var result = new ResolvedCell[rows][];
+        for (var r = 0; r < rows; r++) result[r] = new ResolvedCell[cols];
+
+        TableCell? Src(int r, int c) => r < cells.Count && c < cells[r].Count ? cells[r][c] : null;
+
+        for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
             {
-                var cell = r < cells.Count && c < cells[r].Count ? cells[r][c] : null;
-                var text = tokens.Substitute(cell?.Content ?? "");
-                row[c] = new ResolvedCell(text, cell?.Justify ?? elJustify);
+                var src = Src(r, c);
+                var cs = 1;
+                var rs = 1;
+                if (!covered[r, c] && src is not null) // an anchor sets its (clamped) span + covers the block
+                {
+                    cs = Math.Clamp(src.ColSpan, 1, cols - c);
+                    rs = Math.Clamp(src.RowSpan, 1, rows - r);
+                    for (var rr = r; rr < r + rs; rr++)
+                        for (var cc = c; cc < c + cs; cc++)
+                            if (rr != r || cc != c) covered[rr, cc] = true;
+                }
+
+                var fill = src?.Fill ?? 0;
+                var textWhite = (src?.TextColor ?? "black") == "white";
+                var bold = src?.Bold;
+                if (fill == 0) // unstyled cell → header presets apply (row wins the corner)
+                {
+                    if (p.HeaderRow && r == 0) { fill = HeaderRowShade; textWhite = true; bold ??= true; }
+                    else if (p.HeaderColumn && c == 0) { fill = HeaderColShade; textWhite = true; bold ??= true; }
+                }
+
+                result[r][c] = new ResolvedCell(tokens.Substitute(src?.Content ?? ""), src?.Justify ?? elJustify)
+                {
+                    FillPercent = fill,
+                    TextWhite = textWhite,
+                    FontFamily = src?.FontFamily ?? def.FontFamily,
+                    FontSizePt = src?.FontSizePt ?? def.FontSizePt,
+                    Bold = bold ?? def.Bold,
+                    Italic = src?.Italic ?? def.Italic,
+                    ColSpan = cs,
+                    RowSpan = rs,
+                    Covered = covered[r, c],
+                };
             }
-            rows[r] = row;
-        }
-        return rows;
+        return result;
     }
 
     private static string ExpandSerial(SerialProps p, int rowIndex)

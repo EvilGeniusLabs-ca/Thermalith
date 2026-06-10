@@ -125,15 +125,26 @@ public sealed record TableProps
     public List<List<TableCell>>? Cells { get; init; }
     public double BorderWidthMm { get; init; } = 0.2;
     public bool HeaderRow { get; init; }
+    public bool HeaderColumn { get; init; }
 
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extensions { get; init; }
 }
 
-/// <summary>One table cell — token-aware content + optional per-cell justification (§11.9).</summary>
+/// <summary>One table cell — token-aware content + per-cell style (§11.9). Span = merge (anchor carries
+/// it; covered cells skip). Fill = ink-coverage % (0 = none .. 100 = solid), ordered-dithered to grey.
+/// Font/justify default to the table's style when unset; TextColor stays crisp black/white.</summary>
 public sealed record TableCell
 {
     public string Content { get; init; } = "";
     public Justify? Justify { get; init; }
+    public int ColSpan { get; init; } = 1;
+    public int RowSpan { get; init; } = 1;
+    public int Fill { get; init; }                    // 0 = none (white) .. 100 = solid black
+    public string TextColor { get; init; } = "black"; // black | white (never dithered)
+    public string? FontFamily { get; init; }
+    public double? FontSizePt { get; init; }
+    public bool? Bold { get; init; }
+    public bool? Italic { get; init; }
 
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extensions { get; init; }
 }
