@@ -41,8 +41,9 @@ B1 print path is verified on real hardware. Currently mid **usability/cleanup pa
 
 - **Numeric inspector fields are `NumericUpDown`** (global style in `App.axaml`: spinners + Minimum). The
   `NumericTextConverter` (`Num`) is now used ONLY by `RollDialog`.
-- **Positioning is whole-mm**: `EditorViewModel.Snap` rounds; inserts + scroll-resize round too;
-  X/Y/W/H/Rotation are integer-format NumericUpDowns.
+- **Positioning is decimal-mm** (reverted from whole-mm 2026-06-10): `EditorViewModel.Snap` rounds to
+  0.1 mm (or the grid pitch when snap is on); X/Y/W/H are `0.#`-format NumericUpDowns with 0.5 steps,
+  Rotation stays integer. Model stays mm (portable); the printer renders at ~0.125 mm/dot (203 dpi).
 - **Edit shortcuts guarded**: `TextAwareCommand` makes Delete/Cut/Copy/Paste/Dup/Undo/Redo edit the
   focused text field instead of the document when a text box has focus.
 - **Icons**: Material Design Icons via `Material.Icons.Avalonia` (`<mi:MaterialIcon Kind="…"/>`) going
