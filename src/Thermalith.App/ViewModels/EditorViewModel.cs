@@ -1133,6 +1133,95 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void CancelCellEdit() => IsCellEditing = false;
 
+    // ── Cell operations on the selected block (right-click menu + Properties window mirror these) ──
+
+    private void MutateSelectedCells(Func<TableCell, TableCell> map)
+    {
+        if (CellTable is not { } t) return;
+        var (r0, c0, r1, c1) = CellBlock;
+        r1 = Math.Min(r1, t.Props.Rows - 1);
+        c1 = Math.Min(c1, t.Props.Cols - 1);
+        var grid = Materialize(t.Props);
+        for (var r = r0; r <= r1; r++)
+            for (var c = c0; c <= c1; c++)
+                grid[r][c] = map(grid[r][c]);
+        CommitTable(t, t.Props with { Cells = grid });
+    }
+
+    private void CommitTable(TableElement t, TableProps props)
+    {
+        FlushGesture();
+        ReplaceElement(t with { Props = props });
+        _history.Commit(_live);
+        MarkDirty();
+        RenderNow();
+        UpdateCellHighlight();
+        RaiseState();
+    }
+
+    private bool AllSelectedCells(Func<TableCell, bool> pred)
+    {
+        if (CellTable is not { } t) return false;
+        var (r0, c0, r1, c1) = CellBlock;
+        r1 = Math.Min(r1, t.Props.Rows - 1);
+        c1 = Math.Min(c1, t.Props.Cols - 1);
+        var cells = t.Props.Cells;
+        for (var r = r0; r <= r1; r++)
+            for (var c = c0; c <= c1; c++)
+            {
+                var cell = cells is not null && r < cells.Count && c < cells[r].Count ? cells[r][c] : new TableCell();
+                if (!pred(cell)) return false;
+            }
+        return true;
+    }
+
+    public void SetCellFill(int percent) => MutateSelectedCells(c => c with { Fill = Math.Clamp(percent, 0, 100) });
+    public void SetCellTextColor(bool white) => MutateSelectedCells(c => c with { TextColor = white ? "white" : "black" });
+    public void ToggleCellBold() { var all = AllSelectedCells(c => c.Bold ?? false); MutateSelectedCells(c => c with { Bold = !all }); }
+    public void ToggleCellItalic() { var all = AllSelectedCells(c => c.Italic ?? false); MutateSelectedCells(c => c with { Italic = !all }); }
+    public void SetCellAlignH(string h) => MutateSelectedCells(c => c with { Justify = new Justify { H = h, V = c.Justify?.V ?? "middle" } });
+    public void SetCellAlignV(string v) => MutateSelectedCells(c => c with { Justify = new Justify { H = c.Justify?.H ?? "center", V = v } });
+
+    public void MergeCells()
+    {
+        if (CellTable is not { } t) return;
+        var (r0, c0, r1, c1) = CellBlock;
+        r1 = Math.Min(r1, t.Props.Rows - 1);
+        c1 = Math.Min(c1, t.Props.Cols - 1);
+        if (r1 <= r0 && c1 <= c0) return; // single cell — nothing to merge
+        var grid = Materialize(t.Props);
+        grid[r0][c0] = grid[r0][c0] with { ColSpan = c1 - c0 + 1, RowSpan = r1 - r0 + 1 };
+        for (var r = r0; r <= r1; r++)
+            for (var c = c0; c <= c1; c++)
+                if (r != r0 || c != c0) grid[r][c] = grid[r][c] with { ColSpan = 1, RowSpan = 1 };
+        CommitTable(t, t.Props with { Cells = grid });
+    }
+
+    public void UnmergeCells() => MutateSelectedCells(c => c with { ColSpan = 1, RowSpan = 1 });
+
+    public void ToggleHeaderRow()
+    {
+        if (CellTable is { } t) CommitTable(t, t.Props with { HeaderRow = !t.Props.HeaderRow });
+    }
+
+    public void ToggleHeaderColumn()
+    {
+        if (CellTable is { } t) CommitTable(t, t.Props with { HeaderColumn = !t.Props.HeaderColumn });
+    }
+
+    /// <summary>Right-click in cell mode: select the clicked cell if it's outside the current block.</summary>
+    public void CellRightClick(double dx, double dy)
+    {
+        if (CellTable is not { } t || HitCell(t, dx, dy) is not { } cell) return;
+        var (r0, c0, r1, c1) = CellBlock;
+        if (cell.R < r0 || cell.R > r1 || cell.C < c0 || cell.C > c1)
+        {
+            _cellAnchorR = _cellFocusR = cell.R;
+            _cellAnchorC = _cellFocusC = cell.C;
+            UpdateCellHighlight();
+        }
+    }
+
     /// <summary>Materialize the (possibly jagged/sparse) cell grid into a full Rows×Cols list for editing.</summary>
     private static List<List<TableCell>> Materialize(TableProps p)
     {

@@ -235,23 +235,24 @@
                            PointerWheelChanged="OnCanvasWheel" DoubleTapped="OnCanvasDoubleTapped">
                         <Panel.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Cut" Command="{Binding CutCommand}" />
-                                <MenuItem Header="Copy" Command="{Binding CopyCommand}" />
-                                <MenuItem Header="Paste" Command="{Binding PasteCommand}" />
-                                <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" />
-                                <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
-                                <Separator />
-                                <MenuItem Header="Lock / Unlock" Command="{Binding ToggleLockCommand}" />
-                                <MenuItem Header="Show / Hide" Command="{Binding ToggleVisibleCommand}" />
-                                <Separator />
-                                <MenuItem Header="Bring to Front" Command="{Binding BringToFrontCommand}" />
-                                <MenuItem Header="Bring Forward" Command="{Binding BringForwardCommand}" />
-                                <MenuItem Header="Send Backward" Command="{Binding SendBackwardCommand}" />
-                                <MenuItem Header="Send to Back" Command="{Binding SendToBackCommand}" />
-                                <Separator />
-                                <MenuItem Header="Group" Command="{Binding GroupCommand}" />
-                                <MenuItem Header="Ungroup" Command="{Binding UngroupCommand}" />
-                                <MenuItem Header="Align">
+                                <!-- Element ops (hidden while editing table cells). -->
+                                <MenuItem Header="Cut" Command="{Binding CutCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Copy" Command="{Binding CopyCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Paste" Command="{Binding PasteCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Delete" Command="{Binding DeleteCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <Separator IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Lock / Unlock" Command="{Binding ToggleLockCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Show / Hide" Command="{Binding ToggleVisibleCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <Separator IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Bring to Front" Command="{Binding BringToFrontCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Bring Forward" Command="{Binding BringForwardCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Send Backward" Command="{Binding SendBackwardCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Send to Back" Command="{Binding SendToBackCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <Separator IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Group" Command="{Binding GroupCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Ungroup" Command="{Binding UngroupCommand}" IsVisible="{Binding !Editor.InCellMode}" />
+                                <MenuItem Header="Align" IsVisible="{Binding !Editor.InCellMode}">
                                     <MenuItem Header="Left" Command="{Binding AlignLeftCommand}" />
                                     <MenuItem Header="Center" Command="{Binding AlignCenterHCommand}" />
                                     <MenuItem Header="Right" Command="{Binding AlignRightCommand}" />
@@ -260,10 +261,40 @@
                                     <MenuItem Header="Middle" Command="{Binding AlignMiddleVCommand}" />
                                     <MenuItem Header="Bottom" Command="{Binding AlignBottomCommand}" />
                                 </MenuItem>
-                                <MenuItem Header="Center on Label">
+                                <MenuItem Header="Center on Label" IsVisible="{Binding !Editor.InCellMode}">
                                     <MenuItem Header="Horizontally" Command="{Binding CenterOnLabelHCommand}" />
                                     <MenuItem Header="Vertically" Command="{Binding CenterOnLabelVCommand}" />
                                 </MenuItem>
+
+                                <!-- Table cell ops (shown while editing table cells). -->
+                                <MenuItem Header="Merge Cells" Command="{Binding CellMergeCommand}" IsVisible="{Binding Editor.InCellMode}" />
+                                <MenuItem Header="Unmerge" Command="{Binding CellUnmergeCommand}" IsVisible="{Binding Editor.InCellMode}" />
+                                <Separator IsVisible="{Binding Editor.InCellMode}" />
+                                <MenuItem Header="Fill" IsVisible="{Binding Editor.InCellMode}">
+                                    <MenuItem Header="None" Command="{Binding CellFillCommand}" CommandParameter="0" />
+                                    <MenuItem Header="25%" Command="{Binding CellFillCommand}" CommandParameter="25" />
+                                    <MenuItem Header="50%" Command="{Binding CellFillCommand}" CommandParameter="50" />
+                                    <MenuItem Header="75%" Command="{Binding CellFillCommand}" CommandParameter="75" />
+                                    <MenuItem Header="100%" Command="{Binding CellFillCommand}" CommandParameter="100" />
+                                </MenuItem>
+                                <MenuItem Header="Text Colour" IsVisible="{Binding Editor.InCellMode}">
+                                    <MenuItem Header="Black" Command="{Binding CellTextBlackCommand}" />
+                                    <MenuItem Header="White" Command="{Binding CellTextWhiteCommand}" />
+                                </MenuItem>
+                                <MenuItem Header="Bold" Command="{Binding CellBoldCommand}" IsVisible="{Binding Editor.InCellMode}" />
+                                <MenuItem Header="Italic" Command="{Binding CellItalicCommand}" IsVisible="{Binding Editor.InCellMode}" />
+                                <MenuItem Header="Align" IsVisible="{Binding Editor.InCellMode}">
+                                    <MenuItem Header="Left" Command="{Binding CellAlignHCommand}" CommandParameter="left" />
+                                    <MenuItem Header="Center" Command="{Binding CellAlignHCommand}" CommandParameter="center" />
+                                    <MenuItem Header="Right" Command="{Binding CellAlignHCommand}" CommandParameter="right" />
+                                    <Separator />
+                                    <MenuItem Header="Top" Command="{Binding CellAlignVCommand}" CommandParameter="top" />
+                                    <MenuItem Header="Middle" Command="{Binding CellAlignVCommand}" CommandParameter="middle" />
+                                    <MenuItem Header="Bottom" Command="{Binding CellAlignVCommand}" CommandParameter="bottom" />
+                                </MenuItem>
+                                <Separator IsVisible="{Binding Editor.InCellMode}" />
+                                <MenuItem Header="Header Row" Command="{Binding CellHeaderRowCommand}" IsVisible="{Binding Editor.InCellMode}" />
+                                <MenuItem Header="Header Column" Command="{Binding CellHeaderColumnCommand}" IsVisible="{Binding Editor.InCellMode}" />
                             </ContextMenu>
                         </Panel.ContextMenu>
                         <Image Source="{Binding Editor.Preview}" Stretch="Fill"
@@ -365,7 +396,49 @@
                 <TabItem Header="Properties">
                     <ScrollViewer Padding="8" HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto" ScrollViewer.AllowAutoHide="False">
-                        <ContentControl Name="InspectorHost" Content="{Binding Editor.InspectorTarget}">
+                        <StackPanel>
+                        <!-- Table cell controls (mirror the right-click cell menu) — shown in cell-edit mode. -->
+                        <StackPanel IsVisible="{Binding InspectorShowsCells}" Spacing="3">
+                            <TextBlock Text="Table cell" FontWeight="Bold" Margin="0,0,0,2" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Content="Merge" Command="{Binding CellMergeCommand}" />
+                                <Button Content="Unmerge" Command="{Binding CellUnmergeCommand}" />
+                            </StackPanel>
+                            <TextBlock Classes="section" Text="Fill" />
+                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                <Button Content="0" Width="34" Command="{Binding CellFillCommand}" CommandParameter="0" />
+                                <Button Content="25" Width="34" Command="{Binding CellFillCommand}" CommandParameter="25" />
+                                <Button Content="50" Width="34" Command="{Binding CellFillCommand}" CommandParameter="50" />
+                                <Button Content="75" Width="34" Command="{Binding CellFillCommand}" CommandParameter="75" />
+                                <Button Content="100" Width="40" Command="{Binding CellFillCommand}" CommandParameter="100" />
+                            </StackPanel>
+                            <TextBlock Classes="section" Text="Text" />
+                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                <Button Content="Black" Command="{Binding CellTextBlackCommand}" />
+                                <Button Content="White" Command="{Binding CellTextWhiteCommand}" />
+                                <Button Content="B" FontWeight="Bold" Command="{Binding CellBoldCommand}" />
+                                <Button Content="I" FontStyle="Italic" Command="{Binding CellItalicCommand}" />
+                            </StackPanel>
+                            <TextBlock Classes="section" Text="Align" />
+                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                <Button Content="L" Width="30" Command="{Binding CellAlignHCommand}" CommandParameter="left" />
+                                <Button Content="C" Width="30" Command="{Binding CellAlignHCommand}" CommandParameter="center" />
+                                <Button Content="R" Width="30" Command="{Binding CellAlignHCommand}" CommandParameter="right" />
+                                <Rectangle Width="1" Fill="#444" Margin="3,2" />
+                                <Button Content="T" Width="30" Command="{Binding CellAlignVCommand}" CommandParameter="top" />
+                                <Button Content="M" Width="30" Command="{Binding CellAlignVCommand}" CommandParameter="middle" />
+                                <Button Content="B" Width="30" Command="{Binding CellAlignVCommand}" CommandParameter="bottom" />
+                            </StackPanel>
+                            <TextBlock Classes="section" Text="Header" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Content="Row" Command="{Binding CellHeaderRowCommand}" />
+                                <Button Content="Column" Command="{Binding CellHeaderColumnCommand}" />
+                            </StackPanel>
+                            <TextBlock Text="Double-click a cell to edit · Esc to exit" Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+                            <Separator Margin="0,4" />
+                        </StackPanel>
+                        <ContentControl Name="InspectorHost" Content="{Binding Editor.InspectorTarget}"
+                                        IsVisible="{Binding !InspectorShowsCells}">
                         <ContentControl.DataTemplates>
 
                             <DataTemplate DataType="ed:CanvasEditorViewModel">
@@ -519,6 +592,7 @@
 
                             </ContentControl.DataTemplates>
                         </ContentControl>
+                        </StackPanel>
                     </ScrollViewer>
                 </TabItem>
 

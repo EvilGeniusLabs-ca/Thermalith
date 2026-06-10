@@ -189,8 +189,14 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
         // In cell-edit mode, pointer events select cells (drag = block). Clicking outside the table exits
         // cell mode and falls through to normal element handling.
-        if (ed.InCellMode && !e.GetCurrentPoint(host).Properties.IsRightButtonPressed)
+        if (ed.InCellMode)
         {
+            if (ed.IsCellEditing) ed.CommitCellEdit();
+            if (e.GetCurrentPoint(host).Properties.IsRightButtonPressed)
+            {
+                ed.CellRightClick(p.X, p.Y); // target the right-clicked cell, then the cell menu opens
+                return;
+            }
             if (ed.CellPointerDown(p.X, p.Y)) { _cellDragging = true; e.Pointer.Capture(host); return; }
         }
 

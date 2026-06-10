@@ -278,6 +278,20 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanDelete))] private void CenterOnLabelH() => Editor.CenterOnLabelH();
     [RelayCommand(CanExecute = nameof(CanDelete))] private void CenterOnLabelV() => Editor.CenterOnLabelV();
 
+    // ── Table cell operations (in cell-edit mode) — bound by both the right-click menu and the props panel ──
+    private bool InCell() => Editor.InCellMode;
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellMerge() => Editor.MergeCells();
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellUnmerge() => Editor.UnmergeCells();
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellFill(string? pct) { if (int.TryParse(pct, out var p)) Editor.SetCellFill(p); }
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellTextBlack() => Editor.SetCellTextColor(false);
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellTextWhite() => Editor.SetCellTextColor(true);
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellBold() => Editor.ToggleCellBold();
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellItalic() => Editor.ToggleCellItalic();
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellAlignH(string? h) { if (h is not null) Editor.SetCellAlignH(h); }
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellAlignV(string? v) { if (v is not null) Editor.SetCellAlignV(v); }
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellHeaderRow() => Editor.ToggleHeaderRow();
+    [RelayCommand(CanExecute = nameof(InCell))] private void CellHeaderColumn() => Editor.ToggleHeaderColumn();
+
     private bool CanAlign() => Editor.SelectionCount >= 2;
     private bool CanDistribute() => Editor.SelectionCount >= 3;
 
@@ -365,7 +379,25 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             PasteCommand.NotifyCanExecuteChanged();
         }
+        else if (e.PropertyName == nameof(EditorViewModel.InCellMode))
+        {
+            CellMergeCommand.NotifyCanExecuteChanged();
+            CellUnmergeCommand.NotifyCanExecuteChanged();
+            CellFillCommand.NotifyCanExecuteChanged();
+            CellTextBlackCommand.NotifyCanExecuteChanged();
+            CellTextWhiteCommand.NotifyCanExecuteChanged();
+            CellBoldCommand.NotifyCanExecuteChanged();
+            CellItalicCommand.NotifyCanExecuteChanged();
+            CellAlignHCommand.NotifyCanExecuteChanged();
+            CellAlignVCommand.NotifyCanExecuteChanged();
+            CellHeaderRowCommand.NotifyCanExecuteChanged();
+            CellHeaderColumnCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(InspectorShowsCells));
+        }
     }
+
+    /// <summary>True when the Properties panel should show table-cell controls (a table is in cell mode).</summary>
+    public bool InspectorShowsCells => Editor.InCellMode;
 
     private void UpdateTitle() =>
         Title = $"Thermalith — {Editor.DocumentName}{(Editor.Dirty ? " *" : "")}";
