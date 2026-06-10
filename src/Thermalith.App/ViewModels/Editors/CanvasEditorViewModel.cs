@@ -25,7 +25,7 @@ public sealed partial class CanvasEditorViewModel : ObservableObject
         _shape = c.Shape;
         _cornerRadiusMm = c.CornerRadiusMm;
         _bleedMm = c.BleedMm;
-        _safeAreaInsetMm = c.SafeAreaInsetMm;
+        _printheadWidthMm = c.PrintheadWidthMm;
         _orientationDeg = c.OrientationDeg;
         _loaded = true;
     }
@@ -37,7 +37,7 @@ public sealed partial class CanvasEditorViewModel : ObservableObject
     [ObservableProperty] private string _shape;
     [ObservableProperty] private double _cornerRadiusMm;
     [ObservableProperty] private double _bleedMm;
-    [ObservableProperty] private double? _safeAreaInsetMm;
+    [ObservableProperty] private double? _printheadWidthMm;
     [ObservableProperty] private int _orientationDeg;
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -57,7 +57,7 @@ public sealed partial class CanvasEditorViewModel : ObservableObject
             Shape = Shape,
             CornerRadiusMm = CornerRadiusMm,
             BleedMm = BleedMm,
-            SafeAreaInsetMm = SafeAreaInsetMm,
+            PrintheadWidthMm = PrintheadWidthMm,
             OrientationDeg = OrientationDeg,
         },
     };

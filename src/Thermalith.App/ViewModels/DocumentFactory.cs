@@ -14,14 +14,14 @@ public static class DocumentFactory
             ModifiedUtc = DateTimeOffset.UtcNow.ToString("o"),
             AppVersion = "0.1.0",
         },
-        Canvas = new Canvas { WidthMm = 50, HeightMm = 30, Dpi = 203, Shape = "rectangle", SafeAreaInsetMm = 1.5 },
+        Canvas = new Canvas { WidthMm = 50, HeightMm = 30, Dpi = 203, Shape = "rectangle" },
         Elements = [], // start empty — add elements from the Insert palette
     };
 
-    /// <summary>A new empty document sized to a specific canvas (e.g. the last applied roll's printable size).</summary>
-    public static LabelDocument New(double widthMm, double heightMm, int dpi, string shape) => New() with
+    /// <summary>A new empty document at a specific canvas size + target printhead width (last applied roll).</summary>
+    public static LabelDocument New(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm) => New() with
     {
-        Canvas = new Canvas { WidthMm = widthMm, HeightMm = heightMm, Dpi = dpi, Shape = shape, SafeAreaInsetMm = 1.5 },
+        Canvas = new Canvas { WidthMm = widthMm, HeightMm = heightMm, Dpi = dpi, Shape = shape, PrintheadWidthMm = printheadWidthMm },
     };
 
     /// <summary>A stable, collision-resistant element id (§6.1: ids survive undo/copy/binding).</summary>

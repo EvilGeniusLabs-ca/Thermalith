@@ -391,7 +391,8 @@
                 <!-- Print-area guide lines, spanning the canvas viewport; origin/scale synced in code-behind. -->
                 <views:PrintGuideOverlay Grid.Row="1" Grid.Column="1" x:Name="PrintGuide"
                                          IsVisible="{Binding Editor.ShowSafeArea}"
-                                         InsetMm="{Binding Editor.SafeAreaInsetMm}"
+                                         InsetXMm="{Binding Editor.PrintableInsetXMm}"
+                                         InsetYMm="{Binding Editor.PrintableInsetYMm}"
                                          LabelWidthMm="{Binding Editor.CanvasWidthMm}"
                                          LabelHeightMm="{Binding Editor.CanvasHeightMm}" />
             </Grid>
@@ -464,8 +465,8 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Bleed mm" /><NumericUpDown Grid.Column="1" Value="{Binding BleedMm}" Increment="0.1" Minimum="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Safe inset" /><NumericUpDown Grid.Column="1" Value="{Binding SafeAreaInsetMm}" Increment="0.1" Minimum="0" Watermark="none" /></Grid>
-                                    <TextBlock Text="Safe area guards content against print skew (§6.1.3)." Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Printhead W" /><NumericUpDown Grid.Column="1" Value="{Binding PrintheadWidthMm}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
+                                    <TextBlock Text="Printable area = min(label, printhead) width, centred; the rest is cropped at print." Foreground="#777" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
                                 </StackPanel>
                             </DataTemplate>
 

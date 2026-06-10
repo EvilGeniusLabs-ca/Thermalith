@@ -66,6 +66,11 @@ public sealed record Canvas
     /// </summary>
     public double? SafeAreaInsetMm { get; init; }
 
+    /// <summary>Target printer's printhead / max print width (mm). The printable area is
+    /// <c>min(WidthMm, PrintheadWidthMm)</c> centred; anything past it is cropped at print. <c>null</c>
+    /// = unknown (no printable guide, no crop) until a printer/roll is applied.</summary>
+    public double? PrintheadWidthMm { get; init; }
+
     /// <summary>Whole-label rotation relative to the print-head feed: 0 | 90 | 180 | 270 (§5).</summary>
     public int OrientationDeg { get; init; }
 

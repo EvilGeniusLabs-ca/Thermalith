@@ -274,10 +274,9 @@ public sealed partial class PrinterViewModel : ObservableObject
         {
             var mono = _editor.RenderForPrint();
             if (_caps is { } caps && mono.WidthPx > caps.PrintheadPixels)
-            {
-                Message = $"Label is {mono.WidthPx}px wide — exceeds the {caps.Model} printhead ({caps.PrintheadPixels}px). Reduce canvas width.";
-                return;
-            }
+                // Canvas wider than the printhead → crop the centred printable strip (the ~1mm/side the
+                // head can't reach); content there is mechanically unprintable (crop-don't-block, §F).
+                mono = CropCentered(mono, caps.PrintheadPixels);
 
             var options = new PrintOptions
             {
@@ -303,6 +302,27 @@ public sealed partial class PrinterViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>Crop a 1bpp raster to a centred target width (drop the equal margins each side).</summary>
+    private static Niimbot.Net.Encoding.MonochromeBitmap CropCentered(Niimbot.Net.Encoding.MonochromeBitmap src, int targetWidthPx)
+    {
+        if (targetWidthPx >= src.WidthPx) return src;
+        var h = src.HeightPx;
+        var x0 = (src.WidthPx - targetWidthPx) / 2;
+        var bpr = (targetWidthPx + 7) / 8;
+        var packed = new byte[bpr * h];
+        for (var y = 0; y < h; y++)
+        {
+            var row = src.Row(y);
+            for (var x = 0; x < targetWidthPx; x++)
+            {
+                var sx = x0 + x;
+                if ((row[sx >> 3] & (0x80 >> (sx & 7))) != 0)
+                    packed[y * bpr + (x >> 3)] |= (byte)(0x80 >> (x & 7));
+            }
+        }
+        return new Niimbot.Net.Encoding.MonochromeBitmap(targetWidthPx, h, packed);
     }
 
     // ── Lifecycle ────────────────────────────────────────────────────────────────────────────

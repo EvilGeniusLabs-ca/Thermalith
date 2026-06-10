@@ -20,6 +20,7 @@ public sealed record AppSettings
     public double? LastCanvasHeightMm { get; init; }
     public int? LastCanvasDpi { get; init; }
     public string? LastCanvasShape { get; init; }
+    public double? LastPrintheadWidthMm { get; init; }
 }
 
 /// <summary>

@@ -120,14 +120,14 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void NewDocument() => LoadInternal(DocumentFactory.New(), new Manifest { Id = DocumentFactory.NewId(), Name = "Untitled" }, null, new Dictionary<string, byte[]>());
 
-    /// <summary>New empty document at a specific canvas size (clean, not dirty) — used at startup to seed
-    /// the last applied roll's printable size.</summary>
-    public void NewDocument(double widthMm, double heightMm, int dpi, string shape) =>
-        LoadInternal(DocumentFactory.New(widthMm, heightMm, dpi, shape), new Manifest { Id = DocumentFactory.NewId(), Name = "Untitled" }, null, new Dictionary<string, byte[]>());
+    /// <summary>New empty document at a specific canvas size + target printhead width (clean, not dirty) —
+    /// used at startup to seed the last applied roll/printer.</summary>
+    public void NewDocument(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm) =>
+        LoadInternal(DocumentFactory.New(widthMm, heightMm, dpi, shape, printheadWidthMm), new Manifest { Id = DocumentFactory.NewId(), Name = "Untitled" }, null, new Dictionary<string, byte[]>());
 
-    /// <summary>Current canvas geometry (for persisting the last applied size).</summary>
-    public (double WidthMm, double HeightMm, int Dpi, string Shape) CurrentCanvas() =>
-        (_live.Canvas.WidthMm, _live.Canvas.HeightMm, _live.Canvas.Dpi, _live.Canvas.Shape);
+    /// <summary>Current canvas geometry + target printhead width (for persisting the last applied size).</summary>
+    public (double WidthMm, double HeightMm, int Dpi, string Shape, double? PrintheadWidthMm) CurrentCanvas() =>
+        (_live.Canvas.WidthMm, _live.Canvas.HeightMm, _live.Canvas.Dpi, _live.Canvas.Shape, _live.Canvas.PrintheadWidthMm);
 
     public void LoadPackage(LabelPackage package, string path) =>
         LoadInternal(package.Document, package.Manifest, path, package.Assets);
@@ -727,12 +727,14 @@ public sealed partial class EditorViewModel : ObservableObject
     /// (e.g. 48 mm / 384 px), so the canvas tracks the printable area, not the media width (worklist §A6).
     /// Returns true if the width was clamped below the roll's stock width.
     /// </summary>
-    public bool ApplyRoll(double widthMm, double heightMm, string? shape, int? dpi, double? maxWidthMm = null)
+    /// <summary>Apply a roll: the canvas takes the label's full size; <paramref name="printheadWidthMm"/>
+    /// (the printer's max print width) is stored so the printable area = min(label, printhead) shows as a
+    /// guide and the print crops to it. No clamping — designs keep the label's real size. Returns true
+    /// when the label is wider than the printhead (a printable margin/crop exists).</summary>
+    public bool ApplyRoll(double widthMm, double heightMm, string? shape, int? dpi, double? printheadWidthMm = null)
     {
         FlushGesture();
         var w = widthMm > 0 ? widthMm : _live.Canvas.WidthMm;
-        var clamped = maxWidthMm is > 0 && w > maxWidthMm.Value;
-        if (clamped) w = maxWidthMm!.Value;
         _live = _live with
         {
             Canvas = _live.Canvas with
@@ -741,6 +743,7 @@ public sealed partial class EditorViewModel : ObservableObject
                 HeightMm = heightMm > 0 ? heightMm : _live.Canvas.HeightMm,
                 Shape = string.IsNullOrEmpty(shape) ? _live.Canvas.Shape : shape,
                 Dpi = dpi is > 0 ? dpi.Value : _live.Canvas.Dpi,
+                PrintheadWidthMm = printheadWidthMm ?? _live.Canvas.PrintheadWidthMm,
             },
         };
         _history.Commit(_live);
@@ -749,7 +752,7 @@ public sealed partial class EditorViewModel : ObservableObject
         MarkDirty();
         RenderNow();
         RaiseState();
-        return clamped;
+        return printheadWidthMm is > 0 && w > printheadWidthMm.Value;
     }
 
     /// <summary>Canvas width in mm, surfaced for the toolbar quick-edit (worklist §C). Setting it resizes the
@@ -767,9 +770,16 @@ public sealed partial class EditorViewModel : ObservableObject
         set { if (value > 0 && Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
     }
 
-    /// <summary>Print-area inset in mm (0 when none) — the canvas print-guide lines + edge snapping read
-    /// this directly now that positioning is decimal-mm (a control can sit on the true 1.5mm guide).</summary>
-    public double SafeAreaInsetMm => _live.Canvas.SafeAreaInsetMm ?? 0;
+    /// <summary>Target printhead width (mm), 0 when unknown.</summary>
+    public double PrintheadWidthMm => _live.Canvas.PrintheadWidthMm ?? 0;
+
+    /// <summary>Horizontal printable inset per side (mm): (label − printhead)/2 when the label is wider
+    /// than the head, else 0 (a label narrower than the head prints edge-to-edge — no margin).</summary>
+    public double PrintableInsetXMm =>
+        _live.Canvas.PrintheadWidthMm is { } ph && ph > 0 && ph < _live.Canvas.WidthMm ? (_live.Canvas.WidthMm - ph) / 2 : 0;
+
+    /// <summary>Vertical printable inset (mm) — full-height for now (no confirmed top/bottom blind zone).</summary>
+    public double PrintableInsetYMm => 0;
 
     private void ResizeCanvas(double widthMm, double heightMm)
     {
@@ -1567,32 +1577,21 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private void UpdateSafeArea()
     {
-        if (ShowSafeArea && _live.Canvas.SafeAreaInsetMm is { } inset && inset > 0)
-        {
-            var s = _live.Canvas.Dpi / 25.4 * Zoom;
-            SafeAreaBounds = new Rect(
-                inset * s, inset * s,
-                Math.Max(0, _live.Canvas.WidthMm - 2 * inset) * s,
-                Math.Max(0, _live.Canvas.HeightMm - 2 * inset) * s);
-            HasSafeArea = true;
-        }
-        else
-        {
-            HasSafeArea = false;
-        }
+        // The printable guide is drawn only when there's an actual margin (label wider than the printhead).
+        HasSafeArea = ShowSafeArea && PrintableInsetXMm > 0;
     }
 
     // Positioning is decimal-mm (reverted from whole-mm 2026-06-10): snap to the grid when enabled,
     // otherwise round to 0.1 mm so drags stay clean without forcing whole millimetres.
     private double Snap(double mm) => SnapEnabled ? Math.Round(mm / GridMm) * GridMm : Math.Round(mm, 1);
 
-    // ── Snap to the print guide (safe-area edges) ────────────────────────────────────────────────
-    // The safe-area inset (e.g. 1.5 mm) isn't a whole-mm value, so plain Snap() can't land an edge on
-    // it. When the guide is shown, treat its four edges as magnetic targets so borders line up with it.
+    // ── Snap to the printable guide (left/right printable edges) ─────────────────────────────────
+    // The printable inset (e.g. 1 mm) isn't a whole-mm value, so plain Snap() can't land an edge on it.
+    // When the guide is shown, treat its edges as magnetic targets so borders line up with the printable area.
     private const double GuideSnapMm = 0.75;
 
-    private IReadOnlyList<double> SafeGuides(double extentMm) =>
-        HasSafeArea && SafeAreaInsetMm is var inset && inset > 0 ? [inset, extentMm - inset] : [];
+    private IReadOnlyList<double> SafeGuides(double insetMm, double extentMm) =>
+        HasSafeArea && insetMm > 0 ? [insetMm, extentMm - insetMm] : [];
 
     private static double? NearestGuide(double valueMm, IReadOnlyList<double> guides)
     {
@@ -1610,8 +1609,8 @@ public sealed partial class EditorViewModel : ObservableObject
     /// otherwise fall back to whole-mm.</summary>
     private (double X, double Y) SnapMove(double x, double y, double w, double h)
     {
-        var xg = SafeGuides(_live.Canvas.WidthMm);
-        var yg = SafeGuides(_live.Canvas.HeightMm);
+        var xg = SafeGuides(PrintableInsetXMm, _live.Canvas.WidthMm);
+        var yg = SafeGuides(PrintableInsetYMm, _live.Canvas.HeightMm);
         var nx = NearestGuide(x, xg) ?? (NearestGuide(x + w, xg) is { } r ? r - w : (double?)null);
         var ny = NearestGuide(y, yg) ?? (NearestGuide(y + h, yg) is { } b ? b - h : (double?)null);
         return (nx ?? Snap(x), ny ?? Snap(y));
@@ -1621,8 +1620,8 @@ public sealed partial class EditorViewModel : ObservableObject
     /// edges keep whole-mm behaviour.</summary>
     private (double X, double Y, double W, double H) SnapResize(Handle handle, double x, double y, double w, double h)
     {
-        var xg = SafeGuides(_live.Canvas.WidthMm);
-        var yg = SafeGuides(_live.Canvas.HeightMm);
+        var xg = SafeGuides(PrintableInsetXMm, _live.Canvas.WidthMm);
+        var yg = SafeGuides(PrintableInsetYMm, _live.Canvas.HeightMm);
         bool left = handle is Handle.TopLeft or Handle.Left or Handle.BottomLeft;
         bool right = handle is Handle.TopRight or Handle.Right or Handle.BottomRight;
         bool top = handle is Handle.TopLeft or Handle.Top or Handle.TopRight;
@@ -1659,7 +1658,8 @@ public sealed partial class EditorViewModel : ObservableObject
         OnPropertyChanged(nameof(DocumentName));
         OnPropertyChanged(nameof(CanvasWidthMm));
         OnPropertyChanged(nameof(CanvasHeightMm));
-        OnPropertyChanged(nameof(SafeAreaInsetMm));
+        OnPropertyChanged(nameof(PrintheadWidthMm));
+        OnPropertyChanged(nameof(PrintableInsetXMm));
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

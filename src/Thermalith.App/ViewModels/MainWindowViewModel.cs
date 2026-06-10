@@ -39,16 +39,19 @@ public partial class MainWindowViewModel : ViewModelBase
         // the generic 50×30 and then jump when a printer with a narrower printhead is attached.
         if (_settings.LastCanvasWidthMm is > 0 && _settings.LastCanvasHeightMm is > 0)
             Editor.NewDocument(_settings.LastCanvasWidthMm.Value, _settings.LastCanvasHeightMm.Value,
-                _settings.LastCanvasDpi ?? 203, _settings.LastCanvasShape ?? "rectangle");
+                _settings.LastCanvasDpi ?? 203, _settings.LastCanvasShape ?? "rectangle", _settings.LastPrintheadWidthMm);
 
         UpdateTitle();
     }
 
-    /// <summary>Persist the current canvas size as the last applied roll size (seeds the next startup).</summary>
+    /// <summary>Persist the current canvas size + printhead width as the last applied roll (seeds next startup).</summary>
     private void RememberCanvas()
     {
-        var (w, h, dpi, shape) = Editor.CurrentCanvas();
-        _settings = _settings with { LastCanvasWidthMm = w, LastCanvasHeightMm = h, LastCanvasDpi = dpi, LastCanvasShape = shape };
+        var (w, h, dpi, shape, head) = Editor.CurrentCanvas();
+        _settings = _settings with
+        {
+            LastCanvasWidthMm = w, LastCanvasHeightMm = h, LastCanvasDpi = dpi, LastCanvasShape = shape, LastPrintheadWidthMm = head,
+        };
         _settingsService.Save(_settings);
     }
 
