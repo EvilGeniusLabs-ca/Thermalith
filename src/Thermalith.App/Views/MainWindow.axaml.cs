@@ -195,6 +195,10 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
                     case Key.F2: ed.BeginCellEdit(); FocusCellEditor(); e.Handled = true; return;
                     case Key.Tab: ed.NavigateCell(0, shift ? -1 : 1, true); e.Handled = true; return;
                     case Key.Enter: ed.NavigateCell(shift ? -1 : 1, 0, false); e.Handled = true; return;
+                    case Key.Left: ed.NavigateCell(0, -1, false); e.Handled = true; return;
+                    case Key.Right: ed.NavigateCell(0, 1, false); e.Handled = true; return;
+                    case Key.Up: ed.NavigateCell(-1, 0, false); e.Handled = true; return;
+                    case Key.Down: ed.NavigateCell(1, 0, false); e.Handled = true; return;
                 }
             }
             if (e.Key == Key.Escape)
