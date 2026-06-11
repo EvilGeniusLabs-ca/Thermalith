@@ -50,14 +50,22 @@ public abstract partial class ElementEditorViewModel : ObservableObject
     /// <summary>Call at the end of a subclass constructor so initial assignments don't fire the change callback.</summary>
     protected void MarkLoaded() => _loaded = true;
 
-    /// <summary>Update geometry from an interactive canvas drag without firing the edit callback (the editor commits the gesture itself).</summary>
-    public void SetGeometrySilently(double x, double y, double w, double h)
+    /// <summary>Run a field mutation without firing the edit callback (the caller commits the gesture itself).</summary>
+    protected void SetSilently(Action mutate)
     {
         var was = _loaded;
         _loaded = false;
-        X = x; Y = y; W = w; H = h;
-        _loaded = was;
+        try { mutate(); }
+        finally { _loaded = was; }
     }
+
+    /// <summary>Update geometry from an interactive canvas drag without firing the edit callback (the editor commits the gesture itself).</summary>
+    public void SetGeometrySilently(double x, double y, double w, double h) =>
+        SetSilently(() => { X = x; Y = y; W = w; H = h; });
+
+    /// <summary>Refresh the inspector fields from a live element after an interactive edit. The base syncs
+    /// the bounding box; subclasses whose authored geometry isn't the bbox (e.g. Line's endpoints) override.</summary>
+    public virtual void SyncFromElement(LabelElement el) => SetGeometrySilently(el.X, el.Y, el.W, el.H);
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
@@ -86,6 +94,7 @@ public abstract partial class ElementEditorViewModel : ObservableObject
         SerialElement s => new SerialEditorViewModel(s, onChanged),
         DateTimeElement d => new DateTimeEditorViewModel(d, onChanged),
         ShapeElement sh => new ShapeEditorViewModel(sh, onChanged),
+        LineElement ln => new LineEditorViewModel(ln, onChanged),
         ImageElement im => new ImageEditorViewModel(im, onChanged),
         TableElement tab => new TableEditorViewModel(tab, onChanged),
         _ => throw new ArgumentOutOfRangeException(nameof(el)),

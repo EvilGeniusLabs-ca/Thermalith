@@ -38,7 +38,7 @@ public static class EditorOptions
     public static string[] TextPosition { get; } = ["above", "below", "none"];
     public static string[] QrEncoding { get; } = ["text", "hex"];
     public static string[] EcLevel { get; } = ["L", "M", "Q", "H"];
-    public static string[] ShapeType { get; } = ["rect", "roundedRect", "ellipse", "line"];
+    public static string[] ShapeType { get; } = ["rect", "roundedRect", "ellipse"];
     public static string[] Fill { get; } = ["none", "solid"];
     public static string[] Fit { get; } = ["fill", "fit", "stretch", "center"];
     public static string[] Dither { get; } = ["threshold", "floydSteinberg", "atkinson", "ordered", "none"];

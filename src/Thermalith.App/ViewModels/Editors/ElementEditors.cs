@@ -210,6 +210,56 @@ public sealed partial class ShapeEditorViewModel : ElementEditorViewModel
     };
 }
 
+public sealed partial class LineEditorViewModel : ElementEditorViewModel
+{
+    public override string TypeLabel => "Line";
+
+    // Endpoints are surfaced in absolute label-space mm (what the user thinks in); ToElement() recomputes
+    // the derived bbox + relative offsets. No W/H/Rotation fields — a line is its two points + a weight.
+    [ObservableProperty] private double _p1X;
+    [ObservableProperty] private double _p1Y;
+    [ObservableProperty] private double _p2X;
+    [ObservableProperty] private double _p2Y;
+    [ObservableProperty] private double _weightMm;
+
+    public LineEditorViewModel(LineElement el, Action<string?> onChanged) : base(el, onChanged)
+    {
+        _p1X = el.X + el.Props.X1Mm;
+        _p1Y = el.Y + el.Props.Y1Mm;
+        _p2X = el.X + el.Props.X2Mm;
+        _p2Y = el.Y + el.Props.Y2Mm;
+        _weightMm = el.Props.WeightMm;
+        MarkLoaded();
+    }
+
+    public override void SyncFromElement(LabelElement el)
+    {
+        if (el is not LineElement ln) { base.SyncFromElement(el); return; }
+        SetSilently(() =>
+        {
+            P1X = ln.X + ln.Props.X1Mm; P1Y = ln.Y + ln.Props.Y1Mm;
+            P2X = ln.X + ln.Props.X2Mm; P2Y = ln.Y + ln.Props.Y2Mm;
+            WeightMm = ln.Props.WeightMm;
+            X = ln.X; Y = ln.Y; W = ln.W; H = ln.H;
+        });
+    }
+
+    public override LabelElement ToElement()
+    {
+        double minX = Math.Min(P1X, P2X), minY = Math.Min(P1Y, P2Y);
+        return new LineElement
+        {
+            Id = Id, Name = Name, X = minX, Y = minY, W = Math.Abs(P2X - P1X), H = Math.Abs(P2Y - P1Y),
+            Rotation = Rotation, Locked = Locked, Visible = Visible, Justify = JustifyValue(),
+            Props = new LineProps
+            {
+                X1Mm = P1X - minX, Y1Mm = P1Y - minY, X2Mm = P2X - minX, Y2Mm = P2Y - minY,
+                WeightMm = WeightMm,
+            },
+        };
+    }
+}
+
 public sealed partial class ImageEditorViewModel : ElementEditorViewModel
 {
     public override string TypeLabel => "Image";

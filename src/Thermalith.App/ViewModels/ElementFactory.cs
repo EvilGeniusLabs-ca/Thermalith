@@ -23,6 +23,7 @@ public static class ElementFactory
             "serial" => new SerialElement { Id = id, Name = "Serial", X = x, Y = y, W = w, H = h, Justify = Center(), Props = new SerialProps { Start = 1, PadLength = 4, Prefix = "SN" } },
             "datetime" => new DateTimeElement { Id = id, Name = "Date", X = x, Y = y, W = w, H = h, Justify = Center(), Props = new DateTimeProps { Kind = "date", Format = "yyyy-MM-dd", Source = "printNow" } },
             "shape" => new ShapeElement { Id = id, Name = "Shape", X = x, Y = y, W = w, H = h, Props = new ShapeProps { ShapeType = "rect", StrokeWidthMm = 0.3 } },
+            "line" => MakeLine(canvas),
             "image" => new ImageElement { Id = id, Name = "Image", X = x, Y = y, W = w, H = h, Props = new ImageProps() },
             "table" => new TableElement { Id = id, Name = "Table", X = x, Y = y, W = w, H = h, Props = NewTable() },
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown element type."),
@@ -30,6 +31,23 @@ public static class ElementFactory
     }
 
     private static Justify Center() => new() { H = "center", V = "middle" };
+
+    /// <summary>Default Line: horizontal, on the vertical centerline, spanning the middle half of the
+    /// label width (worklist §K). Endpoints are stored relative to the bbox origin (X,Y); for a flat
+    /// horizontal line the bbox is zero-height, so both relative Y offsets are 0.</summary>
+    private static LineElement MakeLine(Canvas canvas)
+    {
+        var x1 = Math.Round(canvas.WidthMm / 4, 1);
+        var x2 = Math.Round(canvas.WidthMm * 3 / 4, 1);
+        var y = Math.Round(canvas.HeightMm / 2, 1);
+        return new LineElement
+        {
+            Id = DocumentFactory.NewId(),
+            Name = "Line",
+            X = x1, Y = y, W = x2 - x1, H = 0,
+            Props = new LineProps { X1Mm = 0, Y1Mm = 0, X2Mm = x2 - x1, Y2Mm = 0, WeightMm = 0.3 },
+        };
+    }
 
     private static (double W, double H) DefaultSize(string type) => type switch
     {

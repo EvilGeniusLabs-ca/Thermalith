@@ -152,7 +152,7 @@ Explicit token→column remap; tokens auto-map by matching name when omitted.
 | Field | Type | Default | Notes |
 |---|---|---|---|
 | `id` | string | — (req) | Stable, unique. |
-| `type` | enum | — (req) | `text` \| `barcode` \| `qr` \| `serial` \| `datetime` \| `shape` \| `image` \| `table`. |
+| `type` | enum | — (req) | `text` \| `barcode` \| `qr` \| `serial` \| `datetime` \| `shape` \| `line` \| `image` \| `table`. |
 | `name` | string | `type` | Label shown in the layers list. |
 | `x`, `y` | number (mm) | — (req) | **Upper-left** corner. |
 | `w`, `h` | number (mm) | — (req) | Width, height. |
@@ -228,12 +228,28 @@ Runtime counter is **not** stored in the template; it advances per row at batch 
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
-| `shapeType` | enum | `rect` | `rect`\|`roundedRect`\|`ellipse`\|`line`. |
+| `shapeType` | enum | `rect` | `rect`\|`roundedRect`\|`ellipse`. (`line` is its own `line` element — §11.7b.) |
 | `strokeWidthMm` | number | 0.3 | 0 = no stroke. |
 | `fill` | enum | `none` | `none` \| `solid`. |
 | `cornerRadiusMm` | number | 0 | `roundedRect` only. |
 
-> **`line`** uses the element box: the segment runs from `(x, y)` to `(x+w, y+h)`. Set `h = 0` for a horizontal rule, `w = 0` for vertical, or both non-zero for a diagonal.
+### 11.7b `line` (`props`)
+
+A straight segment between two endpoints — independent of other controls (divider / underline / accent).
+The endpoints are the authored source of truth, stored **relative to the element origin** (`x`,`y`); the
+base `x`/`y`/`w`/`h` is the derived bounding box (kept in sync, used for selection/align/marquee/group).
+Because `w`/`h` are derived (never authored), an axis-aligned line is just `y1==y2` (or `x1==x2`) and never
+hits the `w`/`h` min-size clamp.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `x1Mm` / `y1Mm` | number | 0 | Endpoint 1, relative to `(x, y)`. |
+| `x2Mm` / `y2Mm` | number | 0 | Endpoint 2, relative to `(x, y)`. |
+| `weightMm` | number | 0.3 | Stroke weight. |
+
+> **Back-compat:** a legacy `shape` with `shapeType = "line"` (a box-diagonal line) is migrated to a `line`
+> element on load (P1 = top-left, P2 = bottom-right). The renderer still draws legacy `shape`/`line` so
+> un-migrated files render headless-side.
 
 ### 11.8 `image` (`props`)
 
@@ -309,9 +325,9 @@ A deliberately dense **kitchen-sink** label that exercises all eight element typ
       "x": 41, "y": 1.5, "w": 7, "h": 7,
       "props": { "assetId": "image_0001", "fit": "fit", "dither": "atkinson", "invert": false } },
 
-    { "id": "el_rule", "type": "shape", "name": "Divider",
+    { "id": "el_rule", "type": "line", "name": "Divider",
       "x": 2, "y": 9, "w": 46, "h": 0,
-      "props": { "shapeType": "line", "strokeWidthMm": 0.3 } },
+      "props": { "x1Mm": 0, "y1Mm": 0, "x2Mm": 46, "y2Mm": 0, "weightMm": 0.3 } },
 
     { "id": "el_barcode", "type": "barcode", "name": "SKU barcode",
       "x": 2, "y": 10.5, "w": 28, "h": 9,
@@ -372,7 +388,7 @@ A deliberately dense **kitchen-sink** label that exercises all eight element typ
 |---|---|---|---|---|
 | `el_title` | text | 2, 1.5 | 30×6 | token, bold, auto-size (`fill`) |
 | `el_logo` | image | 41, 1.5 | 7×7 | asset, Atkinson dither |
-| `el_rule` | shape (line) | 2, 9 | 46×0 | horizontal rule |
+| `el_rule` | line | 2, 9 | 46×0 | horizontal rule |
 | `el_barcode` | barcode | 2, 10.5 | 28×9 | Code128, human-readable |
 | `el_qr` | qr | 33, 10.5 | 14×14 | auto module sizing |
 | `el_price` | text | 2, 20 | 16×5 | static-ish token |

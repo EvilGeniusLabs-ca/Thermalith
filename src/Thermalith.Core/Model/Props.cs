@@ -84,10 +84,26 @@ public sealed record DateTimeProps
 /// <summary>§11.7 — standard shapes.</summary>
 public sealed record ShapeProps
 {
-    public string ShapeType { get; init; } = "rect"; // rect | roundedRect | ellipse | line
+    public string ShapeType { get; init; } = "rect"; // rect | roundedRect | ellipse
     public double StrokeWidthMm { get; init; } = 0.3;
     public string Fill { get; init; } = "none";       // none | solid
     public double CornerRadiusMm { get; init; }
+
+    [JsonExtensionData] public Dictionary<string, JsonElement>? Extensions { get; init; }
+}
+
+/// <summary>§11.7b — a straight line segment between two endpoints, with a stroke weight. The endpoints
+/// are the authored source of truth, stored <b>relative to the element origin</b> (the base X/Y); the
+/// base X/Y/W/H is the derived bounding box, kept in sync so selection / align / marquee / grouping all
+/// work on a line unchanged. Because W/H are derived (never authored), an axis-aligned line is simply
+/// <c>Y1==Y2</c> (or <c>X1==X2</c>) — it never collides with the W/H min-size clamp.</summary>
+public sealed record LineProps
+{
+    public double X1Mm { get; init; }                 // endpoint 1, relative to the element origin (X,Y)
+    public double Y1Mm { get; init; }
+    public double X2Mm { get; init; }                 // endpoint 2, relative to the element origin
+    public double Y2Mm { get; init; }
+    public double WeightMm { get; init; } = 0.3;      // stroke weight
 
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extensions { get; init; }
 }

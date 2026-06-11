@@ -243,7 +243,8 @@ These are the concrete JSON field names backing the prose controls catalog in §
 | `qr` | `value` (token-aware), `encoding` (`text`/`hex`), `ecLevel` (`L`/`M`/`Q`/`H`), `moduleSizeMm` (or `"auto"`), `quietZoneMm` |
 | `serial` | `start`, `step`, `padLength`, `padChar`, `prefix`, `suffix` (the live counter is runtime state, not stored in the doc) |
 | `datetime` | `kind` (`date`/`time`/`datetime`), `format` (.NET format string), `source` (`printNow`/`fixed`), `fixedValueUtc` |
-| `shape` | `shapeType` (`rect`/`roundedRect`/`ellipse`/`line`), `strokeWidthMm`, `fill` (`none`/`solid`), `cornerRadiusMm` |
+| `shape` | `shapeType` (`rect`/`roundedRect`/`ellipse`), `strokeWidthMm`, `fill` (`none`/`solid`), `cornerRadiusMm` |
+| `line` | `x1Mm`/`y1Mm`, `x2Mm`/`y2Mm` (endpoints relative to the element origin), `weightMm`. Base `x`/`y`/`w`/`h` is the derived bbox (kept in sync). Legacy `shape`/`line` migrates to this on load. |
 | `image` | `assetId` (→ `assets/`), `fit` (`fill`/`fit`/`stretch`/`center`), `dither` (`threshold`/`floydSteinberg`/`atkinson`/`ordered`/`none`), `threshold` (0–255), `invert` |
 | `table` | `cols`, `rows`, `columnWidthsMm[]`, `rowHeightsMm[]`, `cells[][]` (each `{ content, justify }`), `borderWidthMm`, `headerRow` |
 

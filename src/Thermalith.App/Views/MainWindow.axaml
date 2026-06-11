@@ -201,6 +201,9 @@
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="shape">
                         <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconShape}" /><TextBlock Text="Shape" VerticalAlignment="Center" /></StackPanel>
                     </Button>
+                    <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="line">
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="VectorLine" Width="15" Height="15" Foreground="{DynamicResource IconStroke}" /><TextBlock Text="Line" VerticalAlignment="Center" /></StackPanel>
+                    </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="image">
                         <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconImage}" /><TextBlock Text="Image" VerticalAlignment="Center" /></StackPanel>
                     </Button>
@@ -562,6 +565,38 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Stroke mm" /><NumericUpDown Grid.Column="1" Value="{Binding StrokeWidthMm}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Fill" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fill}" SelectedItem="{Binding Fill}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm}" Increment="0.1" Minimum="0" /></Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="ed:LineEditorViewModel">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Line" FontWeight="Bold" Margin="0,0,0,2" />
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+
+                                    <TextBlock Classes="section" Text="Endpoints" />
+                                    <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1">
+                                        <TextBlock Text="Point 1" />
+                                        <NumericUpDown Grid.Column="1" Value="{Binding P1X}" FormatString="0.#" Increment="0.5" />
+                                        <TextBlock Grid.Column="2" Text="Y" Margin="6,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+                                        <NumericUpDown Grid.Column="3" Value="{Binding P1Y}" FormatString="0.#" Increment="0.5" />
+                                    </Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1">
+                                        <TextBlock Text="Point 2" />
+                                        <NumericUpDown Grid.Column="1" Value="{Binding P2X}" FormatString="0.#" Increment="0.5" />
+                                        <TextBlock Grid.Column="2" Text="Y" Margin="6,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+                                        <NumericUpDown Grid.Column="3" Value="{Binding P2Y}" FormatString="0.#" Increment="0.5" />
+                                    </Grid>
+
+                                    <TextBlock Classes="section" Text="Style" />
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Weight mm" /><NumericUpDown Grid.Column="1" Value="{Binding WeightMm}" Increment="0.1" Minimum="0" FormatString="0.0#" /></Grid>
+
+                                    <TextBlock Classes="section" Text="Form alignment" />
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Button Content="Center H" ToolTip.Tip="Center horizontally on the label"
+                                                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CenterOnLabelHCommand}" />
+                                        <Button Content="Center V" ToolTip.Tip="Center vertically on the label"
+                                                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CenterOnLabelVCommand}" />
+                                    </StackPanel>
                                 </StackPanel>
                             </DataTemplate>
 

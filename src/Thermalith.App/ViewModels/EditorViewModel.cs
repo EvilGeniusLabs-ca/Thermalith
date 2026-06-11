@@ -64,6 +64,8 @@ public sealed partial class EditorViewModel : ObservableObject
     private DragMode _dragMode = DragMode.None;
     private Handle _dragHandle;
     private bool _dragMoved;
+    // Start endpoints (absolute mm) of a Line being dragged by one of its endpoint handles.
+    private (string Id, double X1, double Y1, double X2, double Y2)? _lineDrag;
 
     /// <summary>Number of currently-selected elements (drives align/distribute enablement).</summary>
     public int SelectionCount => _selectedIds.Count;
@@ -178,11 +180,34 @@ public sealed partial class EditorViewModel : ObservableObject
         return changed ? doc with { Elements = elements } : doc;
     }
 
+    /// <summary>Back-compat: an old <c>shape</c> with <c>shapeType="line"</c> was a box-diagonal line.
+    /// Convert it to the dedicated <see cref="LineElement"/> on load (P1=top-left, P2=bottom-right, as the
+    /// legacy renderer drew it) so it gets the endpoint handles + Line inspector.</summary>
+    private static LabelDocument MigrateLegacyLines(LabelDocument doc)
+    {
+        var changed = false;
+        var elements = doc.Elements.Select(e =>
+        {
+            if (e is ShapeElement s && string.Equals(s.Props.ShapeType, "line", StringComparison.OrdinalIgnoreCase))
+            {
+                changed = true;
+                return (LabelElement)new LineElement
+                {
+                    Id = s.Id, Name = s.Name, X = s.X, Y = s.Y, W = s.W, H = s.H,
+                    Rotation = s.Rotation, Locked = s.Locked, Visible = s.Visible, GroupId = s.GroupId,
+                    Props = new LineProps { X1Mm = 0, Y1Mm = 0, X2Mm = s.W, Y2Mm = s.H, WeightMm = s.Props.StrokeWidthMm },
+                };
+            }
+            return e;
+        }).ToList();
+        return changed ? doc with { Elements = elements } : doc;
+    }
+
     private void LoadInternal(LabelDocument doc, Manifest? manifest, string? path, IReadOnlyDictionary<string, byte[]> assets)
     {
         _manifest = manifest ?? new Manifest { Id = DocumentFactory.NewId(), Name = doc.Metadata.Name };
         _assets = assets;
-        _live = ApplyAutoSizeToText(doc); // hug auto-size text boxes (the seed label + any loaded file)
+        _live = ApplyAutoSizeToText(MigrateLegacyLines(doc)); // migrate legacy lines, then hug auto-size text boxes
         _history = new SnapshotHistory(_live);
         _gestureActive = false;
         FilePath = path;
@@ -343,6 +368,11 @@ public sealed partial class EditorViewModel : ObservableObject
                 "Fill" => t with { Props = t.Props with { Fill = s.Props.Fill } },
                 "CornerRadiusMm" => t with { Props = t.Props with { CornerRadiusMm = s.Props.CornerRadiusMm } },
                 _ => target,
+            },
+            (LineElement t, LineElement s) => prop switch
+            {
+                "WeightMm" => t with { Props = t.Props with { WeightMm = s.Props.WeightMm } },
+                _ => target, // endpoints are position-like → never propagated across a multi-select
             },
             (ImageElement t, ImageElement s) => prop switch
             {
@@ -579,11 +609,16 @@ public sealed partial class EditorViewModel : ObservableObject
         FlushGesture();
         _dragHandle = handle;
         _dragMoved = false;
+        _lineDrag = null;
         _dragGeoms = new Dictionary<string, GeomMm>();
         // Locked elements are immovable — exclude them so the gesture leaves them in place.
         foreach (var id in _selectedIds)
             if (_live.Elements.FirstOrDefault(e => e.Id == id) is { Locked: false } e)
                 _dragGeoms[id] = new GeomMm(e.X, e.Y, e.W, e.H);
+        // Dragging a Line endpoint: capture both endpoints (absolute) so deltas apply against a fixed origin.
+        if (handle is Handle.Point1 or Handle.Point2 && _selectedIds.Count == 1
+            && _live.Elements.FirstOrDefault(e => e.Id == _selectedIds[0]) is LineElement { Locked: false } ln)
+            _lineDrag = (ln.Id, ln.X + ln.Props.X1Mm, ln.Y + ln.Props.Y1Mm, ln.X + ln.Props.X2Mm, ln.Y + ln.Props.Y2Mm);
         // Nothing draggable (whole selection locked) → no gesture.
         _dragMode = _dragGeoms.Count == 0 ? DragMode.None : mode;
     }
@@ -606,6 +641,18 @@ public sealed partial class EditorViewModel : ObservableObject
                 ReplaceIn(list, id, e => e with { X = nx, Y = ny });
             }
         }
+        else if (_lineDrag is { } ld && _dragHandle is Handle.Point1 or Handle.Point2)
+        {
+            // Move the dragged endpoint; the other stays put. Snap the moved point to the grid / 0.1 mm.
+            var movingP1 = _dragHandle == Handle.Point1;
+            var mx = Snap((movingP1 ? ld.X1 : ld.X2) + dmx);
+            var my = Snap((movingP1 ? ld.Y1 : ld.Y2) + dmy);
+            var p1x = movingP1 ? mx : ld.X1;
+            var p1y = movingP1 ? my : ld.Y1;
+            var p2x = movingP1 ? ld.X2 : mx;
+            var p2y = movingP1 ? ld.Y2 : my;
+            ReplaceIn(list, ld.Id, e => e is LineElement le ? WithEndpoints(le, p1x, p1y, p2x, p2y) : e);
+        }
         else if (_dragGeoms.Count == 1)
         {
             var (id, g) = _dragGeoms.First();
@@ -627,6 +674,7 @@ public sealed partial class EditorViewModel : ObservableObject
         if (_dragMoved) { _history.Commit(_live); RaiseState(); }
         _dragMode = DragMode.None;
         _dragGeoms = null;
+        _lineDrag = null;
     }
 
     /// <summary>Scale every selected element about its own centre (scroll-wheel resize, §7). Coalesced into one undo via the gesture settle.</summary>
@@ -639,6 +687,14 @@ public sealed partial class EditorViewModel : ObservableObject
             if (_live.Elements.FirstOrDefault(e => e.Id == id) is { Locked: true }) continue; // locked = no scroll-resize
             ReplaceIn(list, id, e =>
             {
+                if (e is LineElement le) // scale the endpoints about the line's centre (no W/H clamp)
+                {
+                    double cx = le.X + le.W / 2, cy = le.Y + le.H / 2;
+                    double Sc(double v, double c) => c + (v - c) * factor;
+                    return WithEndpoints(le,
+                        Sc(le.X + le.Props.X1Mm, cx), Sc(le.Y + le.Props.Y1Mm, cy),
+                        Sc(le.X + le.Props.X2Mm, cx), Sc(le.Y + le.Props.Y2Mm, cy));
+                }
                 var nw = Math.Max(1, Math.Round(e.W * factor));
                 var nh = Math.Max(1, Math.Round(e.H * factor));
                 return e with { W = nw, H = nh, X = Math.Round(e.X + (e.W - nw) / 2), Y = Math.Round(e.Y + (e.H - nh) / 2) };
@@ -671,6 +727,18 @@ public sealed partial class EditorViewModel : ObservableObject
         return (x, y, w, h);
     }
 
+    /// <summary>Rebuild a Line from two absolute endpoints: recompute the derived bbox (X/Y/W/H) and store
+    /// the endpoints relative to it. Preserves P1/P2 identity (so the inspector's "Point 1" stays put).</summary>
+    private static LineElement WithEndpoints(LineElement le, double p1x, double p1y, double p2x, double p2y)
+    {
+        double minX = Math.Min(p1x, p2x), minY = Math.Min(p1y, p2y);
+        return le with
+        {
+            X = minX, Y = minY, W = Math.Abs(p2x - p1x), H = Math.Abs(p2y - p1y),
+            Props = le.Props with { X1Mm = p1x - minX, Y1Mm = p1y - minY, X2Mm = p2x - minX, Y2Mm = p2y - minY },
+        };
+    }
+
     private static void ReplaceIn(List<LabelElement> list, string id, Func<LabelElement, LabelElement> map)
     {
         var idx = list.FindIndex(e => e.Id == id);
@@ -680,7 +748,7 @@ public sealed partial class EditorViewModel : ObservableObject
     private void RefreshPrimaryEditorGeometry()
     {
         if (SelectedEditor is { } ed && _live.Elements.FirstOrDefault(e => e.Id == ed.Id) is { } el)
-            ed.SetGeometrySilently(el.X, el.Y, el.W, el.H);
+            ed.SyncFromElement(el);
     }
 
     public void Undo()
@@ -888,12 +956,32 @@ public sealed partial class EditorViewModel : ObservableObject
         var pxPerMm = _live.Canvas.Dpi / 25.4;
         var mmX = displayX / Zoom / pxPerMm;
         var mmY = displayY / Zoom / pxPerMm;
+        var tolMm = 4.0 / Math.Max(1e-6, Zoom * pxPerMm); // ~4 display px, so a thin line is clickable
         for (var i = _live.Elements.Count - 1; i >= 0; i--)
         {
             var e = _live.Elements[i];
+            if (e is LineElement ln) // a line's bbox is degenerate (zero W/H) — hit-test the segment itself
+            {
+                if (DistToSegmentMm(mmX, mmY,
+                        ln.X + ln.Props.X1Mm, ln.Y + ln.Props.Y1Mm,
+                        ln.X + ln.Props.X2Mm, ln.Y + ln.Props.Y2Mm) <= Math.Max(tolMm, ln.Props.WeightMm / 2))
+                    return e.Id;
+                continue;
+            }
             if (mmX >= e.X && mmX <= e.X + e.W && mmY >= e.Y && mmY <= e.Y + e.H) return e.Id;
         }
         return null;
+    }
+
+    /// <summary>Shortest distance (mm) from a point to a line segment — for clicking thin Line elements.</summary>
+    private static double DistToSegmentMm(double px, double py, double ax, double ay, double bx, double by)
+    {
+        double dx = bx - ax, dy = by - ay;
+        var lenSq = dx * dx + dy * dy;
+        if (lenSq < 1e-9) return Math.Sqrt((px - ax) * (px - ax) + (py - ay) * (py - ay)); // degenerate point
+        var t = Math.Clamp(((px - ax) * dx + (py - ay) * dy) / lenSq, 0, 1);
+        double cx = ax + t * dx, cy = ay + t * dy;
+        return Math.Sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
     }
 
     /// <summary>Select the element under a point. <paramref name="additive"/> toggles it in the set. Returns true if an element was hit.</summary>
@@ -963,7 +1051,12 @@ public sealed partial class EditorViewModel : ObservableObject
             ? _live.Elements.FirstOrDefault(e => e.Id == _selectedIds.First())
             : null;
         var noHandles = primary is { Locked: true } or TextElement { Props.AutoSize: true };
-        if (_selectedIds.Count == 1 && !noHandles && SelectedEditor is { } ed)
+        if (_selectedIds.Count == 1 && !noHandles && primary is LineElement ln)
+        {
+            SelectionBounds = new Rect(ln.X * s, ln.Y * s, ln.W * s, ln.H * s);
+            RebuildLineHandles(ln, s);
+        }
+        else if (_selectedIds.Count == 1 && !noHandles && SelectedEditor is { } ed)
         {
             var r = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
             SelectionBounds = r;
@@ -973,6 +1066,16 @@ public sealed partial class EditorViewModel : ObservableObject
         {
             SelectionHandles.Clear();
         }
+    }
+
+    /// <summary>Two handles at a Line's endpoints (display coords) — drag either to set that point's X,Y.</summary>
+    private void RebuildLineHandles(LineElement ln, double s)
+    {
+        SelectionHandles.Clear();
+        const double hs = HandleSize, half = HandleSize / 2;
+        void Add(double xMm, double yMm, Handle k) => SelectionHandles.Add(new HandleSpec(xMm * s - half, yMm * s - half, hs, k));
+        Add(ln.X + ln.Props.X1Mm, ln.Y + ln.Props.Y1Mm, Handle.Point1);
+        Add(ln.X + ln.Props.X2Mm, ln.Y + ln.Props.Y2Mm, Handle.Point2);
     }
 
     // ── Align / distribute (Arrange across the selection, §6.2) ─────────────────────────────────

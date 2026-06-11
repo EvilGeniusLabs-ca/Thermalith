@@ -16,6 +16,7 @@ namespace Thermalith.Core.Model;
 [JsonDerivedType(typeof(SerialElement), "serial")]
 [JsonDerivedType(typeof(DateTimeElement), "datetime")]
 [JsonDerivedType(typeof(ShapeElement), "shape")]
+[JsonDerivedType(typeof(LineElement), "line")]
 [JsonDerivedType(typeof(ImageElement), "image")]
 [JsonDerivedType(typeof(TableElement), "table")]
 public abstract record LabelElement
@@ -75,6 +76,12 @@ public sealed record ShapeElement : LabelElement
 {
     [JsonIgnore] public override string Type => "shape";
     public ShapeProps Props { get; init; } = new();
+}
+
+public sealed record LineElement : LabelElement
+{
+    [JsonIgnore] public override string Type => "line";
+    public LineProps Props { get; init; } = new();
 }
 
 public sealed record ImageElement : LabelElement

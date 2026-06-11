@@ -97,6 +97,7 @@ public sealed class LabelRenderer
         {
             case ResolvedText t: DrawText(ctx, t); break;
             case ResolvedShape s: DrawShape(ctx, s); break;
+            case ResolvedLine l: DrawLine(ctx, l); break;
             case ResolvedBarcode b: DrawBarcode(ctx, b); break;
             case ResolvedQr q: DrawQr(ctx, q); break;
             case ResolvedImage im: DrawImage(ctx, im); break;
@@ -375,7 +376,7 @@ public sealed class LabelRenderer
 
         switch (s.ShapeType?.ToLowerInvariant())
         {
-            case "line":
+            case "line": // legacy box-diagonal line (superseded by LineElement); kept so older files still render
                 ctx.Canvas.DrawLine(x, y, x + w, y + h, line);
                 break;
             case "ellipse":
@@ -398,6 +399,22 @@ public sealed class LabelRenderer
     }
 
     private static SKRect Inset(SKRect r, float by) => new(r.Left + by, r.Top + by, r.Right - by, r.Bottom - by);
+
+    /// <summary>A straight line between two endpoints (§11.7b) — the dedicated Line element. Endpoints are
+    /// already absolute mm (the resolver folded in the element origin), so this draws them directly.</summary>
+    private static void DrawLine(DrawContext ctx, ResolvedLine l)
+    {
+        var stroke = Math.Max(1f, (float)Math.Round(l.WeightMm * ctx.PxPerMm));
+        using var paint = new SKPaint
+        {
+            Color = SKColors.Black,
+            IsAntialias = false,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = stroke,
+            StrokeCap = SKStrokeCap.Butt,
+        };
+        ctx.Canvas.DrawLine(ctx.Px(l.X1Mm), ctx.Px(l.Y1Mm), ctx.Px(l.X2Mm), ctx.Px(l.Y2Mm), paint);
+    }
 
     // ── Barcode ─────────────────────────────────────────────────────────────────────────────
 

@@ -398,6 +398,7 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
                 Handle.TopRight or Handle.BottomLeft => StandardCursorType.TopRightCorner,
                 Handle.Top or Handle.Bottom => StandardCursorType.SizeNorthSouth,
                 Handle.Left or Handle.Right => StandardCursorType.SizeWestEast,
+                Handle.Point1 or Handle.Point2 => StandardCursorType.Cross,
                 _ => StandardCursorType.Arrow,
             }
             : StandardCursorType.Arrow;

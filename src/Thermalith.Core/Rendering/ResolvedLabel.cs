@@ -72,6 +72,15 @@ public sealed record ResolvedShape : ResolvedElement
     public double CornerRadiusMm { get; init; }
 }
 
+public sealed record ResolvedLine : ResolvedElement
+{
+    public double X1Mm { get; init; }   // absolute endpoints (mm) — origin already folded in
+    public double Y1Mm { get; init; }
+    public double X2Mm { get; init; }
+    public double Y2Mm { get; init; }
+    public double WeightMm { get; init; } = 0.3;
+}
+
 public sealed record ResolvedImage : ResolvedElement
 {
     /// <summary>Encoded image bytes (PNG/JPEG/…) from the package assets, or <c>null</c> if missing.</summary>

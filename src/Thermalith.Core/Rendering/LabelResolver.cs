@@ -102,6 +102,16 @@ public static class LabelResolver
                 CornerRadiusMm = sh.Props.CornerRadiusMm,
             }, el, justify),
 
+            LineElement ln => Geo(new ResolvedLine
+            {
+                Id = el.Id,
+                X1Mm = el.X + ln.Props.X1Mm,
+                Y1Mm = el.Y + ln.Props.Y1Mm,
+                X2Mm = el.X + ln.Props.X2Mm,
+                Y2Mm = el.Y + ln.Props.Y2Mm,
+                WeightMm = ln.Props.WeightMm,
+            }, el, justify),
+
             ImageElement im => Geo(new ResolvedImage
             {
                 Id = el.Id,
