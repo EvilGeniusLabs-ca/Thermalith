@@ -23,14 +23,16 @@ Future / wishlist — things we want to do but aren't active. Move items here wh
     - (Earlier framing was "remote-cache → canvas image layer"; the bundled-vector approach is better
       — offline, crisp, zero IP risk — so prefer it over remote-fetched raster.)
 17. NativeMenuBar for a real macOS top-bar (plain `Menu` today; KeymapService ready for the swap).
-17a. **Icon-set migration to MDI (usability pass).** `Material.Icons.Avalonia` is now wired in
-    (`<mi:MaterialIcon Kind="…" />`, styles registered in App.axaml); the rotate buttons already use
-    it. Migrate the remaining hand-drawn `StreamGeometry` icons (insert palette, align/distribute,
-    eye/lock, B-I-U, mirror/flip, conn-dot, etc.) to MDI `Kind`s in one coordinated pass so the whole
-    UI shares one style (MDI is *filled* glyphs vs the current *stroked* line-art — do it all at once,
-    not piecemeal, to avoid a mixed look). Flip/mirror → `FlipHorizontal`/`FlipVertical`. Richard may
-    also source a custom PNG for flip/mirror. Note: the `Material.Icons` assembly bundles all ~7400
-    icon paths (~couple MB, untrimmable) — acceptable for desktop, but revisit if size bites.
+17a. **Icon-set migration to MDI (usability pass) — PARTIAL.** `Material.Icons.Avalonia` is wired in
+    (`<mi:MaterialIcon Kind="…" />`, styles in App.axaml). **Done:** all four image-transform buttons
+    (rotate CW/CCW + mirror/flip → `RotateLeft`/`RotateRight`/`FlipHorizontal`/`FlipVertical`).
+    **Remaining (still stroked `StreamGeometry`, ~48 uses):** insert palette, type-list glyphs,
+    align/distribute, eye/lock, B-I-U. Migrate in one coordinated pass so the UI shares one style (MDI is
+    *filled* vs the current *stroked* line-art — do it all at once to avoid a mixed look). On migration
+    the glyphs take `Foreground`; the theme `IconStroke` brush already keeps the stroked ones visible in
+    light mode, so this is polish, **not** a light-mode blocker. Richard's colored flip/mirror PNGs are
+    parked at `Assets/Icons/` (possible clip-art use). Note: `Material.Icons` bundles ~7400 paths
+    (~couple MB, untrimmable) — fine for desktop; revisit if size bites.
 18. Distribution / packaging (Phase 6) — single-file + `EnableCompressionInSingleFile`, per-RID,
     ReadyToRun choice, `.icns` into the macOS `.app`. No trimming (Avalonia is reflection-heavy).
 19. 3 skipped Niimbot.Net tests — flip via a real print.txt capture (optional).
@@ -62,7 +64,8 @@ not a from-scratch system. The §6.5 third precedence tier (live source) is the 
 - UI: pick a source, map columns → fields, preview row N, print all / range.
 - Scope it as a dedicated phase; large enough to be its own design doc before code.
 
-NEEDS DISCUSSION before building (with §I drag-handle item): data model + UX flow.
+NEEDS DISCUSSION before building: data model + UX flow. (Pairs with the deferred drag-handle / min-size
+decision, now parked under worklist §J "Considering".)
 
 ## Future phases (expected scaffolds — untracked but not forgotten)
 
@@ -75,11 +78,11 @@ NEEDS DISCUSSION before building (with §I drag-handle item): data model + UX fl
   *(DonationWare §4.2 build-out is no longer here — extracted to its own repo 2026-06-08; Thermalith just
   consumes the NuGet, §E.21.)*
 
-## Niimbot.Net broad-model support — hardware test matrix (ORDERED 2026-06-10)
+## Niimbot.Net broad-model support — hardware test matrix (ORDERED — arriving Jun 16–21)
 
 The Niimbot.Net v1 goal is "drive every catalogue printer" (release-plan.md §23; only B1 is
-hardware-verified today). **Ordered 2026-06-10, ~$250 shipped, all three** — and the "upgraded" units
-added a third coverage axis (dpi) on top of width + print-engine:
+hardware-verified today). **Ordered 2026-06-10: one D11 + one B4 (the owned B1 is the mid unit), arriving
+Jun 16–21.** The D11 adds a third coverage axis (dpi) on top of width + print-engine:
 
 - **Width:** 12 / 48 / 104 mm · **Engine:** D110 + Left feed (D11) vs B1 + Top feed (B1, B4) ·
   **dpi:** 203 (B1, B4) + 229 (upgraded D11) — first hardware off the all-203/8-dots-per-mm history.
