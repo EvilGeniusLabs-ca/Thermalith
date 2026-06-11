@@ -8,17 +8,19 @@
         ShowInTaskbar="False"
         Background="{DynamicResource SurfacePanel}">
   <Panel ClipToBounds="True">
-    <!-- (1) evilgenius mark — watermark behind the body, anchored right, ~30% bleeding off the right
-         edge; drawn first so the banner + text sit on top of it. -->
+    <!-- evilgenius mark — upper-right, ~30% bleeding off the top-right corner, behind the content. -->
     <Image Source="avares://Thermalith.App/Assets/evilgenius.png"
-           Width="300" Height="300" Stretch="Uniform"
-           HorizontalAlignment="Right" VerticalAlignment="Bottom"
-           Margin="0,0,-90,-30" Opacity="0.5" IsHitTestVisible="False" />
+           Width="400" Height="400" Stretch="Uniform"
+           HorizontalAlignment="Right" VerticalAlignment="Top"
+           Margin="0,-120,-120,0" Opacity="0.5" IsHitTestVisible="False" />
 
     <DockPanel LastChildFill="True">
-        <!-- (2) egtext terminal banner — full-width header strip (downscaled from 1172x270). -->
-        <Image DockPanel.Dock="Top" Source="avares://Thermalith.App/Assets/egtext.png"
-               Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Top" />
+        <!-- egtext terminal banner at the bottom, framed in its own dark bg (#002B36, matched to the
+             image) so it has black breathing room on each side instead of touching the form border. -->
+        <Border DockPanel.Dock="Bottom" Background="#002B36" Padding="14,10">
+            <Image Source="avares://Thermalith.App/Assets/egtext.png"
+                   Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+        </Border>
 
         <StackPanel Margin="24" Spacing="10">
             <TextBlock Text="Thermalith" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
@@ -37,14 +39,10 @@
 
             <Separator Margin="0,4" />
 
-            <!-- (3) egnametext wordmark — small footer (native 344x29; shown near size to avoid blur). -->
-            <Image Source="avares://Thermalith.App/Assets/egnametext.png"
-                   Height="22" Stretch="Uniform" HorizontalAlignment="Left" Margin="0,2" />
-
             <TextBlock Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap"
                        Text="GPL-3.0-or-later · Built by EvilGeniusLabs. Not affiliated with NIIMBOT — &quot;NIIMBOT&quot; is a trademark of its respective owner; Thermalith is an independent project compatible with NIIMBOT printers." />
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
                 <Button Content="Close" Click="OnClose" MinWidth="80" IsDefault="True" />
             </StackPanel>
         </StackPanel>
