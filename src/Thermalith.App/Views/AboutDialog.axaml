@@ -10,14 +10,15 @@
   <Panel ClipToBounds="True">
     <!-- evilgenius mark — upper-right, ~30% bleeding off the top-right corner, behind the content. -->
     <Image Source="avares://Thermalith.App/Assets/evilgenius.png"
-           Width="400" Height="400" Stretch="Uniform"
+           Width="200" Height="200" Stretch="Uniform"
            HorizontalAlignment="Right" VerticalAlignment="Top"
-           Margin="0,-120,-120,0" Opacity="0.5" IsHitTestVisible="False" />
+           Margin="0,-60,-60,0" Opacity="0.5" IsHitTestVisible="False" />
 
     <DockPanel LastChildFill="True">
         <!-- egtext terminal banner at the bottom, framed in its own dark bg (#002B36, matched to the
              image) so it has black breathing room on each side instead of touching the form border. -->
-        <Border DockPanel.Dock="Bottom" Background="#002B36" Padding="14,10">
+        <Border DockPanel.Dock="Bottom" Background="#002B36" Padding="14,10"
+                Cursor="Hand" PointerPressed="OnVisitSite" ToolTip.Tip="Visit evilgeniuslabs.ca">
             <Image Source="avares://Thermalith.App/Assets/egtext.png"
                    Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
         </Border>
@@ -35,7 +36,12 @@
             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" FontSize="12"
                        Text="Thermalith is donationware: free for everyone. If it saves you time, a tip helps fund development — entirely optional, always appreciated." />
 
-            <Button Content="♥  Donate" Classes="accent" Click="OnDonate" HorizontalAlignment="Left" Margin="0,2" />
+            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,2">
+                <Button Content="♥  Donate" Classes="accent" Click="OnDonate" />
+                <TextBlock Text="evilgeniuslabs.ca" VerticalAlignment="Center"
+                           Foreground="#2D7DF6" TextDecorations="Underline" Cursor="Hand"
+                           PointerPressed="OnVisitSite" ToolTip.Tip="Open evilgeniuslabs.ca" />
+            </StackPanel>
 
             <Separator Margin="0,4" />
 
