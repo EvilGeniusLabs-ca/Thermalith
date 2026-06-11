@@ -8,35 +8,46 @@
         ShowInTaskbar="False"
         Background="{DynamicResource SurfacePanel}">
   <Panel ClipToBounds="True">
-    <!-- EvilGeniusLabs mark, anchored to the top-right corner with ~30% bleeding off (clipped); the
-         rest sits behind the content as a background graphic. 400px box → 120px (30%) off top + right. -->
+    <!-- (1) evilgenius mark — watermark behind the body, anchored right, ~30% bleeding off the right
+         edge; drawn first so the banner + text sit on top of it. -->
     <Image Source="avares://Thermalith.App/Assets/evilgenius.png"
-           Width="400" Height="400" Stretch="Uniform"
-           HorizontalAlignment="Right" VerticalAlignment="Top"
-           Margin="0,-120,-120,0" Opacity="0.5" IsHitTestVisible="False" />
-    <StackPanel Margin="24" Spacing="10">
-        <TextBlock Text="Thermalith" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
-        <TextBlock Text="Open-Source NIIMBOT System" Foreground="{DynamicResource TextSecondary}" />
-        <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextHint}" FontSize="12" />
+           Width="300" Height="300" Stretch="Uniform"
+           HorizontalAlignment="Right" VerticalAlignment="Bottom"
+           Margin="0,0,-90,-30" Opacity="0.5" IsHitTestVisible="False" />
 
-        <Separator Margin="0,4" />
+    <DockPanel LastChildFill="True">
+        <!-- (2) egtext terminal banner — full-width header strip (downscaled from 1172x270). -->
+        <Image DockPanel.Dock="Top" Source="avares://Thermalith.App/Assets/egtext.png"
+               Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Top" />
 
-        <TextBlock TextWrapping="Wrap"
-                   Text="Thanks for using Thermalith — a free, local-first label designer for NIIMBOT thermal printers. No account, no cloud, no telemetry; your labels stay on your machine." />
+        <StackPanel Margin="24" Spacing="10">
+            <TextBlock Text="Thermalith" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
+            <TextBlock Text="Open-Source NIIMBOT System" Foreground="{DynamicResource TextSecondary}" />
+            <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextHint}" FontSize="12" />
 
-        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" FontSize="12"
-                   Text="Thermalith is donationware: free for everyone. If it saves you time, a tip helps fund development — entirely optional, always appreciated." />
+            <Separator Margin="0,4" />
 
-        <Button Content="♥  Donate" Classes="accent" Click="OnDonate" HorizontalAlignment="Left" Margin="0,2" />
+            <TextBlock TextWrapping="Wrap"
+                       Text="Thanks for using Thermalith — a free, local-first label designer for NIIMBOT thermal printers. No account, no cloud, no telemetry; your labels stay on your machine." />
 
-        <Separator Margin="0,4" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" FontSize="12"
+                       Text="Thermalith is donationware: free for everyone. If it saves you time, a tip helps fund development — entirely optional, always appreciated." />
 
-        <TextBlock Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap"
-                   Text="GPL-3.0-or-later · Built by EvilGeniusLabs. Not affiliated with NIIMBOT — &quot;NIIMBOT&quot; is a trademark of its respective owner; Thermalith is an independent project compatible with NIIMBOT printers." />
+            <Button Content="♥  Donate" Classes="accent" Click="OnDonate" HorizontalAlignment="Left" Margin="0,2" />
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
-            <Button Content="Close" Click="OnClose" MinWidth="80" IsDefault="True" />
+            <Separator Margin="0,4" />
+
+            <!-- (3) egnametext wordmark — small footer (native 344x29; shown near size to avoid blur). -->
+            <Image Source="avares://Thermalith.App/Assets/egnametext.png"
+                   Height="22" Stretch="Uniform" HorizontalAlignment="Left" Margin="0,2" />
+
+            <TextBlock Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap"
+                       Text="GPL-3.0-or-later · Built by EvilGeniusLabs. Not affiliated with NIIMBOT — &quot;NIIMBOT&quot; is a trademark of its respective owner; Thermalith is an independent project compatible with NIIMBOT printers." />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+                <Button Content="Close" Click="OnClose" MinWidth="80" IsDefault="True" />
+            </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </DockPanel>
   </Panel>
 </Window>
