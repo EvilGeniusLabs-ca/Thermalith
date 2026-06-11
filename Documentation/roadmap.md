@@ -92,9 +92,9 @@ same "confirm against hardware" discipline as the per-SKU roll key. The D11 espe
   says **229** — CONFIRM the real reported dpi on arrival (drives render dot-pitch). Covers the narrow
   form factor *and* the different engine (`PrintTaskVersion.D110` + `PrintDirection.Left`) — the path the
   current generic-B1 fallback definitely gets wrong — *and* the non-203 dpi path.
-- **Middle — B1 #2 (old/cheap, 203 dpi / 384 px).** Identical to the verified daily unit, so it's a clean
-  dedicated test B1 (known firmware, don't disturb the daily printer). (B1 Pro at 229 dpi exists and was
-  skipped — not a hole, the upgraded D11 already exercises 229.)
+- **Middle — existing B1 (203 dpi / 384 px).** The owned daily unit is the mid / verified reference — **no
+  second B1 was bought** (order is one D11 + one B4). (B1 Pro at 229 dpi exists, skipped — not a hole, the
+  300-dpi D11 already exercises the non-203 path.)
 - **Wide end — B4 (4" / 104 mm).** Proves the driver holds at 104 mm. **No app-side "shipping" work
   exists to do:** a 4" label is just a 104 mm canvas the app already accepts (size fields take 3 digits),
   printed one at a time like any other size. The whole requirement is that **Niimbot.Net lets a developer
