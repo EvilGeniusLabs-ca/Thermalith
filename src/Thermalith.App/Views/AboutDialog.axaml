@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Thermalith.App.Views.AboutDialog"
+        Title="About Thermalith"
+        Width="440" SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource SurfacePanel}">
+    <StackPanel Margin="24" Spacing="10">
+        <TextBlock Text="Thermalith" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
+        <TextBlock Text="Open-Source NIIMBOT System" Foreground="{DynamicResource TextSecondary}" />
+        <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextHint}" FontSize="12" />
+
+        <Separator Margin="0,4" />
+
+        <TextBlock TextWrapping="Wrap"
+                   Text="Thanks for using Thermalith — a free, local-first label designer for NIIMBOT thermal printers. No account, no cloud, no telemetry; your labels stay on your machine." />
+
+        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" FontSize="12"
+                   Text="Thermalith is donationware: free for everyone. If it saves you time, a tip helps fund development — entirely optional, always appreciated." />
+
+        <Button Content="♥  Donate" Classes="accent" Click="OnDonate" HorizontalAlignment="Left" Margin="0,2" />
+
+        <Separator Margin="0,4" />
+
+        <TextBlock Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap"
+                   Text="GPL-3.0-or-later · Built by EvilGeniusLabs. Not affiliated with NIIMBOT — &quot;NIIMBOT&quot; is a trademark of its respective owner; Thermalith is an independent project compatible with NIIMBOT printers." />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+            <Button Content="Close" Click="OnClose" MinWidth="80" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -8,6 +8,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- Windows executable icon. macOS .icns is assembled into the .app at packaging (Phase 6). -->
     <ApplicationIcon>Assets\thermalith.ico</ApplicationIcon>
+    <!-- Single source of truth for the displayed/About version (pre-release). -->
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

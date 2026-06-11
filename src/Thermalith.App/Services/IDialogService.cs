@@ -10,4 +10,7 @@ public interface IDialogService
 
     /// <summary>Show the roll/label definition dialog seeded with <paramref name="seed"/>. Returns the roll, or null on cancel.</summary>
     Task<RollDefinition?> DefineRollAsync(RollDefinition seed, string title);
+
+    /// <summary>Show the Help → About dialog (identity, version, donate link).</summary>
+    Task ShowAboutAsync();
 }

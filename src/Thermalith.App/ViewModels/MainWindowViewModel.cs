@@ -368,8 +368,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private void Quit() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
     [RelayCommand]
-    private void About() =>
-        StatusMessage = "Thermalith — Open-Source NIIMBOT System · GPL-3.0-or-later · EvilGeniusLabs";
+    private async Task About()
+    {
+        if (Dialogs is not null) await Dialogs.ShowAboutAsync();
+    }
 
     // ── MRU / settings ──────────────────────────────────────────────────────────────────────────
 

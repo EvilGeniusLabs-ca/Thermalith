@@ -123,6 +123,8 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     public Task<bool> ConfirmDiscardAsync() => new ConfirmDialog().ShowDialog<bool>(this);
 
+    public Task ShowAboutAsync() => new AboutDialog().ShowDialog(this);
+
     public Task<Thermalith.Core.Catalog.RollDefinition?> DefineRollAsync(Thermalith.Core.Catalog.RollDefinition seed, string title) =>
         new RollDialog { DataContext = new ViewModels.RollDialogViewModel(seed, title) }
             .ShowDialog<Thermalith.Core.Catalog.RollDefinition?>(this);
