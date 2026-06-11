@@ -7,6 +7,13 @@
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Background="{DynamicResource SurfacePanel}">
+  <Panel ClipToBounds="True">
+    <!-- EvilGeniusLabs mark, anchored to the top-right corner with ~30% bleeding off (clipped); the
+         rest sits behind the content as a background graphic. 200px box → 60px (30%) off top + right. -->
+    <Image Source="avares://Thermalith.App/Assets/evilgenius.png"
+           Width="200" Height="200" Stretch="Uniform"
+           HorizontalAlignment="Right" VerticalAlignment="Top"
+           Margin="0,-60,-60,0" Opacity="0.5" IsHitTestVisible="False" />
     <StackPanel Margin="24" Spacing="10">
         <TextBlock Text="Thermalith" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
         <TextBlock Text="Open-Source NIIMBOT System" Foreground="{DynamicResource TextSecondary}" />
@@ -31,4 +38,5 @@
             <Button Content="Close" Click="OnClose" MinWidth="80" IsDefault="True" />
         </StackPanel>
     </StackPanel>
+  </Panel>
 </Window>
