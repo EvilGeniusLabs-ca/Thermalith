@@ -48,6 +48,7 @@
 
         <conv:EqualityConverter x:Key="Eq" />
         <conv:NumericTextConverter x:Key="Num" />
+        <conv:NumericValueConverter x:Key="Nz" />
         <conv:BoolToBrushConverter x:Key="ConnDot" TrueBrush="#3FB950" FalseBrush="#555" />
         <!-- Locked element → grey selection box; unlocked → the standard blue. -->
         <conv:BoolToBrushConverter x:Key="LockStroke" TrueBrush="#888888" FalseBrush="#2D7DF6" />

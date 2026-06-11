@@ -143,10 +143,10 @@
                     <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="4,0" />
                     <!-- Quick canvas-size edit; bound to the same canvas as the Properties panel (§C). -->
                     <TextBlock Text="W" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
-                    <NumericUpDown Width="140" Value="{Binding Editor.CanvasWidthMm}" Minimum="1" FormatString="0.#"
+                    <NumericUpDown Width="140" Value="{Binding Editor.CanvasWidthMm, Converter={StaticResource Nz}}" Minimum="1" FormatString="0.#"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas width (mm)" />
                     <TextBlock Text="H" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
-                    <NumericUpDown Width="140" Value="{Binding Editor.CanvasHeightMm}" Minimum="1" FormatString="0.#"
+                    <NumericUpDown Width="140" Value="{Binding Editor.CanvasHeightMm, Converter={StaticResource Nz}}" Minimum="1" FormatString="0.#"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas height (mm)" />
                     <TextBlock Text="mm" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                 </StackPanel>
@@ -423,9 +423,9 @@
                         <!-- Table cell controls (mirror the right-click cell menu) — shown in cell-edit mode. -->
                         <StackPanel IsVisible="{Binding InspectorShowsCells}" Spacing="3">
                             <TextBlock Text="Table" FontWeight="Bold" Margin="0,0,0,2" />
-                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).Cols}" Minimum="1" FormatString="0" /></Grid>
-                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).Rows}" Minimum="1" FormatString="0" /></Grid>
-                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).BorderWidthMm}" Increment="0.1" Minimum="0" /></Grid>
+                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).Cols, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
+                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).Rows, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
+                            <Grid Classes="frow" ColumnDefinitions="70,*"><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding Editor.((ed:TableEditorViewModel)SelectedEditor).BorderWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                             <TextBlock Classes="section" Text="Cell" />
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <Button Content="Merge" Command="{Binding CellMergeCommand}" />
@@ -473,14 +473,14 @@
                                 <StackPanel Spacing="2">
                                     <TextBlock Text="Label" FontWeight="Bold" Margin="0,0,0,4" />
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Width mm" /><NumericUpDown Grid.Column="1" Value="{Binding WidthMm}" Minimum="1" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Height mm" /><NumericUpDown Grid.Column="1" Value="{Binding HeightMm}" Minimum="1" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="DPI" /><NumericUpDown Grid.Column="1" Value="{Binding Dpi}" Minimum="50" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Width mm" /><NumericUpDown Grid.Column="1" Value="{Binding WidthMm, Converter={StaticResource Nz}}" Minimum="1" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Height mm" /><NumericUpDown Grid.Column="1" Value="{Binding HeightMm, Converter={StaticResource Nz}}" Minimum="1" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="DPI" /><NumericUpDown Grid.Column="1" Value="{Binding Dpi, Converter={StaticResource Nz}}" Minimum="50" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Bleed mm" /><NumericUpDown Grid.Column="1" Value="{Binding BleedMm}" Increment="0.1" Minimum="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Printhead W" /><NumericUpDown Grid.Column="1" Value="{Binding PrintheadWidthMm}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Bleed mm" /><NumericUpDown Grid.Column="1" Value="{Binding BleedMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Printhead W" /><NumericUpDown Grid.Column="1" Value="{Binding PrintheadWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
                                     <TextBlock Text="Printable area = min(label, printhead) width, centred; the rest is cropped at print." Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap" Margin="0,4" />
                                 </StackPanel>
                             </DataTemplate>
@@ -497,7 +497,7 @@
                                     <!-- Size + B/I/U share one row. -->
                                     <Grid Classes="frow" ColumnDefinitions="90,120,*">
                                         <TextBlock Text="Size (pt)" />
-                                        <NumericUpDown Grid.Column="1" Value="{Binding FontSizePt}" Minimum="1" Maximum="500" />
+                                        <NumericUpDown Grid.Column="1" Value="{Binding FontSizePt, Converter={StaticResource Nz}}" Minimum="1" Maximum="500" />
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right">
                                             <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Bold}"><TextBlock Text="B" FontWeight="Bold" /></ToggleButton>
                                             <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Italic}"><TextBlock Text="I" FontStyle="Italic" /></ToggleButton>
@@ -509,7 +509,7 @@
                                     <CheckBox IsChecked="{Binding AutoSize}" Content="Auto-size box to text" Margin="0,2"
                                               ToolTip.Tip="The box hugs the text (no resize handles). Turn off for a fixed box with word-wrap." />
                                     <Grid Classes="frow" ColumnDefinitions="90,*" IsEnabled="{Binding !AutoSize}"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line spacing" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line spacing" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing, Converter={StaticResource Nz}}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
@@ -520,8 +520,8 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <CheckBox IsChecked="{Binding ShowText}" Content="Show text" Margin="0,4" />
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleWidthMm}" Increment="0.1" Minimum="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
@@ -531,17 +531,17 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Encoding" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.QrEncoding}" SelectedItem="{Binding Encoding}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="EC level" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.EcLevel}" SelectedItem="{Binding EcLevel}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleSizeMm}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" ToolTip.Tip="Blank margin around the code, required for reliable scanning. The gap to the selection box is the quiet zone, not a bug; 0 hugs the box but can hurt scannability." /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm}" Increment="0.1" Minimum="0" ToolTip.Tip="Blank margin around the code, required for reliable scanning. 0 hugs the box but can hurt scannability." /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleSizeMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" ToolTip.Tip="Blank margin around the code, required for reliable scanning. The gap to the selection box is the quiet zone, not a bug; 0 hugs the box but can hurt scannability." /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" ToolTip.Tip="Blank margin around the code, required for reliable scanning. 0 hugs the box but can hurt scannability." /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:SerialEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Start" /><NumericUpDown Grid.Column="1" Value="{Binding Start}" Minimum="0" FormatString="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Step" /><NumericUpDown Grid.Column="1" Value="{Binding Step}" Minimum="1" FormatString="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Pad len" /><NumericUpDown Grid.Column="1" Value="{Binding PadLength}" Minimum="0" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Start" /><NumericUpDown Grid.Column="1" Value="{Binding Start, Converter={StaticResource Nz}}" Minimum="0" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Step" /><NumericUpDown Grid.Column="1" Value="{Binding Step, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Pad len" /><NumericUpDown Grid.Column="1" Value="{Binding PadLength, Converter={StaticResource Nz}}" Minimum="0" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Pad char" /><TextBox Grid.Column="1" Text="{Binding PadChar, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Prefix" /><TextBox Grid.Column="1" Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Suffix" /><TextBox Grid.Column="1" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
@@ -562,9 +562,9 @@
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.ShapeType}" SelectedItem="{Binding ShapeType}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Stroke mm" /><NumericUpDown Grid.Column="1" Value="{Binding StrokeWidthMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Stroke mm" /><NumericUpDown Grid.Column="1" Value="{Binding StrokeWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Fill" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fill}" SelectedItem="{Binding Fill}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
@@ -576,19 +576,19 @@
                                     <TextBlock Classes="section" Text="Endpoints" />
                                     <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1">
                                         <TextBlock Text="Point 1" />
-                                        <NumericUpDown Grid.Column="1" Value="{Binding P1X}" FormatString="0.#" Increment="0.5" />
+                                        <NumericUpDown Grid.Column="1" Value="{Binding P1X, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
                                         <TextBlock Grid.Column="2" Text="Y" Margin="6,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
-                                        <NumericUpDown Grid.Column="3" Value="{Binding P1Y}" FormatString="0.#" Increment="0.5" />
+                                        <NumericUpDown Grid.Column="3" Value="{Binding P1Y, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
                                     </Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1">
                                         <TextBlock Text="Point 2" />
-                                        <NumericUpDown Grid.Column="1" Value="{Binding P2X}" FormatString="0.#" Increment="0.5" />
+                                        <NumericUpDown Grid.Column="1" Value="{Binding P2X, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
                                         <TextBlock Grid.Column="2" Text="Y" Margin="6,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
-                                        <NumericUpDown Grid.Column="3" Value="{Binding P2Y}" FormatString="0.#" Increment="0.5" />
+                                        <NumericUpDown Grid.Column="3" Value="{Binding P2Y, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
                                     </Grid>
 
                                     <TextBlock Classes="section" Text="Style" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Weight mm" /><NumericUpDown Grid.Column="1" Value="{Binding WeightMm}" Increment="0.1" Minimum="0" FormatString="0.0#" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Weight mm" /><NumericUpDown Grid.Column="1" Value="{Binding WeightMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" FormatString="0.0#" /></Grid>
 
                                     <TextBlock Classes="section" Text="Form alignment" />
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -609,7 +609,7 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Fit" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fit}" SelectedItem="{Binding Fit}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Threshold" /><NumericUpDown Grid.Column="1" Value="{Binding Threshold}" Minimum="0" Maximum="255" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Threshold" /><NumericUpDown Grid.Column="1" Value="{Binding Threshold, Converter={StaticResource Nz}}" Minimum="0" Maximum="255" FormatString="0" /></Grid>
                                     <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" />
                                     <TextBlock Text="Transform" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -624,9 +624,9 @@
                             <DataTemplate DataType="ed:TableEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Cols}" Minimum="1" FormatString="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Rows}" Minimum="1" FormatString="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding BorderWidthMm}" Increment="0.1" Minimum="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Cols, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Rows, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding BorderWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                     <TextBlock Text="Double-click the table to edit cells (select, type, merge, fill, header)."
                                                Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap" Margin="0,6" />
                                 </StackPanel>
@@ -684,15 +684,15 @@
                             </Grid>
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
                                 <TextBlock Text="Copies" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding Copies}" Minimum="1" FormatString="0" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding Copies, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" />
                             </Grid>
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
                                 <TextBlock Text="Offset X px" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding OffsetX}" FormatString="0" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding OffsetX, Converter={StaticResource Nz}}" FormatString="0" />
                             </Grid>
                             <Grid ColumnDefinitions="90,*" Margin="0,2">
                                 <TextBlock Text="Offset Y px" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding OffsetY}" FormatString="0" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding OffsetY, Converter={StaticResource Nz}}" FormatString="0" />
                             </Grid>
                             <Button Content="Print" Command="{Binding PrintCommand}" HorizontalAlignment="Stretch" Margin="0,6" />
 
