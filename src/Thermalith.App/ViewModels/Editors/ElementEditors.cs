@@ -216,11 +216,12 @@ public sealed partial class LineEditorViewModel : ElementEditorViewModel
 
     // Endpoints are surfaced in absolute label-space mm (what the user thinks in); ToElement() recomputes
     // the derived bbox + relative offsets. No W/H/Rotation fields — a line is its two points + a weight.
-    [ObservableProperty] private double _p1X;
-    [ObservableProperty] private double _p1Y;
-    [ObservableProperty] private double _p2X;
-    [ObservableProperty] private double _p2Y;
-    [ObservableProperty] private double _weightMm;
+    // Nullable so clearing a field (NumericUpDown → null) doesn't throw; ToElement coalesces empties.
+    [ObservableProperty] private double? _p1X;
+    [ObservableProperty] private double? _p1Y;
+    [ObservableProperty] private double? _p2X;
+    [ObservableProperty] private double? _p2Y;
+    [ObservableProperty] private double? _weightMm;
 
     public LineEditorViewModel(LineElement el, Action<string?> onChanged) : base(el, onChanged)
     {
@@ -246,15 +247,16 @@ public sealed partial class LineEditorViewModel : ElementEditorViewModel
 
     public override LabelElement ToElement()
     {
-        double minX = Math.Min(P1X, P2X), minY = Math.Min(P1Y, P2Y);
+        double p1x = P1X ?? 0, p1y = P1Y ?? 0, p2x = P2X ?? 0, p2y = P2Y ?? 0;
+        double minX = Math.Min(p1x, p2x), minY = Math.Min(p1y, p2y);
         return new LineElement
         {
-            Id = Id, Name = Name, X = minX, Y = minY, W = Math.Abs(P2X - P1X), H = Math.Abs(P2Y - P1Y),
+            Id = Id, Name = Name, X = minX, Y = minY, W = Math.Abs(p2x - p1x), H = Math.Abs(p2y - p1y),
             Rotation = Rotation, Locked = Locked, Visible = Visible, Justify = JustifyValue(),
             Props = new LineProps
             {
-                X1Mm = P1X - minX, Y1Mm = P1Y - minY, X2Mm = P2X - minX, Y2Mm = P2Y - minY,
-                WeightMm = WeightMm,
+                X1Mm = p1x - minX, Y1Mm = p1y - minY, X2Mm = p2x - minX, Y2Mm = p2y - minY,
+                WeightMm = WeightMm ?? 0.3,
             },
         };
     }
