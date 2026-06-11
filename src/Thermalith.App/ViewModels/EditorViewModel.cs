@@ -1638,6 +1638,80 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseCellState(); // refresh the Properties panel toggles to the focus cell
     }
 
+    // ── In-place primary-property editing (click/double-click/type-to-edit a selected element) ────
+    // Generalizes the table's in-place cell editor to every control with a single "primary" text
+    // property: Text → Content, Barcode/QR → Value. Editing happens over the element on the canvas, no
+    // inspector trip. (Table uses its own cell editor above; other types have no primary text.)
+
+    [ObservableProperty] private bool _isPrimaryEditing;
+    [ObservableProperty] private string _primaryEditText = "";
+    [ObservableProperty] private Rect _primaryEditorRect;
+    [ObservableProperty] private bool _primaryEditMultiline; // Text → accepts newlines; Barcode/QR → single line
+
+    /// <summary>The single selected element if it has an editable primary text property (and isn't locked).</summary>
+    private LabelElement? PrimaryTarget()
+    {
+        if (_selectedIds.Count != 1) return null;
+        var el = _live.Elements.FirstOrDefault(e => e.Id == _selectedIds[0]);
+        return el is (TextElement or BarcodeElement or QrElement) and { Locked: false } ? el : null;
+    }
+
+    /// <summary>True when a plain click/keystroke could open the in-place primary editor (drives the type-to-edit gate).</summary>
+    public bool CanPrimaryEdit => PrimaryTarget() is not null;
+
+    private static string PrimaryValue(LabelElement el) => el switch
+    {
+        TextElement t => t.Props.Content,
+        BarcodeElement b => b.Props.Value,
+        QrElement q => q.Props.Value,
+        _ => "",
+    };
+
+    private static LabelElement WithPrimary(LabelElement el, string v) => el switch
+    {
+        TextElement t => t with { Props = t.Props with { Content = v } },
+        BarcodeElement b => b with { Props = b.Props with { Value = v } },
+        QrElement q => q with { Props = q.Props with { Value = v } },
+        _ => el,
+    };
+
+    /// <summary>Open the in-place editor over the selected element's primary property. Seeded with the
+    /// current value, or <paramref name="initial"/> (type-to-edit: the keystroke that started editing).</summary>
+    public bool BeginPrimaryEdit(string? initial = null)
+    {
+        if (InCellMode || PrimaryTarget() is not { } el) return false;
+        PrimaryEditText = initial ?? PrimaryValue(el);
+        PrimaryEditMultiline = el is TextElement;
+        var s = _live.Canvas.Dpi / 25.4 * Zoom;
+        PrimaryEditorRect = new Rect(el.X * s, el.Y * s, Math.Max(12, el.W * s), Math.Max(14, el.H * s));
+        IsPrimaryEditing = true;
+        return true;
+    }
+
+    /// <summary>Commit the in-place editor's text to the selected element's primary property (one undo checkpoint).</summary>
+    public void CommitPrimaryEdit()
+    {
+        if (!IsPrimaryEditing) return;
+        IsPrimaryEditing = false;
+        if (PrimaryTarget() is not { } el || PrimaryValue(el) == PrimaryEditText) return; // gone or unchanged
+        FlushGesture();
+        var updated = WithPrimary(el, PrimaryEditText);
+        if (updated is TextElement { Props.AutoSize: true } t) // auto-size box hugs the new content
+        {
+            var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
+            updated = t with { W = Math.Ceiling(wmm), H = Math.Ceiling(hmm) };
+        }
+        ReplaceElement(updated);
+        _history.Commit(_live);
+        Layers.FirstOrDefault(l => l.Id == updated.Id)?.Sync(updated.Name ?? updated.Type, updated.Visible, updated.Locked);
+        if (SelectedEditor?.Id == updated.Id) SelectedEditor = ElementEditorViewModel.Create(updated, OnElementEdited); // sync inspector
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
+    public void CancelPrimaryEdit() => IsPrimaryEditing = false;
+
     // ── Rendering ───────────────────────────────────────────────────────────────────────────────
 
     private void RequestRender()

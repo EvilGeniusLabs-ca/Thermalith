@@ -400,6 +400,17 @@
                                      Text="{Binding Editor.CellEditText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      KeyDown="OnCellEditorKeyDown" LostFocus="OnCellEditorLostFocus" />
                         </Canvas>
+                        <!-- In-place primary-property editor (Text content / Barcode-QR value), over the element. -->
+                        <Canvas IsHitTestVisible="{Binding Editor.IsPrimaryEditing}">
+                            <TextBox x:Name="PrimaryEditor" IsVisible="{Binding Editor.IsPrimaryEditing}"
+                                     Canvas.Left="{Binding Editor.PrimaryEditorRect.X}" Canvas.Top="{Binding Editor.PrimaryEditorRect.Y}"
+                                     Width="{Binding Editor.PrimaryEditorRect.Width}" Height="{Binding Editor.PrimaryEditorRect.Height}"
+                                     MinHeight="0" Padding="2,0" FontSize="11"
+                                     AcceptsReturn="{Binding Editor.PrimaryEditMultiline}"
+                                     TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                     Text="{Binding Editor.PrimaryEditText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     KeyDown="OnPrimaryEditorKeyDown" LostFocus="OnPrimaryEditorLostFocus" />
+                        </Canvas>
                     </Panel>
                 </Border>
                 </ScrollViewer>

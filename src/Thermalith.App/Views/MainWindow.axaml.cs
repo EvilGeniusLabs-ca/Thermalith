@@ -141,11 +141,11 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         if (Vm is not { } vm || sender is not Control host) return;
         var p = e.GetPosition(host);
         var ed = vm.Editor;
-        if (!ed.InCellMode) { if (!ed.TryEnterCellMode(p.X, p.Y)) return; }
-        else ed.CellPointerDown(p.X, p.Y);
-        ed.BeginCellEdit();
-        FocusCellEditor();
-        e.Handled = true;
+        if (ed.InCellMode) { ed.CellPointerDown(p.X, p.Y); ed.BeginCellEdit(); FocusCellEditor(); e.Handled = true; return; }
+        if (ed.TryEnterCellMode(p.X, p.Y)) { ed.BeginCellEdit(); FocusCellEditor(); e.Handled = true; return; }
+        // Not a table: select what's under the cursor and open its primary editor (Text/Barcode/QR).
+        ed.SelectAt(p.X, p.Y, false);
+        if (ed.BeginPrimaryEdit()) { FocusPrimaryEditor(); e.Handled = true; }
     }
 
     private void FocusCellEditor() =>
@@ -157,13 +157,22 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     // Type-to-edit: in cell mode, a printable keystroke starts editing the active cell with that char.
     protected override void OnTextInput(TextInputEventArgs e)
     {
-        if (Vm?.Editor is { } ed && ed.InCellMode && !ed.IsCellEditing
-            && !string.IsNullOrEmpty(e.Text) && !char.IsControl(e.Text[0]))
+        if (Vm?.Editor is { } ed && !string.IsNullOrEmpty(e.Text) && !char.IsControl(e.Text[0]))
         {
-            ed.BeginCellEdit(e.Text);
-            FocusCellEditorEnd();
-            e.Handled = true;
-            return;
+            if (ed.InCellMode && !ed.IsCellEditing)
+            {
+                ed.BeginCellEdit(e.Text);
+                FocusCellEditorEnd();
+                e.Handled = true;
+                return;
+            }
+            // Type-to-edit a selected element's primary property — but only with the canvas focused, so
+            // typing in an inspector field (a TextBox / NumericUpDown's inner editor) is never hijacked.
+            if (!ed.InCellMode && !ed.IsPrimaryEditing && ed.CanPrimaryEdit
+                && FocusManager?.GetFocusedElement() is not TextBox)
+            {
+                if (ed.BeginPrimaryEdit(e.Text)) { FocusPrimaryEditorEnd(); e.Handled = true; return; }
+            }
         }
         base.OnTextInput(e);
     }
@@ -182,6 +191,29 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
     private void OnCellEditorLostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
         Vm?.Editor.CommitCellEdit();
+
+    // ── In-place primary-property editor (Text content / Barcode-QR value) ───────────────────────
+
+    private void FocusPrimaryEditor() =>
+        Dispatcher.UIThread.Post(() => { PrimaryEditor.Focus(); PrimaryEditor.SelectAll(); }, DispatcherPriority.Background);
+
+    private void FocusPrimaryEditorEnd() =>
+        Dispatcher.UIThread.Post(() => { PrimaryEditor.Focus(); PrimaryEditor.CaretIndex = PrimaryEditor.Text?.Length ?? 0; }, DispatcherPriority.Background);
+
+    private void OnPrimaryEditorKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+        switch (e.Key)
+        {
+            case Key.Escape: vm.Editor.CancelPrimaryEdit(); CanvasHost.Focus(); e.Handled = true; break;
+            // Single-line fields (Barcode/QR) commit on Enter; multi-line Text lets Enter insert a newline.
+            case Key.Enter when !vm.Editor.PrimaryEditMultiline:
+                vm.Editor.CommitPrimaryEdit(); CanvasHost.Focus(); e.Handled = true; break;
+        }
+    }
+
+    private void OnPrimaryEditorLostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
+        Vm?.Editor.CommitPrimaryEdit();
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
@@ -205,6 +237,13 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             {
                 if (ed.IsCellEditing) { ed.CancelCellEdit(); CanvasHost.Focus(); e.Handled = true; return; }
                 if (ed.InCellMode) { ed.ExitCellMode(); e.Handled = true; return; }
+            }
+            // Keyboard peer of type-to-edit: F2 opens the in-place primary editor; Esc closes it.
+            if (!ed.InCellMode)
+            {
+                if (ed.IsPrimaryEditing && e.Key == Key.Escape) { ed.CancelPrimaryEdit(); CanvasHost.Focus(); e.Handled = true; return; }
+                if (!ed.IsPrimaryEditing && e.Key == Key.F2 && ed.CanPrimaryEdit && FocusManager?.GetFocusedElement() is not TextBox)
+                    if (ed.BeginPrimaryEdit()) { FocusPrimaryEditor(); e.Handled = true; return; }
             }
         }
         base.OnKeyDown(e);
@@ -258,6 +297,7 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         var additive = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         if (ed.SelectAt(p.X, p.Y, additive))
         {
+            host.Focus(); // canvas owns the keyboard so type-to-edit / F2 / Delete target the selection, not a stale field
             ed.BeginDrag(DragMode.Move, Handle.TopLeft); // move the whole selection
             _dragging = true;
             e.Pointer.Capture(host);
