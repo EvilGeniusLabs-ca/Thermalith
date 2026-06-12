@@ -3,6 +3,10 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Thermalith.App</RootNamespace>
+    <!-- Published binary is "Thermalith" (Thermalith.exe on Windows), not "Thermalith.App" — the ".App"
+         reads as a file extension on Linux and clashes with the macOS .app-bundle meaning. Namespaces
+         stay Thermalith.App via RootNamespace above. -->
+    <AssemblyName>Thermalith</AssemblyName>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
