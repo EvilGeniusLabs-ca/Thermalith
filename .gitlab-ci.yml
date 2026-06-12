@@ -16,6 +16,12 @@
 # Version note: artifact filenames come from <Version> in Thermalith.App.csproj,
 # NOT from the git tag. Keep the csproj version in step with the tag you push.
 
+# Hard gate: the whole pipeline only ever runs for a tag push. Branch commits,
+# merge requests, schedules and the web "Run pipeline" button create nothing.
+workflow:
+  rules:
+    - if: '$CI_COMMIT_TAG'
+
 stages:
   - build
 
@@ -27,8 +33,9 @@ stages:
 build:linux:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:10.0   # provides an SDK >= 10.0.204 (global.json)
-  tags:
-    - linux            # TODO: set to your self-hosted gitlab.glyphdeck.org Linux runner's tag
+  # Single self-hosted runner today, so this job is left UNTAGGED to land on the
+  # only runner. If that runner is set to NOT run untagged jobs, add its tag:
+  #   tags: [ <runner-tag> ]
   rules:
     - if: '$CI_COMMIT_TAG'                    # tag pushes only
   before_script:
