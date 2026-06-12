@@ -32,7 +32,7 @@ public sealed partial class EditorViewModel : ObservableObject
     private IReadOnlyDictionary<string, byte[]> _assets = new Dictionary<string, byte[]>();
     private bool _gestureActive;
     private DateTimeOffset _lastRenderAt;
-    private const double RenderCadenceMs = 80;
+    private const double RenderCadenceMs = 40;
 
     public EditorViewModel()
     {
