@@ -31,6 +31,11 @@ Design docs live in [`Documentation/`](Documentation/): start with the [build sp
 
 ## Building
 
+> **Just want to run Thermalith?** You don't need any of this. The published app is a self-contained
+> single-file binary — **nothing has to be installed to run it**, not the SDK and not even the .NET
+> runtime. Grab the binary for your platform and double-click it. The SDK below is **only** required to
+> *build the app yourself from source*.
+
 ### Prerequisite: the .NET 10 SDK (not just the runtime)
 
 You **must** have the **.NET 10 SDK** installed. This is non-negotiable — nothing here builds on .NET 8, .NET 9, or the older "Core" SDKs, and the **runtime alone is not enough**: building requires the full **SDK**.
