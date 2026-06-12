@@ -99,6 +99,35 @@ Each run:
 
 The output directory for each target is wiped before publishing, so each build is clean. If any target fails the script prints which one and exits with a non-zero status; otherwise it ends with `All platforms built successfully.`
 
+## Connecting a printer on Linux (USB-serial permissions)
+
+On Linux a USB NIIMBOT printer enumerates as a USB CDC serial device — typically `/dev/ttyACM0`
+(check with `ls -l /dev/serial/by-id/`). That device node is owned by `root:dialout`, so **your user
+must be a member of the `dialout` group** to open it. This is a one-time setup step; Windows and macOS
+need no equivalent.
+
+If you are not in the group, the symptom is: the app **scans but does not find the printer** (it shows
+up as "no printer", and Connect fails) — the port is there, but opening it is denied. Grant access with:
+
+```bash
+sudo usermod -aG dialout $USER
+```
+
+Then **fully log out and back in** (or reboot). Group membership is only applied to *new* login
+sessions, so the change does not take effect in your current session — and an app launched from the old
+session still cannot open the port until you re-login.
+
+Verify it worked:
+
+```bash
+groups | tr ' ' '\n' | grep -x dialout   # should print: dialout
+ls -l /dev/ttyACM0                        # group should be 'dialout'
+```
+
+> **Distro note:** the serial group is `dialout` on Debian/Ubuntu (and this project's reference setup).
+> Some distributions (e.g. Arch) use `uucp` instead. If `/dev/ttyACM0` shows a different group owner in
+> the `ls -l` above, add yourself to *that* group instead.
+
 ## Platforms
 
 Windows, macOS, and Linux. USB-serial printers first; Bluetooth (BLE) later, behind the same transport interface.
