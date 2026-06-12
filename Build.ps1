@@ -72,6 +72,15 @@ foreach ($project in $Projects) {
         }
 
         Write-Host "OK: $($project.Name) - $target" -ForegroundColor Green
+
+        # Linux desktop integration: ship a .desktop entry + icon alongside the
+        # binary so the artifact can be installed (or wrapped in an AppImage).
+        # The ELF binary itself can't carry an icon the way a Windows .exe does.
+        if ($target -like "linux-*") {
+            Write-Host "    Adding Linux desktop entry + icon ..." -ForegroundColor DarkGray
+            Copy-Item "Assets/Icons/thermalith.desktop" -Destination (Join-Path $outDir "thermalith.desktop") -Force
+            Copy-Item "Assets/Icons/thermalith-256.png" -Destination (Join-Path $outDir "thermalith.png") -Force
+        }
     }
 }
 

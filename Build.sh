@@ -74,6 +74,17 @@ for project_name in "${PROJECT_ORDER[@]}"; do
         echo "==> Publishing $project_name - $target ..."
         if dotnet publish "$project_path" -p:PublishProfile="$target"; then
             echo "OK: $project_name - $target"
+
+            # Linux desktop integration: ship a .desktop entry + icon alongside the
+            # binary so the artifact can be installed (or wrapped in an AppImage).
+            # The ELF binary itself can't carry an icon the way a Windows .exe does.
+            case "$target" in
+                linux-*)
+                    echo "    Adding Linux desktop entry + icon ..."
+                    cp Assets/Icons/thermalith.desktop "$out_dir/thermalith.desktop"
+                    cp Assets/Icons/thermalith-256.png  "$out_dir/thermalith.png"
+                    ;;
+            esac
         else
             echo "FAILED: $project_name - $target"
             FAILED+=("$project_name/$target")

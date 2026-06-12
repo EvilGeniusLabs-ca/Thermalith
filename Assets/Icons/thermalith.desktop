@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Thermalith
+GenericName=Thermal Label Designer
+Comment=Design and print NIIMBOT thermal labels
+Exec=Thermalith
+Icon=thermalith
+Terminal=false
+Categories=Graphics;Utility;
+Keywords=label;thermal;niimbot;print;barcode;qr;
+StartupWMClass=Thermalith
