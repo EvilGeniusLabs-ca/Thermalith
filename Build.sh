@@ -9,12 +9,13 @@
 
 set -euo pipefail
 
-declare -A PROJECTS=(
-    ["Thermalith.App"]="src/Thermalith.App/Thermalith.App.csproj"
+# "name:csproj" entries. name = artifact folder under artifacts/ (must stay
+# "thermalith", NOT "Thermalith.App" — a folder ending in .App is read as a
+# .app bundle by case-insensitive macOS and is confusing on Linux). Indexed
+# array, not "declare -A": macOS ships bash 3.2, which has no associative arrays.
+PROJECTS=(
+    "thermalith:src/Thermalith.App/Thermalith.App.csproj"
 )
-
-# Ordered project names (bash associative arrays don't preserve order)
-PROJECT_ORDER=("Thermalith.App")
 
 DEFAULT_TARGETS=(
     "win-x64"
@@ -56,8 +57,9 @@ for entry in "${NUGET_PROJECTS[@]}"; do
 done
 
 # -- Publish apps -------------------------------------------------------------
-for project_name in "${PROJECT_ORDER[@]}"; do
-    project_path="${PROJECTS[$project_name]}"
+for entry in "${PROJECTS[@]}"; do
+    project_name="${entry%%:*}"
+    project_path="${entry##*:}"
 
     echo ""
     echo "=== Building $project_name ==="

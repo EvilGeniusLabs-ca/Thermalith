@@ -19,8 +19,11 @@ $NuGetProjects = @(
 $NupkgDir = "artifacts/nupkgs"
 
 # -- Publishable apps ---------------------------------------------------------
+# Name = artifact folder name under artifacts/ (must stay "thermalith", NOT
+# "Thermalith.App" — a folder ending in .App is read as a .app bundle by
+# case-insensitive macOS and is confusing on Linux). Path = source csproj.
 $Projects = @(
-    @{ Name = "Thermalith.App"; Path = "src/Thermalith.App/Thermalith.App.csproj" }
+    @{ Name = "thermalith"; Path = "src/Thermalith.App/Thermalith.App.csproj" }
 )
 
 $DefaultTargets = @(
