@@ -81,6 +81,18 @@ foreach ($project in $Projects) {
             Copy-Item "Assets/Icons/thermalith.desktop" -Destination (Join-Path $outDir "thermalith.desktop") -Force
             Copy-Item "Assets/Icons/thermalith-256.png" -Destination (Join-Path $outDir "thermalith.png") -Force
         }
+
+        # macOS needs a .app bundle (Info.plist + icon) to launch from Finder and
+        # live in /Applications; the bare binary won't do. The bundle can only be
+        # assembled + ad-hoc signed on macOS (needs codesign), so skip elsewhere.
+        if ($target -like "osx-*") {
+            if ($IsMacOS) {
+                Write-Host "    Assembling macOS .app bundle ..." -ForegroundColor DarkGray
+                & ./Pack-MacApp.sh $outDir
+            } else {
+                Write-Host "    Skipping .app bundle (not running on macOS)" -ForegroundColor DarkGray
+            }
+        }
     }
 }
 

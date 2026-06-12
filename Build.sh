@@ -84,6 +84,17 @@ for project_name in "${PROJECT_ORDER[@]}"; do
                     cp Assets/Icons/thermalith.desktop "$out_dir/thermalith.desktop"
                     cp Assets/Icons/thermalith-256.png  "$out_dir/thermalith.png"
                     ;;
+                osx-*)
+                    # macOS needs a .app bundle (Info.plist + icon) to launch from
+                    # Finder and live in /Applications; the bare binary won't do.
+                    # Only assemblable on macOS (needs codesign); skip elsewhere.
+                    if [ "$(uname -s)" = "Darwin" ]; then
+                        echo "    Assembling macOS .app bundle ..."
+                        ./Pack-MacApp.sh "$out_dir"
+                    else
+                        echo "    Skipping .app bundle (not running on macOS)"
+                    fi
+                    ;;
             esac
         else
             echo "FAILED: $project_name - $target"
