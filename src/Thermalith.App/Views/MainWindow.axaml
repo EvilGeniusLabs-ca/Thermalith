@@ -162,10 +162,16 @@
 
         <!-- Status bar -->
         <Border DockPanel.Dock="Bottom" Background="{DynamicResource SurfaceBar}" Padding="8,3">
-            <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                 <TextBlock Text="{Binding Editor.StatusText}" Foreground="{DynamicResource TextPrimary}" />
                 <TextBlock Grid.Column="1" Text="{Binding StatusMessage, UpdateSourceTrigger=PropertyChanged}" Foreground="{DynamicResource TextInfo}" HorizontalAlignment="Center" />
-                <TextBlock Grid.Column="2" Text="{Binding Editor.Dirty, StringFormat='dirty: {0}'}" Foreground="{DynamicResource TextHint}" />
+                <TextBlock Grid.Column="2" Text="{Binding Editor.Dirty, StringFormat='dirty: {0}'}" Foreground="{DynamicResource TextHint}" VerticalAlignment="Center" />
+                <!-- EvilGeniusLabs mark — click to open About (donate link lives there). -->
+                <Button Grid.Column="3" Command="{Binding AboutCommand}" Margin="10,0,0,0"
+                        Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        ToolTip.Tip="About Thermalith">
+                    <Image Source="avares://Thermalith.App/Assets/evilgenius.png" Height="18" />
+                </Button>
             </Grid>
         </Border>
 
