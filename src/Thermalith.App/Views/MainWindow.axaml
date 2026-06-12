@@ -159,7 +159,7 @@
                     <!-- EvilGeniusLabs mark — far-right, matched to the Print button height; opens About (donate link). -->
                     <Button Command="{Binding AboutCommand}" Padding="0" Background="Transparent" BorderThickness="0"
                             Cursor="Hand" VerticalAlignment="Center" ToolTip.Tip="About Thermalith">
-                        <Image Source="avares://Thermalith.App/Assets/evilgenius.png"
+                        <Image Source="/Assets/evilgenius.png"
                                Height="{Binding #PrintButton.Bounds.Height}" />
                     </Button>
                 </StackPanel>

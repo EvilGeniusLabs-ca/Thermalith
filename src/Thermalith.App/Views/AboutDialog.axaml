@@ -9,7 +9,7 @@
         Background="{DynamicResource SurfacePanel}">
   <Panel ClipToBounds="True">
     <!-- evilgenius mark — upper-right, ~30% bleeding off the top-right corner, behind the content. -->
-    <Image Source="avares://Thermalith.App/Assets/evilgenius.png"
+    <Image Source="/Assets/evilgenius.png"
            Width="200" Height="200" Stretch="Uniform"
            HorizontalAlignment="Right" VerticalAlignment="Top"
            Margin="0,-60,-60,0" Opacity="0.5" IsHitTestVisible="False" />
@@ -19,7 +19,7 @@
              image) so it has black breathing room on each side instead of touching the form border. -->
         <Border DockPanel.Dock="Bottom" Background="#002B36" Padding="14,10"
                 Cursor="Hand" PointerPressed="OnVisitSite" ToolTip.Tip="Visit evilgeniuslabs.ca">
-            <Image Source="avares://Thermalith.App/Assets/egtext.png"
+            <Image Source="/Assets/egtext.png"
                    Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
         </Border>
 
