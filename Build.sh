@@ -98,6 +98,11 @@ for entry in "${PROJECTS[@]}"; do
                     fi
                     ;;
             esac
+
+            # Bundle this platform's payload into a distributable package
+            # (zip / tar.gz / dmg) inside its own RID folder.
+            echo "    Packaging $target ..."
+            ./Package-Platform.sh "$target" "$out_dir"
         else
             echo "FAILED: $project_name - $target"
             FAILED+=("$project_name/$target")

@@ -96,6 +96,38 @@ foreach ($project in $Projects) {
                 Write-Host "    Skipping .app bundle (not running on macOS)" -ForegroundColor DarkGray
             }
         }
+
+        # Bundle this platform's payload into a distributable package (zip / tar.gz
+        # / dmg) inside its own RID folder. The app name stays "Thermalith"; the
+        # arch lives only in the archive filename so downloads are distinguishable.
+        Write-Host "    Packaging $target ..." -ForegroundColor DarkGray
+        $verMatch = Select-String -Path $project.Path -Pattern '<Version>(.*?)</Version>' | Select-Object -First 1
+        $ver = if ($verMatch) { $verMatch.Matches[0].Groups[1].Value } else { "0.1.0" }
+        $base = "Thermalith-$ver-$target"
+        if ($target -like "win-*") {
+            $zip = Join-Path $outDir "$base.zip"
+            if (Test-Path $zip) { Remove-Item $zip -Force }
+            $items = Get-ChildItem -LiteralPath $outDir -Exclude *.pdb, *.zip
+            Compress-Archive -Path $items.FullName -DestinationPath $zip -Force
+            Write-Host "    packaged $zip" -ForegroundColor DarkGray
+        }
+        elseif ($target -like "linux-*") {
+            # Build in a temp dir then move in, so the tarball never includes itself.
+            $tgz = "$base.tar.gz"
+            $tmp = New-Item -ItemType Directory -Force -Path (Join-Path ([System.IO.Path]::GetTempPath()) ([System.Guid]::NewGuid().ToString()))
+            tar --exclude='*.pdb' -czf (Join-Path $tmp $tgz) -C $outDir .
+            Move-Item (Join-Path $tmp $tgz) (Join-Path $outDir $tgz) -Force
+            Remove-Item $tmp -Recurse -Force
+            Write-Host "    packaged $(Join-Path $outDir $tgz)" -ForegroundColor DarkGray
+        }
+        elseif ($target -like "osx-*") {
+            # .dmg needs macOS (hdiutil). On macOS reuse the bash packer; skip elsewhere.
+            if ($IsMacOS) {
+                & ./Package-Platform.sh $target $outDir
+            } else {
+                Write-Host "    Skipping .dmg (build on macOS)" -ForegroundColor DarkGray
+            }
+        }
     }
 }
 

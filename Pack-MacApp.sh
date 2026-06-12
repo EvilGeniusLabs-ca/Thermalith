@@ -6,11 +6,13 @@
 # launches from Finder, or sits in /Applications. This wraps that publish output.
 #
 # Usage:
-#   ./Pack-MacApp.sh <publish-dir>            # writes <publish-dir>/../Thermalith-<arch>.app
-#   ./Pack-MacApp.sh artifacts/thermalith/osx-arm64   # -> Thermalith-arm64.app
+#   ./Pack-MacApp.sh <publish-dir>            # writes <publish-dir>/Thermalith.app
+#   ./Pack-MacApp.sh artifacts/thermalith/osx-arm64   # -> .../osx-arm64/Thermalith.app
 #
-# The bundle is named per-arch (Thermalith-arm64.app / Thermalith-x64.app) so a
-# full build of both osx RIDs doesn't have x64 overwrite arm64 in the same dir.
+# The bundle is always named Thermalith.app (no arch suffix) and is written
+# INSIDE the per-RID publish dir, so a full build of both osx RIDs keeps them
+# separate — artifacts/thermalith/osx-arm64/Thermalith.app and
+# .../osx-x64/Thermalith.app — without baking the arch into the app name.
 #
 # Called automatically by Build.sh for osx-* targets.
 
@@ -18,10 +20,6 @@ set -euo pipefail
 
 PUBLISH_DIR="${1:?usage: Pack-MacApp.sh <publish-dir>}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Arch from the publish dir name (osx-arm64 -> arm64, osx-x64 -> x64).
-ARCH="$(basename "$PUBLISH_DIR" | sed 's/^osx-//')"
-BUNDLE_BASE="Thermalith-$ARCH"
 
 APP_NAME="Thermalith"
 EXECUTABLE="Thermalith"              # matches <AssemblyName> in the csproj
@@ -43,7 +41,7 @@ if [ ! -f "$ICON_SRC" ]; then
     exit 1
 fi
 
-APP_DIR="$PUBLISH_DIR/../$BUNDLE_BASE.app"
+APP_DIR="$PUBLISH_DIR/$APP_NAME.app"
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
@@ -89,5 +87,5 @@ if command -v codesign >/dev/null 2>&1; then
 fi
 
 # Normalize the path for display
-RESOLVED="$(cd "$(dirname "$APP_DIR")" && pwd)/$BUNDLE_BASE.app"
+RESOLVED="$(cd "$(dirname "$APP_DIR")" && pwd)/$APP_NAME.app"
 echo "OK: assembled $RESOLVED (v$VERSION)"
