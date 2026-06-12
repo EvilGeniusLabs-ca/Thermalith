@@ -31,6 +31,8 @@ public sealed partial class EditorViewModel : ObservableObject
     private Manifest _manifest = new() { Id = DocumentFactory.NewId(), Name = "Untitled" };
     private IReadOnlyDictionary<string, byte[]> _assets = new Dictionary<string, byte[]>();
     private bool _gestureActive;
+    private DateTimeOffset _lastRenderAt;
+    private const double RenderCadenceMs = 80;
 
     public EditorViewModel()
     {
@@ -1714,14 +1716,22 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ── Rendering ───────────────────────────────────────────────────────────────────────────────
 
+    // Debounce-with-max-wait. A short burst (e.g. inspector typing) coalesces to one trailing render,
+    // but a sustained gesture (drag) fires faster than the cadence, which would keep resetting a plain
+    // debounce so it never ticks until release — the content "teleports" to the end. Capping the wait at
+    // one cadence since the last actual paint keeps the preview repainting smoothly through the drag.
     private void RequestRender()
     {
         _renderDebounce.Stop();
+        var sinceMs = (DateTimeOffset.Now - _lastRenderAt).TotalMilliseconds;
+        if (sinceMs >= RenderCadenceMs) { RenderNow(); return; }
+        _renderDebounce.Interval = TimeSpan.FromMilliseconds(RenderCadenceMs - sinceMs);
         _renderDebounce.Start();
     }
 
     private void RenderNow()
     {
+        _lastRenderAt = DateTimeOffset.Now; // advance the cadence even on a render error, so we don't busy-loop
         try
         {
             var ctx = new ResolveContext { Now = DateTimeOffset.Now, Assets = _assets, RowIndex = 0 };
