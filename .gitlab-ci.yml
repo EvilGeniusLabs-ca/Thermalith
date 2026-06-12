@@ -1,0 +1,70 @@
+# Thermalith release-build pipeline.
+#
+# Trigger: push a tag (e.g. `git tag v0.2.0 && git push origin v0.2.0`).
+# Builds the self-contained, single-file artifacts for every platform using the
+# repo's own build scripts (Build.sh -> Package-Platform.sh / Pack-MacApp.sh)
+# and exposes them as downloadable GitLab CI artifacts.
+#
+# Release management (GitHub repo / push mirror / `gh release create`) is handled
+# SEPARATELY for now - this pipeline only produces the artifacts. Ordinary branch
+# pushes build nothing: both jobs are tag-only, so no pipeline is created without
+# a tag.
+#
+# Host-agnostic by design: no hardcoded instance hostname appears here, so a
+# future GitLab domain change (e.g. -> gitlab.evilgeniuslabs.ca) needs no edits.
+#
+# Version note: artifact filenames come from <Version> in Thermalith.App.csproj,
+# NOT from the git tag. Keep the csproj version in step with the tag you push.
+
+stages:
+  - build
+
+# --- Windows + Linux artifacts (cross-built on one Linux runner) -------------
+# `dotnet publish` is RID-targeted, so a single Linux runner cross-publishes
+# win-x64, linux-x64 and linux-arm64 without a Windows or ARM host, and packs the
+# Niimbot.Net NuGet. macOS packaging needs a real Mac (codesign/hdiutil), so it
+# lives in the separate job below.
+build:linux:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:10.0   # provides an SDK >= 10.0.204 (global.json)
+  tags:
+    - linux            # TODO: set to your self-hosted gitlab.glyphdeck.org Linux runner's tag
+  rules:
+    - if: '$CI_COMMIT_TAG'                    # tag pushes only
+  before_script:
+    # The .NET SDK image is Debian-based: it has tar/gzip but not `zip`, which
+    # Package-Platform.sh needs to build the Windows .zip.
+    - apt-get update && apt-get install -y --no-install-recommends zip
+  script:
+    - chmod +x Build.sh Package-Platform.sh Pack-MacApp.sh
+    - ./Build.sh win-x64 linux-x64 linux-arm64
+  artifacts:
+    name: "thermalith-$CI_COMMIT_TAG-win-linux"
+    paths:
+      - artifacts/thermalith/*/*.zip       # win-x64
+      - artifacts/thermalith/*/*.tar.gz    # linux-x64, linux-arm64
+      - artifacts/nupkgs/*.nupkg           # Niimbot.Net
+    expire_in: 90 days
+
+# --- macOS artifacts (.app bundle + .dmg) ------------------------------------
+# Requires the M4 Mac mini registered as a self-hosted macOS GitLab runner,
+# powered on, with the .NET 10 SDK installed. codesign + hdiutil are macOS-only,
+# so the .app bundle and .dmg can ONLY be produced here. Kept manual so a tag
+# never blocks on the Mac being offline - press play on this job when the Mac is
+# up. (Currently ad-hoc signed only; Developer ID notarization comes later.)
+build:macos:
+  stage: build
+  tags:
+    - macos            # TODO: set to the M4 runner's tag
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: manual
+      allow_failure: true
+  script:
+    - chmod +x Build.sh Package-Platform.sh Pack-MacApp.sh
+    - ./Build.sh osx-arm64 osx-x64
+  artifacts:
+    name: "thermalith-$CI_COMMIT_TAG-macos"
+    paths:
+      - artifacts/thermalith/*/*.dmg       # osx-arm64, osx-x64
+    expire_in: 90 days
