@@ -128,6 +128,29 @@ ls -l /dev/ttyACM0                        # group should be 'dialout'
 > Some distributions (e.g. Arch) use `uucp` instead. If `/dev/ttyACM0` shows a different group owner in
 > the `ls -l` above, add yourself to *that* group instead.
 
+## Running the unsigned macOS build
+
+Current releases are **not yet code-signed or notarized** (signing is being set up — see
+[`Documentation/release-plan.md`](Documentation/release-plan.md)). Until that lands, macOS Gatekeeper
+will refuse to open the downloaded build with a message like *"Thermalith" cannot be opened because the
+developer cannot be verified.* This is expected for an unsigned binary — nothing is wrong with the
+download. macOS 15 (Sequoia) removed the old Control-click → **Open** bypass, so use one of these
+instead:
+
+- **System Settings route (no terminal).** Double-click the app once and dismiss the warning. Then open
+  **System Settings → Privacy & Security**, scroll to the **Security** section, and click **Open Anyway**
+  next to the Thermalith message. Confirm once more — macOS then remembers the choice.
+- **Terminal route.** Strip the quarantine flag macOS attaches to downloaded files, then run it:
+
+  ```bash
+  xattr -dr com.apple.quarantine /path/to/Thermalith
+  chmod +x /path/to/Thermalith        # only needed for the bare single-file binary
+  ```
+
+> **Why this is needed:** Apple only suppresses the warning for apps signed with a Developer ID and
+> notarized. **Signing/notarization is actively in progress** — once it ships, future macOS releases
+> open with a normal double-click and these steps go away. Earlier downloads are unaffected either way.
+
 ## Platforms
 
 Windows, macOS, and Linux. USB-serial printers first; Bluetooth (BLE) later, behind the same transport interface.
