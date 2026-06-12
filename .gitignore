@@ -29,3 +29,6 @@ appsettings.Development.json
 
 # Verify snapshot received files (transient; .verified.* are the committed baselines)
 *.received.*
+
+# Claude
+.claude/
