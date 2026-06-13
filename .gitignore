@@ -32,3 +32,5 @@ appsettings.Development.json
 
 # Claude
 .claude/
+# Portable context bundle — personal + infra-access info, transport by scp/USB only
+claude-context-bundle.txt
