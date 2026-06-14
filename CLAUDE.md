@@ -3,7 +3,7 @@
 Open-source NIIMBOT thermal-label designer + driver. Cross-platform Avalonia / .NET 10, GPL-3.0. The
 B1 print path is verified on real hardware. Currently mid **usability/cleanup pass** on the editor.
 
-**Continuing the cleanup work: start at `Documentation/worklist.md` §I** (the active punch-list).
+**Continuing the cleanup work: start at `Documentation/internal/Thermalith/worklist.md` §I** (the active punch-list).
 
 ## Where things are
 
@@ -19,12 +19,20 @@ B1 print path is verified on real hardware. Currently mid **usability/cleanup pa
 
 ## Docs (read on demand)
 
-- `Documentation/worklist.md` — **active backlog; cleanup queue is §I.**
+Public docs (shipped in the repo / mirrored to GitHub):
+
 - `Documentation/roadmap.md` — future / wishlist (clip-art, i18n, data-merge, MCP, help, community DB).
-- `Documentation/release-plan.md` — release / launch / CI / signing pipeline + Release-1 scope.
-- `Documentation/worklist-done.md` — completed record.
 - `Documentation/reference-data.md` — endpoints / RFID / devices.json facts.
 - `Documentation/thermalith-build-spec.md` — canonical §-numbered design. `label-json-spec.md` — `.nlbl` schema.
+
+Internal/private docs (`Documentation/internal/` — separate private repo `richard_barnes/internal-docs`,
+gitignored here, **never mirrored to public GitHub**):
+
+- `Documentation/internal/Thermalith/worklist.md` — **active backlog; cleanup queue is §I.**
+- `Documentation/internal/Thermalith/worklist-done.md` — completed record.
+- `Documentation/internal/Thermalith/release-plan.md` — release / launch / CI / signing pipeline + Release-1 scope.
+- `Documentation/internal/Thermalith/table-design.md` — unsettled table-cluster design.
+- `Documentation/internal/Thermalith/macos-ci-runner.md` — macOS CI runner setup runbook.
 
 ## Build / test / verify
 

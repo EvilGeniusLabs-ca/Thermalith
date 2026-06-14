@@ -30,6 +30,10 @@ appsettings.Development.json
 # Verify snapshot received files (transient; .verified.* are the committed baselines)
 *.received.*
 
+# Internal/private docs — separate private repo (richard_barnes/internal-docs),
+# cloned here but NEVER mirrored to the public GitHub repo
+Documentation/internal/
+
 # Claude
 .claude/
 # Portable context bundle — personal + infra-access info, transport by scp/USB only
