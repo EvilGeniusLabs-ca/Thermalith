@@ -1,0 +1,32 @@
+% Thermalith User Manual — PDF-only LaTeX setup, used by build-pdf.sh (xelatex).
+% Provides the per-page footer branding and a glyph fallback for symbols the body
+% font lacks. Image paths are relative to markdown/ (build-pdf.sh runs pandoc there).
+
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{newunicodechar}
+
+% --- Glyph fallback -------------------------------------------------------
+% The macOS keys and the arrow aren't in the default body font; pull them from
+% DejaVu Sans (ships with texlive-fonts-extra) so they don't come out as boxes.
+\newfontfamily\fallbackfont{DejaVu Sans}
+\newunicodechar{⌘}{{\fallbackfont ⌘}}
+\newunicodechar{⇧}{{\fallbackfont ⇧}}
+\newunicodechar{⌫}{{\fallbackfont ⌫}}
+\newunicodechar{→}{{\fallbackfont →}}
+
+% --- Per-page footer ------------------------------------------------------
+% EvilGenius head (left) · page number (centre) · EvilGeniusLabs.ca wordmark (right).
+\newcommand{\eglfooter}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0.4pt}%
+  \fancyfoot[L]{\raisebox{-0.4\height}{\includegraphics[height=9mm]{assets/brand/evilgenius.png}}}%
+  \fancyfoot[C]{\thepage}%
+  \fancyfoot[R]{\raisebox{-0.15\height}{\includegraphics[height=4.5mm]{assets/brand/evilgeniuslabsca.png}}}%
+}
+\pagestyle{fancy}
+\eglfooter
+\fancypagestyle{plain}{\eglfooter}   % chapter-opening pages get the footer too
+\setlength{\footskip}{16mm}
