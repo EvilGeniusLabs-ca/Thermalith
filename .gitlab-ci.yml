@@ -5,10 +5,10 @@
 # repo's own build scripts (Build.sh -> Package-Platform.sh / Pack-MacApp.sh)
 # and exposes them as downloadable GitLab CI artifacts.
 #
-# Release management (GitHub repo / push mirror / `gh release create`) is handled
-# SEPARATELY for now - this pipeline only produces the artifacts. Ordinary branch
-# pushes build nothing: both jobs are tag-only, so no pipeline is created without
-# a tag.
+# On a tag: all platforms + the manual PDF build automatically, then the manual
+# `release:github` job (press play) publishes a GitHub release with the artifacts.
+# Ordinary branch pushes build nothing - everything is tag-gated, so no pipeline
+# is created without a tag.
 #
 # Host-agnostic by design: no hardcoded instance hostname appears here, so a
 # future GitLab domain change (e.g. -> gitlab.evilgeniuslabs.ca) needs no edits.
@@ -24,6 +24,7 @@ workflow:
 
 stages:
   - build
+  - release
 
 # --- Windows + Linux artifacts (cross-built on one Linux runner) -------------
 # `dotnet publish` is RID-targeted, so a single Linux runner cross-publishes
@@ -54,19 +55,16 @@ build:linux:
     expire_in: 90 days
 
 # --- macOS artifacts (.app bundle + .dmg) ------------------------------------
-# Requires the M4 Mac mini registered as a self-hosted macOS GitLab runner,
-# powered on, with the .NET 10 SDK installed. codesign + hdiutil are macOS-only,
-# so the .app bundle and .dmg can ONLY be produced here. Kept manual so a tag
-# never blocks on the Mac being offline - press play on this job when the Mac is
-# up. (Currently ad-hoc signed only; Developer ID notarization comes later.)
+# Builds on the M4 Mac mini, an always-on self-hosted macOS runner (tag `macos`).
+# codesign + hdiutil are macOS-only, so the .app/.dmg can ONLY be produced here.
+# The Mac is an always-on appliance, so this runs automatically on a tag like the
+# Linux job. (Currently ad-hoc signed only; Developer ID notarization comes later.)
 build:macos:
   stage: build
   tags:
     - macos            # M4 Mac mini runner (registered with this tag)
   rules:
     - if: '$CI_COMMIT_TAG'
-      when: manual
-      allow_failure: true
   script:
     - chmod +x Build.sh Package-Platform.sh Pack-MacApp.sh
     - ./Build.sh osx-arm64 osx-x64
@@ -99,3 +97,57 @@ docs:manual:
     paths:
       - Documentation/Manual/pdf/Thermalith-User-Manual.pdf
     expire_in: 90 days
+
+# --- Publish a GitHub release (on demand) ------------------------------------
+# Uploads the built artifacts (binaries + Niimbot.Net nupkg + manual PDF) to a
+# GitHub release. MANUAL: every tag builds automatically, but you press play here
+# to publish — that's the on-demand release gate. Beta vs full is driven by the
+# per-tag notes file Documentation/releases/<tag>.md frontmatter:
+#   ---
+#   title: Thermalith 1.2.0
+#   prerelease: false        # true -> published as a GitHub Pre-release
+#   ---
+#   <release body markdown>
+#
+# PREREQUISITE: a GitHub fine-grained PAT (Contents: write on the repo) set as a
+# masked + protected CI variable named GITHUB_PAT. Until that's set this job
+# cannot run. GitHub hosts the public files directly; GitLab CI artifacts (90-day,
+# gated) cover the internal/beta audience — there is no GitLab release track.
+release:github:
+  stage: release
+  image: alpine:latest
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: manual
+  needs:
+    - job: build:linux
+      artifacts: true
+    - job: build:macos
+      artifacts: true
+    - job: docs:manual
+      artifacts: true
+  variables:
+    GH_REPO: "EvilGeniusLabs-ca/Thermalith"
+  before_script:
+    - apk add --no-cache github-cli
+  script:
+    - |
+      set -e
+      export GH_TOKEN="$GITHUB_PAT"
+      NOTES="Documentation/releases/${CI_COMMIT_TAG}.md"
+      [ -f "$NOTES" ] || { echo "Missing release notes: $NOTES"; exit 1; }
+      TITLE=$(awk -F':[[:space:]]*' '/^title:/{print $2; exit}' "$NOTES")
+      PRERELEASE=$(awk -F':[[:space:]]*' '/^prerelease:/{print tolower($2); exit}' "$NOTES")
+      awk 'BEGIN{n=0} /^---[[:space:]]*$/{n++; next} n>=2{print}' "$NOTES" > body.md
+      [ -n "$TITLE" ] || TITLE="$CI_COMMIT_TAG"
+      PREFLAG=""
+      if [ "$PRERELEASE" = "true" ]; then PREFLAG="--prerelease"; fi
+      ASSETS=$(find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' -o -name '*.dmg' -o -name '*.nupkg' \) 2>/dev/null; find Documentation/Manual/pdf -type f -name '*.pdf' 2>/dev/null)
+      echo "Publishing $CI_COMMIT_TAG to $GH_REPO (prerelease=${PRERELEASE:-false})"
+      echo "Assets:"; echo "$ASSETS"
+      if gh release view "$CI_COMMIT_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+        gh release edit "$CI_COMMIT_TAG" --repo "$GH_REPO" --title "$TITLE" --notes-file body.md $PREFLAG
+        gh release upload "$CI_COMMIT_TAG" --repo "$GH_REPO" --clobber $ASSETS
+      else
+        gh release create "$CI_COMMIT_TAG" --repo "$GH_REPO" --title "$TITLE" --notes-file body.md $PREFLAG $ASSETS
+      fi
