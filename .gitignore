@@ -3,6 +3,9 @@ bin/
 obj/
 artifacts/
 
+# Built user manual PDF — produced by Documentation/Manual/build-pdf.sh / CI, not committed
+Documentation/Manual/pdf/
+
 # IDE / editor
 .vs/
 .vscode/

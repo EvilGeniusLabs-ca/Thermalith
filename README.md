@@ -34,7 +34,7 @@ Design docs live in [`Documentation/`](Documentation/): start with the [build sp
 A full user manual — a tour of the window, every element type, printing, and keyboard shortcuts, with screenshots — lives in [`Documentation/Manual/`](Documentation/Manual/):
 
 - **Read it online:** start at the [user manual](Documentation/Manual/markdown/00-introduction.md) (Markdown, with screenshots).
-- **PDF:** [Thermalith User Manual (PDF)](Documentation/Manual/pdf/Thermalith-User-Manual.pdf) — one printable document.
+- **PDF:** the **Thermalith User Manual** PDF is built in CI and attached to each [release](https://github.com/EvilGeniusLabs-ca/Thermalith/releases) — or build it yourself with `Documentation/Manual/build-pdf.sh`.
 
 ## Building
 

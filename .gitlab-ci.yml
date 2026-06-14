@@ -75,3 +75,27 @@ build:macos:
     paths:
       - artifacts/thermalith/*/*.dmg       # osx-arm64, osx-x64
     expire_in: 90 days
+
+# --- User manual PDF (pandoc + xelatex) --------------------------------------
+# Runs in the official pandoc/latex image (pandoc + TeX Live) — a SEPARATE
+# container from the .NET build jobs above. Fonts (Lato + DejaVu Sans) are
+# bundled in Documentation/Manual/fonts and loaded via OSFONTDIR by build-pdf.sh,
+# so nothing font-related needs installing here. Untagged, so it lands on the
+# Linux runner (which runs untagged jobs); the runner pulls this image per-job.
+docs:manual:
+  stage: build
+  image: pandoc/latex:latest          # TODO: pin to a specific tag once validated
+  rules:
+    - if: '$CI_COMMIT_TAG'             # tag pushes only, like the build jobs
+  before_script:
+    # pandoc/latex is Alpine: bash (the script uses bashisms) + fontconfig (XeTeX
+    # font lookup). fancyhdr/newunicodechar aren't always in the slim TeX Live.
+    - apk add --no-cache bash fontconfig
+    - tlmgr install fancyhdr newunicodechar 2>/dev/null || true
+  script:
+    - bash Documentation/Manual/build-pdf.sh
+  artifacts:
+    name: "thermalith-manual-$CI_COMMIT_TAG"
+    paths:
+      - Documentation/Manual/pdf/Thermalith-User-Manual.pdf
+    expire_in: 90 days

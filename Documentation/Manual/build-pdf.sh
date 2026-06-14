@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Build the Thermalith User Manual PDF from the chapter markdown.
 #
-# Requires: pandoc + xelatex + the Lato font (Debian/Ubuntu/WSL:
-#   sudo apt install texlive-xetex texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra fonts-lato)
-# To use a different modern font, change MAINFONT below (e.g. "Open Sans",
-# "Noto Sans", "Source Sans Pro" — install the matching fonts-* package).
+# Requires: pandoc + xelatex (Debian/Ubuntu/WSL:
+#   sudo apt install texlive-xetex texlive-fonts-recommended texlive-latex-extra)
+# Fonts (Lato body + DejaVu Sans glyph fallback) are BUNDLED in ./fonts and loaded
+# via OSFONTDIR below — no system font install is needed, on any machine or in CI.
+# To use a different body font, drop its .ttf in ./fonts and change MAINFONT.
 #
 # Run from anywhere: ./build-pdf.sh   →   writes pdf/Thermalith-User-Manual.pdf
 set -euo pipefail
@@ -17,8 +18,9 @@ command -v xelatex >/dev/null 2>&1 || { echo "ERROR: xelatex not found — insta
 
 mkdir -p ../pdf
 
-MAINFONT="Lato"                 # modern sans body font (apt: fonts-lato)
-MONOFONT="DejaVu Sans Mono"     # always available
+# Load the repo-bundled fonts (no system install). XeTeX also searches OSFONTDIR.
+export OSFONTDIR="$SCRIPT_DIR/fonts"
+MAINFONT="Lato"                 # modern sans body font, bundled in ./fonts
 
 # Chapters in numeric order (00-, 01-, ...).
 mapfile -t CHAPTERS < <(ls -1 [0-9][0-9]-*.md | sort)
@@ -33,7 +35,6 @@ pandoc \
   -V documentclass=report \
   -V geometry:"top=2cm, bottom=3cm, left=2.2cm, right=2.2cm" \
   -V mainfont="$MAINFONT" \
-  -V monofont="$MONOFONT" \
   -V linkcolor=blue -V urlcolor=blue \
   --include-in-header=../header.tex \
   --include-before-body=../cover.tex \
