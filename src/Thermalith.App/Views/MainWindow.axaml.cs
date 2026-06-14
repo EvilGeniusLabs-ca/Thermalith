@@ -375,14 +375,11 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         }
         if (_dragging)
         {
-            var p = e.GetPosition(host);
-            var moved = Math.Abs(p.X - _pressPoint.X) > 3 || Math.Abs(p.Y - _pressPoint.Y) > 3;
             vm.Editor.EndDrag();
             _dragging = false;
             e.Pointer.Capture(null);
-            // A plain click (no drag) on a single table drops into cell-edit mode — no double-click needed.
-            if (!moved && vm.Editor.SelectedIsTable && !vm.Editor.InCellMode)
-                vm.Editor.TryEnterCellMode(p.X, p.Y);
+            // Single-click selects the table as an object (base-props inspector); cell mode is
+            // double-click only (OnCanvasDoubleTapped) per table-design.md §6.
             return;
         }
         if (_marquee)
