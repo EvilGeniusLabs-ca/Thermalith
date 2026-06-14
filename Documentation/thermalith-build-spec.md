@@ -563,7 +563,7 @@ The product is GPL-v3 / free-for-all (above) and asks for *voluntary* support on
 
 **CI:** build + test on all three OSes (the whole point is cross-platform). A single Linux runner can cross-publish every RID (`win`/`linux`/`osx`).
 
-> **CI platform (resolved).** Build and run CI on the self-hosted GitLab (`gitlab.glyphdeck.org`, `eg-projects/` group); **mirror to GitHub and publish public releases there at go-live**. GitLab is the dev/CI home; GitHub is the public release face. The publish-profile + `Build.{ps1,sh}` approach above is CI-agnostic; write the GitLab pipeline against it.
+> **CI platform (resolved).** Build and run CI on the self-hosted GitLab (`gitlab.evilgeniuslabs.ca`, `eg-projects/` group); **mirror to GitHub and publish public releases there at go-live**. GitLab is the dev/CI home; GitHub is the public release face. The publish-profile + `Build.{ps1,sh}` approach above is CI-agnostic; write the GitLab pipeline against it.
 
 ---
 
@@ -579,7 +579,7 @@ The product is GPL-v3 / free-for-all (above) and asks for *voluntary* support on
 8. ~~**DPI assumption**~~ — **RESOLVED:** `canvas.dpi` is a real field seeded from the printer profile, not a hardcoded 8 px/mm; renderer must read it (§6.1, §6.3).
 9. ~~**Funding model**~~ — **RESOLVED:** donationware; voluntary Ko-fi / PayPal / Stripe-Payment-Link / custom via the UI-agnostic, MIT-licensed `EvilGeniusLabs.DonationWare` NuGet, named for future break-out (§4.2, §10).
 10. ~~**Undo model**~~ — **RESOLVED:** snapshot-based (the label doc is small and JSON-serializable) (§6.4).
-11. ~~**CI platform / hosting**~~ — **RESOLVED:** build/CI on GitLab (`gitlab.glyphdeck.org`); mirror + public releases to GitHub at go-live (§10).
+11. ~~**CI platform / hosting**~~ — **RESOLVED:** build/CI on GitLab (`gitlab.evilgeniuslabs.ca`); mirror + public releases to GitHub at go-live (§10).
 12. **Donation provider targets** — supply the actual Ko-fi / PayPal.me / Stripe Payment Link URLs at integration time (Phase 6).
 13. **Niimbot label-stock catalog** — data-gathering: mine Niimbot's desktop software / website for official label SKUs (size mm + shape) to seed the preset catalog (§6.1.2). Not blocking; can start with a handful of common sizes (e.g. 40×30, 50×30, circular) and grow.
 14. **Auto-size consistency across a batch** — with data binding (Phase 4), should `shrink`/`fill` text size each label independently (per-row) or fit once to the longest value so a run looks uniform? Default per-row; add a uniform option if wanted. (§6.2 auto-sizing, §6.5.)
