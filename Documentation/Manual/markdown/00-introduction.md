@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/brand/egtext.png" alt="EvilGeniusLabs.ca" height="128"></p>
+
 # Introduction
 
 Thermalith is a free, local-first desktop app for designing and printing labels on NIIMBOT
@@ -27,3 +29,8 @@ Thermalith is open source under the GPL-3.0 licence and is free for everyone. If
 time, there is an optional **Donate** option in the About window — entirely voluntary.
 
 The rest of this manual walks through the window, building a label, each element type, and printing.
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>

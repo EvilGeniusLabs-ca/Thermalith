@@ -46,3 +46,8 @@ right-click menu.
 ![A locked element](assets/locked.png)
 
 ![A locked and hidden element](assets/locked_visible.png)
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>

@@ -34,3 +34,8 @@ content (text, barcodes, codes) inside the guides so nothing is clipped.
 Use **File → Save** (or the toolbar **Save**) to write the label to a `.nlbl` file, and **File →
 Open** to load one back. The `.nlbl` file holds the whole label — its size, every element, and any
 embedded images — in one file.
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>

@@ -39,3 +39,8 @@ Thermalith uses the standard shortcuts for your platform — **Ctrl** on Windows
 
 > While you're editing a text field (such as an element's content or a number box), the editing
 > shortcuts act on that field rather than on the label.
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>

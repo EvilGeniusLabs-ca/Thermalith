@@ -45,3 +45,8 @@ to Back** (in **Arrange** or the right-click menu) to control which elements dra
 
 Select several elements and **Group** them so they move and resize together. **Ungroup** splits them
 back into individual elements.
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>

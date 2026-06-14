@@ -126,3 +126,8 @@ In cell-edit mode the **Properties** tab shows the cell controls:
 
 > Single-click selects the table as an object (to move, resize, or change its overall properties);
 > double-click is what enters cell editing.
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>

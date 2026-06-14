@@ -48,3 +48,8 @@ same thing.)
 > angle, so a printed label can show a small skew. This is a hardware characteristic — Thermalith sends
 > a clean, straight image. Keep important content within the dashed printable-area guides so nothing is
 > clipped, and use the **Offset** fields if the print sits slightly off-centre on your stock.
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>

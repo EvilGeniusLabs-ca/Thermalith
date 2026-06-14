@@ -32,3 +32,8 @@ label has unsaved changes.
 
 Use the **−**, **Fit**, and **+** toolbar buttons to zoom out, fit the label to the window, or zoom
 in. **Fit** is the quickest way to recentre if you lose the label off-screen.
+
+<table width="100%"><tr>
+<td width="50%" align="left" valign="bottom"><img src="assets/brand/evilgenius.png" alt="EvilGenius" height="56"></td>
+<td width="50%" align="right" valign="bottom"><img src="assets/brand/evilgeniuslabsca.png" alt="EvilGeniusLabs.ca" height="26"></td>
+</tr></table>
