@@ -1,21 +1,17 @@
 # Thermalith — Reference Data & Findings
 
-Factual reference gathered during the catalog/hardware exploration — read on demand.
+Factual reference for the NIIMBOT protocol and label hardware — read on demand.
 
-## Reference data & findings (for future sessions)
+## Reference data & findings
 
-Everything below was gathered live during the catalog exploration so a future session doesn't have
-to re-derive it.
-
-### Roll/label sizing — LEARNED, user-curated (decided 2026-06-08)
+### Roll/label sizing — learned, user-curated (decided 2026-06-08)
 
 We do NOT scrape or pre-curate NIIMBOT's SKU catalogue (no public endpoint; the gallery is
 auth'd/region cloud + copyrighted images; niimbluelib has no roll data; the niimblue editor only
 hardcodes ~4 presets). Instead the label catalogue is **learned from the user's own rolls** — no
 network, no IP exposure.
 
-Dropped: scraping NIIMBOT's cloud SKU catalogue / locating that endpoint (worklist history kept the
-investigation in §Reference; conclusion: not a clean/public source).
+Dropped: scraping NIIMBOT's cloud SKU catalogue / locating that endpoint — not a clean/public source.
 
 ### Endpoints
 
@@ -71,40 +67,26 @@ Derivations (verified against our B1 profile):
 - B32: printable 72 / stock 75, paccuracy 9, density 1–15.
 - Widest (4-inch+ class): B4 / B4 Pro maxPrintWidth 108; B2 Pro / EP2M_H / ET10 → 200.
 
-### RFID read — real sample (B1, bundled 50×30 roll, 2026-06-08)
+### RFID read — what the tag carries (B1)
 
-`print-harness info` on the roll that shipped with the B1:
-- `uuid` = `UUID-REDACTED` (8 bytes — per *physical* roll)
-- `barcode` = `BARCODE-REDACTED` (9 digits — looks like a NIIMBOT article/batch code, maybe date `06-16-25`+run)
-- `serial` = `SERIAL-REDACTED` (per *physical* roll)
-- type = WithGaps, 59/96 labels left
+What the B1 reports for an RFID-tagged roll: `uuid` (8 bytes, per *physical* roll), `barcode` (a
+~9-digit NIIMBOT article/batch code), `serial` (per *physical* roll), paper type, and label counts.
 
-Findings (vs the 40×20 box: dims `40*20`, `id:30486`, part name `T40*20-320WHITE`):
-- The RFID barcode is **not** the part name and **not** the box id (`30486` is 5 digits; barcode is 9).
-  So the box `id` does NOT match the RFID — store both.
+Findings:
+- The RFID barcode is **not** the part name and **not** the box id. Store both separately.
 - The RFID carries **no dimensions and no part name** — none of uuid/barcode/serial encodes the size
   or SKU. So size + paper type MUST come from the user-entered roll definition; the RFID is an opaque
   match key only. (NIIMBOT shows the size because their cloud resolves the barcode → SKU; we can't.)
 - `uuid`/`serial` are per-physical-roll → not viable per-SKU keys. **`barcode` is the only per-SKU key
   candidate.** OPEN: is `barcode` stable per-SKU or per-batch? Needs a 2nd roll of the SAME SKU to
-  confirm; deferred (the 40×20 roll is being saved for a live roll-change test). Design defensively:
-  key on `barcode`, store `partName`/`boxId` too, parse W×H from `partName` (`T40*20` → 40×20) to
-  pre-fill; refine to partName-keyed + observed-barcodes if barcode proves per-batch.
-
-### Local references & tooling
-
-- niimbluelib cloned at `d:\Projects\_ref\niimbluelib` — `src/printer_models.ts` (auto-generated),
-  `tools/gen-printer-models.js` (shows the endpoint + the mappings above). niimprint at
-  `d:\Projects\_ref\niimprint`. Both outside the GPL tree (study-only).
+  confirm. Design defensively: key on `barcode`, store `partName`/`boxId` too, parse W×H from
+  `partName` (`T40*20` → 40×20) to pre-fill; refine to partName-keyed + observed-barcodes if barcode
+  proves per-batch.
 - `RfidInfo` gap: our DTO exposes `Barcode`/`ConsumablesType`/serial/counts but NO mm dimensions, so
   RFID alone can't tell us the loaded label's size — "Consumables inside the printer" needs a
   barcode/SKU → size lookup.
-- Tooling on this box: Python 3.10 at
-  `C:\Users\USER\AppData\Local\Programs\Python\Python310\python` with Pillow installed (used for
-  the app icon). `curl` works. When dumping `devices.json` set `PYTHONIOENCODING=utf-8` — device
-  names contain Chinese characters and the default Windows cp1252 console errors.
 
-### Decisions locked during exploration
+### Decisions locked
 
 - Bundle a generated `printers.json` as an **EmbeddedResource** (inside the single-file exe — same
   mechanism as the Roboto font / `label-stock.json`; ~15 KB, negligible vs the runtime). Update is

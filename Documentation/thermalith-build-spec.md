@@ -106,7 +106,7 @@ Conventions for the whole solution, set once at scaffold.
 
 Voluntary donation options (Ko-fi, PayPal, Stripe Payment Link, custom) are provided by the
 **`EvilGeniusLabs.DonationWare`** package — a small, **UI-agnostic, MIT-licensed** NuGet that lives in
-**its own repo** (`d:\Projects\EvilGeniusLabs.DonationWare`, extracted 2026-06-08; reusable across all
+**its own repo** (extracted 2026-06-08; reusable across all
 EvilGeniusLabs software, open or commercial). Thermalith simply *consumes* the published NuGet and wires
 it into Help/About at Phase 6 (§12) — off the critical path, not part of this solution. Full design +
 worklist live in that repo's `Documentation/`. URL-only, no money handled in-process.
@@ -546,7 +546,7 @@ This project is not being commercialized. The four Niimbot projects (`Niimbot.Ne
 - **No license inherited from the source projects.** `Niimbot.Net` is a *wholly new rebuild* synthesized from studying `niimbluelib` + `niimprint`, not a copy (§5), so we inherit neither upstream's terms and are free to license as we choose. GPL-v3 is a deliberate pick, not a requirement. (A one-time check of each upstream's actual license is good hygiene, but it does not constrain us.)
 - **LGPL carve-out — considered and dropped.** LGPL-v3 on the lib would let *closed-source* third-party apps depend on `Niimbot.Net` (GPL-v3 only lets GPL apps use it). That trade only matters if maximizing third-party adoption of the lib outranks pure copyleft. Given the free-for-all / non-commercial priority and the value of simplicity: **GPL-v3 throughout, no carve-out.** Revisit only if a concrete need to let closed apps build on the lib appears.
 
-**Funding model — donationware (a first for an EGL project):**
+**Funding model — donationware:**
 The product is GPL-v3 / free-for-all (above) and asks for *voluntary* support only, surfaced in-app via `EvilGeniusLabs.DonationWare` (§4.2): a single, opt-in, dismissible donate affordance (Help/About) — **no paywall, no nag loop, no telemetry**, consistent with the local-first goals in §2. GPL + donationware is a coherent pairing: the software is free, support is voluntary. Providers: Ko-fi, PayPal, Stripe Payment Link, and arbitrary custom URLs — whatever the user wants to give through.
 
 **Distribution (later, not core):**
@@ -563,7 +563,7 @@ The product is GPL-v3 / free-for-all (above) and asks for *voluntary* support on
 
 **CI:** build + test on all three OSes (the whole point is cross-platform). A single Linux runner can cross-publish every RID (`win`/`linux`/`osx`).
 
-> **CI platform (resolved).** Build and run CI on the self-hosted GitLab (`gitlab.evilgeniuslabs.ca`, `eg-projects/` group); **mirror to GitHub and publish public releases there at go-live**. GitLab is the dev/CI home; GitHub is the public release face. The publish-profile + `Build.{ps1,sh}` approach above is CI-agnostic; write the GitLab pipeline against it.
+> **CI platform.** Built and tested on a self-hosted CI runner (a single Linux runner cross-publishes every RID). The publish-profile + `Build.{ps1,sh}` approach above is CI-agnostic, so the pipeline is portable.
 
 ---
 
@@ -579,7 +579,7 @@ The product is GPL-v3 / free-for-all (above) and asks for *voluntary* support on
 8. ~~**DPI assumption**~~ — **RESOLVED:** `canvas.dpi` is a real field seeded from the printer profile, not a hardcoded 8 px/mm; renderer must read it (§6.1, §6.3).
 9. ~~**Funding model**~~ — **RESOLVED:** donationware; voluntary Ko-fi / PayPal / Stripe-Payment-Link / custom via the UI-agnostic, MIT-licensed `EvilGeniusLabs.DonationWare` NuGet, named for future break-out (§4.2, §10).
 10. ~~**Undo model**~~ — **RESOLVED:** snapshot-based (the label doc is small and JSON-serializable) (§6.4).
-11. ~~**CI platform / hosting**~~ — **RESOLVED:** build/CI on GitLab (`gitlab.evilgeniuslabs.ca`); mirror + public releases to GitHub at go-live (§10).
+11. ~~**CI platform / hosting**~~ — **RESOLVED:** build/CI on a self-hosted runner; cross-platform publish via the CI-agnostic build scripts (§10).
 12. **Donation provider targets** — supply the actual Ko-fi / PayPal.me / Stripe Payment Link URLs at integration time (Phase 6).
 13. **Niimbot label-stock catalog** — data-gathering: mine Niimbot's desktop software / website for official label SKUs (size mm + shape) to seed the preset catalog (§6.1.2). Not blocking; can start with a handful of common sizes (e.g. 40×30, 50×30, circular) and grow.
 14. **Auto-size consistency across a batch** — with data binding (Phase 4), should `shrink`/`fill` text size each label independently (per-row) or fit once to the longest value so a run looks uniform? Default per-row; add a uniform option if wanted. (§6.2 auto-sizing, §6.5.)
@@ -644,8 +644,8 @@ cold-start empty list into a warm one over time.
   the user still confirms.
 - **Local-first, opt-in, off by default.** Never a dependency — the local learned store works fully
   offline; the community DB is purely an enhancement.
-- **Home:** `Thermalith.Server` (the §8 API/MCP project), with submit + fetch verbs; hosted on EGL
-  infrastructure. Same fetch/cache plumbing as the printer-catalogue update.
+- **Home:** `Thermalith.Server` (the §8 API/MCP project), with submit + fetch verbs; hosted as a
+  network service. Same fetch/cache plumbing as the printer-catalogue update.
 - **Quality:** dedup/consensus keyed by barcode (the same SKU converges to one size), plus light
   moderation against junk submissions.
 - **License:** the shared dataset under an open data license (e.g. CC0 or ODbL) so it stays free and

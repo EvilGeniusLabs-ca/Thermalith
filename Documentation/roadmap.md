@@ -4,7 +4,7 @@ Future / wishlist — things we want to do but aren't active. Move items here wh
 
 ## E. Deferred / later
 
-16. **Insertable / drag-drop clip-art system — CONFIRMED PRE-LAUNCH goal** (Richard, 2026-06-08; not
+16. **Insertable / drag-drop clip-art system — CONFIRMED PRE-LAUNCH goal** (EvilGenius, 2026-06-08; not
     started). NIIMBOT's app ships shipping/package-handling symbols + electronics-label symbols;
     Thermalith wants its own equivalent. IP rule stands: **our own / CC0 / freely-licensed standard
     pictograms only, NEVER NIIMBOT's artwork.**
@@ -30,17 +30,17 @@ Future / wishlist — things we want to do but aren't active. Move items here wh
     align/distribute, eye/lock, B-I-U. Migrate in one coordinated pass so the UI shares one style (MDI is
     *filled* vs the current *stroked* line-art — do it all at once to avoid a mixed look). On migration
     the glyphs take `Foreground`; the theme `IconStroke` brush already keeps the stroked ones visible in
-    light mode, so this is polish, **not** a light-mode blocker. Richard's colored flip/mirror PNGs are
+    light mode, so this is polish, **not** a light-mode blocker. EvilGenius's colored flip/mirror PNGs are
     parked at `Assets/Icons/` (possible clip-art use). Note: `Material.Icons` bundles ~7400 paths
     (~couple MB, untrimmable) — fine for desktop; revisit if size bites.
 18. Distribution / packaging (Phase 6) — single-file + `EnableCompressionInSingleFile`, per-RID,
     ReadyToRun choice, `.icns` into the macOS `.app`. No trimming (Avalonia is reflection-heavy).
 19. 3 skipped Niimbot.Net tests — flip via a real print.txt capture (optional).
 21. **Implement EGL Donation from the NuGet** (Phase 6) — consume the external
-    `EvilGeniusLabs.DonationWare` MIT NuGet (its own repo at `d:\Projects\EvilGeniusLabs.DonationWare`)
+    `EvilGeniusLabs.DonationWare` MIT NuGet (its own repo)
     in Help/About: render the provider affordance(s) + inject the launcher. The package's own build-out
     and publish are tracked in that repo, not here. Off the critical path; wire in late.
-20. **App UI localization / multi-language (i18n)** — future (Richard, 2026-06-08). Localize Thermalith's
+20. **App UI localization / multi-language (i18n)** — future (EvilGenius, 2026-06-08). Localize Thermalith's
     own UI (menus, dialogs, inspector labels, messages) into multiple languages — relevant to the global
     NIIMBOT audience. Distinct layer from the §6.3.4 **CJK font** gap (that's rendering CJK text *on the
     label*; this is translating the *app chrome*). Means extracting hardcoded XAML/VM strings into resource
@@ -65,7 +65,7 @@ not a from-scratch system. The §6.5 third precedence tier (live source) is the 
 - Scope it as a dedicated phase; large enough to be its own design doc before code.
 
 NEEDS DISCUSSION before building: data model + UX flow. (Pairs with the deferred drag-handle / min-size
-decision, now parked under worklist §J "Considering".)
+decision.)
 
 ## Future phases (expected scaffolds — untracked but not forgotten)
 
@@ -78,34 +78,32 @@ decision, now parked under worklist §J "Considering".)
   *(DonationWare §4.2 build-out is no longer here — extracted to its own repo 2026-06-08; Thermalith just
   consumes the NuGet, §E.21.)*
 
-## Niimbot.Net broad-model support — hardware test matrix (ORDERED — arriving Jun 16–21)
+## Niimbot.Net broad-model support — hardware test matrix
 
-The Niimbot.Net v1 goal is "drive every catalogue printer" (release-plan.md §23; only B1 is
-hardware-verified today). **Ordered 2026-06-10: one D11 + one B4 (the owned B1 is the mid unit), arriving
-Jun 16–21.** The D11 adds a third coverage axis (dpi) on top of width + print-engine:
+The Niimbot.Net v1 goal is "drive every catalogue printer"; only B1 is hardware-verified today.
+Broadening coverage means exercising three axes — width, print-engine, and dpi:
 
 - **Width:** 12 / 48 / 104 mm · **Engine:** D110 + Left feed (D11) vs B1 + Top feed (B1, B4) ·
-  **dpi:** 203 (B1, B4) + 229 (upgraded D11) — first hardware off the all-203/8-dots-per-mm history.
+  **dpi:** 203 (B1, B4) + 229 (D11) — beyond the all-203/8-dots-per-mm baseline.
 
-**Arrival task (each unit):** read its reported **model-id + dpi** and reconcile against the catalogue —
+**Per-unit task:** read each printer's reported **model-id + dpi** and reconcile against the catalogue —
 same "confirm against hardware" discipline as the per-SKU roll key. The D11 especially (see below).
 
-- **Narrow end — D11 "upgraded" (~12 mm).** Ordered the higher-dpi variant — maps to catalogue
+- **Narrow end — D11 "upgraded" (~12 mm).** The higher-dpi variant maps to catalogue
   **D11_H / D11_Pro (229 dpi / 108 px, ids 528/531)**. NIIMBOT markets it "300 dpi" but `devices.json`
-  says **229** — CONFIRM the real reported dpi on arrival (drives render dot-pitch). Covers the narrow
+  says **229** — CONFIRM the real reported dpi against hardware (drives render dot-pitch). Covers the narrow
   form factor *and* the different engine (`PrintTaskVersion.D110` + `PrintDirection.Left`) — the path the
   current generic-B1 fallback definitely gets wrong — *and* the non-203 dpi path.
-- **Middle — existing B1 (203 dpi / 384 px).** The owned daily unit is the mid / verified reference — **no
-  second B1 was bought** (order is one D11 + one B4). (B1 Pro at 229 dpi exists, skipped — not a hole, the
-  300-dpi D11 already exercises the non-203 path.)
+- **Middle — B1 (203 dpi / 384 px).** The verified reference unit, mid-width. (B1 Pro at 229 dpi exists,
+  skipped — not a hole, the 300-dpi D11 already exercises the non-203 path.)
 - **Wide end — B4 (4" / 104 mm).** Proves the driver holds at 104 mm. **No app-side "shipping" work
   exists to do:** a 4" label is just a 104 mm canvas the app already accepts (size fields take 3 digits),
   printed one at a time like any other size. The whole requirement is that **Niimbot.Net lets a developer
   drive the printer** (the v1 NuGet goal) — the app comes along for free. The only additive "shipping-ish"
   capability, printing many labels in a run, is **data-merge / variable-data (§J)** — printer-agnostic and
-  orthogonal to the B4, not a shipping feature. So this purchase is purely a *library* test target.
+  orthogonal to the B4, not a shipping feature. So the B4 is purely a *library* test target.
 
-Note: the 25×78 mm "cable" labels already on order are B-series stock — the B1 prints them. A D-series is
+Note: 25×78 mm "cable" labels are B-series stock — the B1 prints them. A D-series is
 a *different* (narrow wire-marker) cable form factor, not a printer for those labels.
 
 ## A. Community-shared label DB (future consideration)
@@ -114,7 +112,7 @@ a *different* (narrow wire-marker) cable form factor, not a printer for those la
     Users may share a learned roll definition
     `{ barcode, name, paperType, widthMm, heightMm, shape, density }` to a hosted API; the app can
     optionally pull it to pre-fill a newly-detected barcode (user still confirms). Clean — our own
-    crowdsourced factual DB, no NIIMBOT IP. Lives in `Thermalith.Server` (currently a stub) on EGL
-    infra. Needs: submit + fetch verbs, dedup/consensus by barcode (same SKU converges), moderation,
+    crowdsourced factual DB, no NIIMBOT IP. Lives in `Thermalith.Server` (currently a stub) as a
+    hosted service. Needs: submit + fetch verbs, dedup/consensus by barcode (same SKU converges), moderation,
     an open DB license (CC0/ODbL). Off by default, never a dependency (local store works offline).
     Design the local record shape now so this drops in later without rework (same record).
