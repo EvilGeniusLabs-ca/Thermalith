@@ -12,7 +12,7 @@ Past the scaffold and in active development; not yet at a tagged release.
 
 - **Printing works on real hardware.** The full design → render → print path is verified end-to-end on a NIIMBOT **B1** (203 dpi). Other models resolve their geometry from a 77-printer capability catalogue (built from the vendor's device data); broadening verified driver coverage across the printer family is in progress, with a B4 and a D11 joining the test matrix.
 - **The editor is usable.** Text, barcode, QR, serial, date/time, shape, line, image, and table elements; on-canvas drag / resize / align / distribute / group, layers, undo/redo, rulers with grid snap, a printable-area guide, click-to-type editing, and light / dark / system themes.
-- Currently in a usability/cleanup pass ahead of Release 1 — scope and the launch / CI / signing plan live in [`Documentation/release-plan.md`](Documentation/release-plan.md).
+- Currently in a usability/cleanup pass ahead of Release 1.
 
 ## What's here
 
@@ -28,6 +28,13 @@ One solution, factored so each piece is independently useful:
 Also in the tree: `tools/print-harness` (a console probe/print tool for hardware bring-up) and `tests/` (78 tests across Niimbot.Net, Thermalith.Core, and Thermalith.Server).
 
 Design docs live in [`Documentation/`](Documentation/): start with the [build spec](Documentation/thermalith-build-spec.md), the [`.nlbl` format spec](Documentation/label-json-spec.md), and the [roadmap](Documentation/roadmap.md).
+
+## User manual
+
+A full user manual — a tour of the window, every element type, printing, and keyboard shortcuts, with screenshots — lives in [`Documentation/Manual/`](Documentation/Manual/):
+
+- **Read it online:** start at the [user manual](Documentation/Manual/markdown/00-introduction.md) (Markdown, with screenshots).
+- **PDF:** [Thermalith User Manual (PDF)](Documentation/Manual/pdf/Thermalith-User-Manual.pdf) — one printable document.
 
 ## Building
 
@@ -130,8 +137,7 @@ ls -l /dev/ttyACM0                        # group should be 'dialout'
 
 ## Running the unsigned macOS build
 
-Current releases are **not yet code-signed or notarized** (signing is being set up — see
-[`Documentation/release-plan.md`](Documentation/release-plan.md)). Until that lands, macOS Gatekeeper
+Current releases are **not yet code-signed or notarized** (signing is being set up). Until that lands, macOS Gatekeeper
 will refuse to open the downloaded build with a message like *"Thermalith" cannot be opened because the
 developer cannot be verified.* This is expected for an unsigned binary — nothing is wrong with the
 download. macOS 15 (Sequoia) removed the old Control-click → **Open** bypass, so use one of these
