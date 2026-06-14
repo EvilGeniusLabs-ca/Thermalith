@@ -62,7 +62,7 @@ build:linux:
 build:macos:
   stage: build
   tags:
-    - macos            # TODO: set to the M4 runner's tag
+    - macos            # M4 Mac mini runner (registered with this tag)
   rules:
     - if: '$CI_COMMIT_TAG'
       when: manual
