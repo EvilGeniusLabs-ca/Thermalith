@@ -316,7 +316,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool CanGroup() => Editor.SelectionCount >= 2;
     [RelayCommand] private void ZoomIn() => Editor.ZoomIn();
     [RelayCommand] private void ZoomOut() => Editor.ZoomOut();
-    [RelayCommand] private void ZoomFit() => Editor.FitToWidth();
+    [RelayCommand] private void ZoomFit() => Editor.FitToWindow();
 
     private bool CanUndo() => Editor.CanUndo;
     private bool CanRedo() => Editor.CanRedo;

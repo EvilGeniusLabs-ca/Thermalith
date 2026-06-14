@@ -5,6 +5,7 @@ using Niimbot.Net;
 using Niimbot.Net.Capabilities;
 using Niimbot.Net.Commands;
 using Niimbot.Net.Transport;
+using Thermalith.App.Services;
 
 namespace Thermalith.App.ViewModels;
 
@@ -107,10 +108,10 @@ public sealed partial class PrinterViewModel : ObservableObject
                 Message = $"Probing {info.PortName}…";
                 var probe = await PrinterProbe.ProbeAsync(info.PortName);
                 if (probe is not null) found++;
-                Ports.Add(new PortItem(
-                    info.PortName,
-                    probe is null ? $"{info.PortName} — no printer" : $"{info.PortName} — {probe.Model}",
-                    probe is not null));
+                var transport = SerialPortTransport.Describe(info.PortName);
+                var tag = transport is null ? "" : $" ({transport})";
+                var label = (probe is null ? $"{info.PortName} — no printer" : $"{info.PortName} — {probe.Model}") + tag;
+                Ports.Add(new PortItem(info.PortName, label, probe is not null));
             }
             SelectedPort = Ports.FirstOrDefault(p => p.IsNiimbot) ?? Ports.FirstOrDefault();
             Message = Ports.Count == 0

@@ -104,6 +104,11 @@ public sealed partial class EditorViewModel : ObservableObject
     public int PreviewWidthPx { get; private set; }
     public int PreviewHeightPx { get; private set; }
 
+    /// <summary>Canvas viewport size in px (the CanvasScroll visible area), pushed by the view so
+    /// <see cref="FitToWindow"/> can fit BOTH axes. Zero until the view reports it (then fit is width-only).</summary>
+    public double ViewportWidth { get; set; }
+    public double ViewportHeight { get; set; }
+
     private CanvasEditorViewModel _canvasEditor = null!;
 
     /// <summary>What the inspector shows: the selected element editor, or the canvas editor when nothing is selected (§7).</summary>
@@ -217,8 +222,8 @@ public sealed partial class EditorViewModel : ObservableObject
         _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
         RebuildLayers();
         SelectedLayer = null;
-        FitToWidth();
-        RenderNow();
+        RenderNow();      // sets PreviewWidthPx/HeightPx first…
+        FitToWindow();    // …so the fit zoom is based on the real dimensions
         RaiseState();
     }
 
@@ -1768,7 +1773,17 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void ZoomIn() => Zoom = Math.Min(12.0, Zoom * 1.25);
     public void ZoomOut() => Zoom = Math.Max(0.25, Zoom / 1.25);
-    public void FitToWidth() => Zoom = PreviewWidthPx > 0 ? Math.Clamp(720.0 / PreviewWidthPx, 0.25, 12.0) : 2.0;
+    /// <summary>Zoom so the whole label fits the canvas viewport on BOTH axes (tall labels included).
+    /// Falls back to a width-only target if the view hasn't reported the viewport size yet.</summary>
+    public void FitToWindow()
+    {
+        if (PreviewWidthPx <= 0 || PreviewHeightPx <= 0) { Zoom = 2.0; return; }
+        const double pad = 32.0; // breathing room + ruler gutters
+        var wTarget = (ViewportWidth > 1 ? ViewportWidth : 720.0) - pad;
+        var hTarget = (ViewportHeight > 1 ? ViewportHeight : double.PositiveInfinity) - pad;
+        var z = Math.Min(wTarget / PreviewWidthPx, hTarget / PreviewHeightPx);
+        Zoom = Math.Clamp(z, 0.25, 12.0);
+    }
 
     partial void OnZoomChanged(double value)
     {

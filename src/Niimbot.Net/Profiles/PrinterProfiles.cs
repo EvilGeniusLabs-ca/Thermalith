@@ -53,6 +53,16 @@ public static class PrinterProfiles
         PrintTaskVersion = PrintTaskVersion.D110,
     };
 
+    /// <summary>The B4 — 4" shipping printer: 203 dpi, 832-px head (~104 mm printable), B1 print task +
+    /// Top feed, reads RFID. Model id 6656 confirmed on real hardware 2026-06-14; same B-series print
+    /// sequence as the B1 (catalogue specs: printheadPx 832, density 1–5, paperTypes gap/black/transparent).</summary>
+    public static readonly PrinterProfile B4 = B1 with
+    {
+        Model = PrinterModel.B4,
+        ModelIds = [6656],
+        PrintheadPixels = 832,
+    };
+
     public static readonly PrinterProfile D11 = new()
     {
         Model = PrinterModel.D11,
@@ -82,7 +92,7 @@ public static class PrinterProfiles
         SupportsRfid = false,
     };
 
-    private static readonly PrinterProfile[] All = [B1, B1Pro, B1Se, B21, B21S, D11, D110];
+    private static readonly PrinterProfile[] All = [B1, B1Pro, B1Se, B21, B21S, B4, D11, D110];
 
     /// <summary>Resolve a profile from a reported device model id, or <see cref="Unknown"/>.</summary>
     public static PrinterProfile FromModelId(int modelId) =>

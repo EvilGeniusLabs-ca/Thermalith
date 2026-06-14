@@ -57,6 +57,20 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         CanvasScroll.ScrollChanged += (_, _) => UpdateRulers();
         CanvasHost.LayoutUpdated += (_, _) => UpdateRulers();
 
+        // Push the canvas viewport size to the editor so Fit fits BOTH axes (tall labels included),
+        // and run a one-time fit once the viewport is first laid out — startup centring, since the
+        // load-time fit runs before the canvas has a real size.
+        CanvasScroll.SizeChanged += (_, _) =>
+        {
+            vm.Editor.ViewportWidth = CanvasScroll.Bounds.Width;
+            vm.Editor.ViewportHeight = CanvasScroll.Bounds.Height;
+            if (!_didInitialFit && CanvasScroll.Bounds is { Width: > 1, Height: > 1 })
+            {
+                _didInitialFit = true;
+                vm.Editor.FitToWindow();
+            }
+        };
+
         // Persist geometry as it changes too — a debugger stop kills the process before a clean close.
         _persistDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
         _persistDebounce.Tick += (_, _) => { _persistDebounce!.Stop(); PersistWindowState(); };
@@ -135,6 +149,7 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     private bool _marquee;
     private bool _cellDragging;
     private bool _axisResizing;
+    private bool _didInitialFit;
     private Point _pressPoint;
 
     // Double-click a table → enter cell-edit mode (or edit the cell if already in it) (table-design.md §6).

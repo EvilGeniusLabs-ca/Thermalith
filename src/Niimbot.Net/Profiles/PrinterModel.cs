@@ -13,6 +13,7 @@ public enum PrinterModel
     B1_SE,
     B21,
     B21S,
+    B4,
     D11,
     D110,
 }
