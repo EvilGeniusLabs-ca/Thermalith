@@ -18,10 +18,11 @@ public static class DocumentFactory
         Elements = [], // start empty — add elements from the Insert palette
     };
 
-    /// <summary>A new empty document at a specific canvas size + target printhead width (last applied roll).</summary>
-    public static LabelDocument New(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm) => New() with
+    /// <summary>A new empty document at a specific canvas size + target printhead width + safe margin
+    /// (the last applied roll / remembered defaults).</summary>
+    public static LabelDocument New(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm, double? safeMarginMm = null) => New() with
     {
-        Canvas = new Canvas { WidthMm = widthMm, HeightMm = heightMm, Dpi = dpi, Shape = shape, PrintheadWidthMm = printheadWidthMm },
+        Canvas = new Canvas { WidthMm = widthMm, HeightMm = heightMm, Dpi = dpi, Shape = shape, PrintheadWidthMm = printheadWidthMm, SafeAreaInsetMm = safeMarginMm },
     };
 
     /// <summary>A stable, collision-resistant element id (§6.1: ids survive undo/copy/binding).</summary>

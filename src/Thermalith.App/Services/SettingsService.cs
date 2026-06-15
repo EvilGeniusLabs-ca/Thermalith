@@ -24,6 +24,7 @@ public sealed record AppSettings
     public int? LastCanvasDpi { get; init; }
     public string? LastCanvasShape { get; init; }
     public double? LastPrintheadWidthMm { get; init; }
+    public double? LastSafeMarginMm { get; init; }
 
     // Last connected printer — startup background-scans and reconnects if found. Port is a hint (ports
     // re-enumerate); model is the real match.
