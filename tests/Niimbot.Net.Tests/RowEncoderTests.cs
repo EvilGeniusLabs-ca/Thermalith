@@ -71,6 +71,38 @@ public class RowEncoderTests
     }
 
     [Fact]
+    public void Encode_splits_blank_runs_longer_than_255_so_repeat_never_overflows_the_byte()
+    {
+        // A tall, fully-blank label (601 rows) — the B4 "only the top prints" case. The repeat field
+        // is one byte, so a 601-row run must split into 255 + 255 + 91 at advancing positions.
+        var bitmap = new MonochromeBitmap(8, 601, new byte[601]);
+        var packets = RowEncoder.Encode(bitmap, new RowEncoder.Options { PrintheadPixels = 384 });
+
+        Assert.Equal(3, packets.Count);
+        // Each packet's repeat byte (3rd payload byte) must be ≤ 255, and positions advance by the chunk.
+        Assert.Equal([0x00, 0x00, 0xFF], packets[0].Data);       // pos 0,   repeat 255
+        Assert.Equal([0x00, 0xFF, 0xFF], packets[1].Data);       // pos 255, repeat 255
+        Assert.Equal([0x01, 0xFE, 0x5B], packets[2].Data);       // pos 510, repeat 91
+    }
+
+    [Fact]
+    public void Encode_splits_long_identical_content_runs_into_le255_chunks()
+    {
+        // 600 identical dense rows (a vertical border line) → must not emit a single repeat=600 packet.
+        var packed = new byte[600];
+        for (var y = 0; y < 600; y++) packed[y] = 0xFF;
+        var bitmap = new MonochromeBitmap(8, 600, packed);
+        var packets = RowEncoder.Encode(bitmap, new RowEncoder.Options { PrintheadPixels = 384 });
+
+        // 600 → 255 + 255 + 90, three packets whose repeat bytes cover every row exactly once.
+        Assert.Equal(3, packets.Count);
+        Assert.Equal(255, packets[0].Data[5]);
+        Assert.Equal(255, packets[1].Data[5]);
+        Assert.Equal(90, packets[2].Data[5]);
+        Assert.Equal(600, packets.Sum(p => (int)p.Data[5])); // every row accounted for, none truncated
+    }
+
+    [Fact]
     public void PrintBitmapRowIndexed_matches_niimbluelib_reference_vector()
     {
         // Documented niimbluelib packet:

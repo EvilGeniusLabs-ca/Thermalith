@@ -118,22 +118,26 @@ public static class RowEncoder
             while (y + repeat < bitmap.HeightPx && bitmap.Row(y + repeat).SequenceEqual(row))
                 repeat++;
 
-            if (isVoid)
+            // The on-wire repeat field is a single byte (max 255). A run longer than that — common on
+            // tall, mostly-blank labels (e.g. the B4's 148 mm border) — must be split into ≤255-row
+            // packets at advancing positions, or `(byte)repeat` silently truncates the run and the
+            // print stops short (the rest of the label comes out blank).
+            var counts = isVoid ? default : CountPixels(row, options.PrintheadPixels, options.CountMode);
+            var indices = !isVoid && options.UseIndexedRows && counts.Total <= 6 ? IndexPixels(row) : null;
+
+            var remaining = repeat;
+            var pos = y;
+            while (remaining > 0)
             {
-                packets.Add(PacketGenerator.PrintEmptyRow(y, repeat));
-            }
-            else
-            {
-                var counts = CountPixels(row, options.PrintheadPixels, options.CountMode);
-                if (options.UseIndexedRows && counts.Total <= 6)
-                {
-                    var indices = IndexPixels(row);
-                    packets.Add(PacketGenerator.PrintBitmapRowIndexed(y, repeat, indices, counts.Parts));
-                }
+                var chunk = Math.Min(255, remaining);
+                if (isVoid)
+                    packets.Add(PacketGenerator.PrintEmptyRow(pos, chunk));
+                else if (indices is not null)
+                    packets.Add(PacketGenerator.PrintBitmapRowIndexed(pos, chunk, indices, counts.Parts));
                 else
-                {
-                    packets.Add(PacketGenerator.PrintBitmapRow(y, repeat, row, counts.Parts));
-                }
+                    packets.Add(PacketGenerator.PrintBitmapRow(pos, chunk, row, counts.Parts));
+                pos += chunk;
+                remaining -= chunk;
             }
 
             y += repeat;

@@ -319,10 +319,18 @@ public sealed partial class PrinterViewModel : ObservableObject
         try
         {
             var mono = _editor.RenderForPrint();
+            var rawW = mono.WidthPx;
+            var rawH = mono.HeightPx;
             if (_caps is { } caps && mono.WidthPx > caps.PrintheadPixels)
                 // Canvas wider than the printhead → crop the centred printable strip (the ~1mm/side the
                 // head can't reach); content there is mechanically unprintable (crop-don't-block, §F).
                 mono = CropCentered(mono, caps.PrintheadPixels);
+
+            // Diagnostic for the B4 "only the top prints" report: what we actually hand the printer.
+            var diag = $"raster {rawW}×{rawH}px → {mono.WidthPx}×{mono.HeightPx}px sent " +
+                       $"(head {_caps?.PrintheadPixels}px), orient {_editor.OrientationDeg}°, " +
+                       $"canvas {_editor.CanvasWidthMm:0.#}×{_editor.CanvasHeightMm:0.#}mm @ {_caps?.Dpi}dpi";
+            Console.WriteLine("[Thermalith print] " + diag);
 
             var options = new PrintOptions
             {
