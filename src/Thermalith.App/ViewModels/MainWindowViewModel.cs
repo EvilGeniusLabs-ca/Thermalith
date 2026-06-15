@@ -62,8 +62,9 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsService.Save(_settings);
     }
 
-    /// <summary>Persist the current canvas size + printhead width as the last applied roll (seeds next startup).</summary>
-    private void RememberCanvas()
+    /// <summary>Persist the current canvas size + printhead width + safe margin as the last-used defaults
+    /// (seeds the next new label). Called on roll-apply, on Save, and on app close.</summary>
+    public void RememberCanvas()
     {
         var (w, h, dpi, shape, head, margin) = Editor.CurrentCanvas();
         _settings = _settings with

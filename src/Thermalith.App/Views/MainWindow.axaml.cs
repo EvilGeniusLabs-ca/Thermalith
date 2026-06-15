@@ -126,6 +126,7 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
                 return;
             }
 
+            vm.RememberCanvas(); // capture canvas defaults (incl. safe margin) so they survive restart
             PersistWindowState();
             vm.Printer.Shutdown();
         }
