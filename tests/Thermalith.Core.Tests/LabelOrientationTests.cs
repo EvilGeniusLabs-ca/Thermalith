@@ -54,16 +54,24 @@ public class LabelOrientationTests
     }
 
     [Fact]
-    public void Rotate_right_moves_the_element_centre_clockwise_and_turns_it()
+    public void Rotate_right_moves_the_element_centre_but_keeps_it_upright()
     {
-        // oldH = 50; centre (7,7) → CW: (oldH - cy, cx) = (43, 7). W/H unchanged, angle +90.
+        // oldH = 50; centre (7,7) → CW: (oldH - cy, cx) = (43, 7). W/H unchanged, angle UNCHANGED.
         var r = LabelOrientation.RotateRight(TallDoc());
         var a = r.Elements[0];
         Assert.Equal(43 - a.W / 2, a.X, 6);   // newX = newCentreX - W/2 = 43 - 5
         Assert.Equal(7 - a.H / 2, a.Y, 6);    // newY = newCentreY - H/2 = 7 - 3
-        Assert.Equal(10, a.W, 6);             // unrotated box size preserved
+        Assert.Equal(10, a.W, 6);             // box size preserved
         Assert.Equal(6, a.H, 6);
-        Assert.Equal(90, a.Rotation, 6);
+        Assert.Equal(0, a.Rotation, 6);       // control stays at its authored angle — only the print rotates
+    }
+
+    [Fact]
+    public void Rotate_does_not_change_an_elements_own_angle()
+    {
+        var doc = TallDoc() with { Elements = [TallDoc().Elements[0] with { Rotation = 30 } ] };
+        Assert.Equal(30, LabelOrientation.RotateRight(doc).Elements[0].Rotation, 6);
+        Assert.Equal(30, LabelOrientation.RotateLeft(doc).Elements[0].Rotation, 6);
     }
 
     [Fact]
