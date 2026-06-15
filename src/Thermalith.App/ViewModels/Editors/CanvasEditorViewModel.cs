@@ -27,6 +27,7 @@ public sealed partial class CanvasEditorViewModel : ObservableObject
         _bleedMm = c.BleedMm;
         _printheadWidthMm = c.PrintheadWidthMm;
         _orientationDeg = c.OrientationDeg;
+        _safeMarginMm = c.SafeAreaInsetMm ?? 0;
         _loaded = true;
     }
 
@@ -39,6 +40,10 @@ public sealed partial class CanvasEditorViewModel : ObservableObject
     [ObservableProperty] private double _bleedMm;
     [ObservableProperty] private double? _printheadWidthMm;
     [ObservableProperty] private int _orientationDeg;
+
+    /// <summary>User-set soft safe margin (mm) inset on every edge — a guide to keep content clear of
+    /// per-printer skew/registration. 0 = off. Guide only: it never crops, the user may place outside it.</summary>
+    [ObservableProperty] private double _safeMarginMm;
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
@@ -59,6 +64,7 @@ public sealed partial class CanvasEditorViewModel : ObservableObject
             BleedMm = BleedMm,
             PrintheadWidthMm = PrintheadWidthMm,
             OrientationDeg = OrientationDeg,
+            SafeAreaInsetMm = SafeMarginMm > 0 ? SafeMarginMm : null, // 0 → omit (off)
         },
     };
 }

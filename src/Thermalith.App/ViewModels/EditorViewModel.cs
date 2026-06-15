@@ -893,15 +893,20 @@ public sealed partial class EditorViewModel : ObservableObject
         }
     }
 
-    /// <summary>Horizontal printable inset per side (mm). The printhead limits the physical-width axis,
-    /// which is the view's X axis at 0/180 and its Y axis at 90/270 — so the margin moves to
-    /// <see cref="PrintableInsetYMm"/> when the view is turned.</summary>
-    public double PrintableInsetXMm => ViewRotated ? 0 : PrintheadMarginMm;
+    /// <summary>User-set soft safe margin (mm) — an even inset on all edges, the user's guide for
+    /// per-printer skew/registration (worklist §A). 0 = off. Guide only: nothing crops to it.</summary>
+    private double SafeMarginMm => _live.Canvas.SafeAreaInsetMm ?? 0;
 
-    /// <summary>Vertical printable inset (mm) — carries the printhead margin when the view is turned 90°/270°.</summary>
-    public double PrintableInsetYMm => ViewRotated ? PrintheadMarginMm : 0;
+    /// <summary>Printable-guide inset per side (mm). The soft safe margin applies to every edge; on the
+    /// physical-width axis it's floored at the printhead margin so the guide never under-warns the hard
+    /// crop (the head limits the view's X axis at 0/180, its Y axis at 90/270).</summary>
+    public double PrintableInsetXMm => ViewRotated ? SafeMarginMm : Math.Max(SafeMarginMm, PrintheadMarginMm);
 
-    /// <summary>True when a printable margin/crop exists on either axis (label wider than the head).</summary>
+    /// <summary>Printable-guide inset per side (mm), vertical — carries the printhead floor when turned 90°/270°.</summary>
+    public double PrintableInsetYMm => ViewRotated ? Math.Max(SafeMarginMm, PrintheadMarginMm) : SafeMarginMm;
+
+    /// <summary>True when the printhead is narrower than the label on its width axis (a hard print crop
+    /// exists). Distinct from the user's soft margin — drives the "label wider than head" roll warning.</summary>
     public bool HasPrintableMargin => PrintheadMarginMm > 0;
 
     /// <summary>Turn the label 90° clockwise (rotate-right): the design view turns and content turns with
@@ -1851,9 +1856,9 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private void UpdateSafeArea()
     {
-        // The printable guide is drawn only when there's an actual margin (label wider than the printhead),
-        // on whichever axis the physical-width limit falls (X normally, Y when the view is turned).
-        HasSafeArea = ShowSafeArea && HasPrintableMargin;
+        // The guide draws when either axis has an inset — the user's soft safe margin and/or the
+        // printhead floor (on whichever axis the physical-width limit falls).
+        HasSafeArea = ShowSafeArea && (PrintableInsetXMm > 0 || PrintableInsetYMm > 0);
     }
 
     // Positioning is decimal-mm (reverted from whole-mm 2026-06-10): snap to the grid when enabled,
