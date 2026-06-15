@@ -758,6 +758,17 @@ public sealed partial class EditorViewModel : ObservableObject
             ed.SyncFromElement(el);
     }
 
+    /// <summary>Restore an auto-size text box's content-measured W/H (its footprint isn't rotated), keeping
+    /// the centre the rotate placed it at. A no-op for every other element / fixed-size text.</summary>
+    private LabelElement RemeasureAutoText(LabelElement el)
+    {
+        if (el is not TextElement t || !t.Props.AutoSize) return el;
+        var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
+        double w = Math.Ceiling(wmm), h = Math.Ceiling(hmm);
+        double cx = t.X + t.W / 2, cy = t.Y + t.H / 2;
+        return t with { W = w, H = h, X = cx - w / 2, Y = cy - h / 2 };
+    }
+
     public void Undo()
     {
         FlushGesture();
@@ -915,6 +926,10 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         FlushGesture();
         _live = LabelOrientation.Rotate(_live, clockwise);
+        // Auto-size text hugs its glyphs, so its footprint is content-driven — the generic W/H swap makes
+        // it narrow and mis-wraps until a click re-measures. Re-measure here (keeping the rotated centre)
+        // so the preview is right immediately.
+        _live = _live with { Elements = _live.Elements.Select(RemeasureAutoText).ToList() };
         _history.Commit(_live);
         _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
         // Rotate reposition+swaps every element, so the selected element's inspector must re-read the
