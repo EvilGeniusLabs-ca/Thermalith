@@ -99,8 +99,12 @@ docs:manual:
     expire_in: 90 days
 
 # --- Publish a GitHub release (on demand) ------------------------------------
-# Uploads the built artifacts (binaries + Niimbot.Net nupkg + manual PDF) to a
-# GitHub release. MANUAL: every tag builds automatically, but you press play here
+# Pushes the source + tag to the GitHub repo (one-way mirror), then uploads the
+# built artifacts to a GitHub release on that tag. Release assets: the 5 binary
+# packs (win-x64 .zip, linux-x64 / linux-arm64 .tar.gz, osx-arm64 / osx-x64 .dmg),
+# the manual PDF, the Niimbot.Net .nupkg, and printers.json. GitHub adds the
+# "Source code (zip/tar.gz)" archives automatically from the pushed tag.
+# MANUAL: every tag builds automatically, but you press play here
 # to publish — that's the on-demand release gate. Beta vs full is driven by the
 # per-tag notes file Documentation/releases/<tag>.md frontmatter:
 #   ---
@@ -128,12 +132,22 @@ release:github:
       artifacts: true
   variables:
     GH_REPO: "EvilGeniusLabs-ca/Thermalith"
+    GIT_DEPTH: 0   # full clone so the source mirror push to GitHub carries real history, not a shallow tip
   before_script:
-    - apk add --no-cache github-cli
+    - apk add --no-cache github-cli git
   script:
     - |
       set -e
       export GH_TOKEN="$GITHUB_PAT"
+
+      # One-way source mirror: push this tagged commit (as main) + the tag to GitHub so the repo source
+      # is there and the release's auto-generated "Source code (zip/tar.gz)" archives exist. GitLab is the
+      # source of truth, so force is intentional. The token-bearing URL is never echoed.
+      GH_PUSH_URL="https://x-access-token:${GITHUB_PAT}@github.com/${GH_REPO}.git"
+      echo "Mirroring source + ${CI_COMMIT_TAG} to ${GH_REPO}"
+      git push --force "$GH_PUSH_URL" "HEAD:refs/heads/main"
+      git push --force "$GH_PUSH_URL" "refs/tags/${CI_COMMIT_TAG}"
+
       NOTES="Documentation/releases/${CI_COMMIT_TAG}.md"
       [ -f "$NOTES" ] || { echo "Missing release notes: $NOTES"; exit 1; }
       TITLE=$(awk -F':[[:space:]]*' '/^title:/{print $2; exit}' "$NOTES")
