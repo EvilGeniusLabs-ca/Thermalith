@@ -863,30 +863,20 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>The label's current orientation in degrees (0/90/180/270) — view → physical-feed rotation.</summary>
     public int OrientationDeg => (((_live.Canvas.OrientationDeg % 360) + 360) % 360);
 
-    /// <summary>Physical label width in mm — the loaded label's fixed dimension, surfaced for the toolbar
-    /// quick-edit (worklist §C). Independent of the view's orientation: rotating the canvas does NOT change
-    /// it. Setting it resizes the physical label as a committed change.</summary>
+    /// <summary>Canvas (design-view) width in mm, surfaced for the toolbar quick-edit (worklist §C).
+    /// Tracks the current orientation — on rotate the view dimensions swap, so the W/H boxes swap with
+    /// them (what you see is what the box reads). Setting it resizes the canvas as a committed change.</summary>
     public double CanvasWidthMm
     {
-        get => ViewRotated ? _live.Canvas.HeightMm : _live.Canvas.WidthMm;
-        set
-        {
-            if (value <= 0) return;
-            if (ViewRotated) { if (Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
-            else { if (Math.Abs(value - _live.Canvas.WidthMm) > 1e-6) ResizeCanvas(value, _live.Canvas.HeightMm); }
-        }
+        get => _live.Canvas.WidthMm;
+        set { if (value > 0 && Math.Abs(value - _live.Canvas.WidthMm) > 1e-6) ResizeCanvas(value, _live.Canvas.HeightMm); }
     }
 
-    /// <summary>Physical label height in mm, surfaced for the toolbar quick-edit (worklist §C). Fixed across rotation.</summary>
+    /// <summary>Canvas (design-view) height in mm, surfaced for the toolbar quick-edit (worklist §C).</summary>
     public double CanvasHeightMm
     {
-        get => ViewRotated ? _live.Canvas.WidthMm : _live.Canvas.HeightMm;
-        set
-        {
-            if (value <= 0) return;
-            if (ViewRotated) { if (Math.Abs(value - _live.Canvas.WidthMm) > 1e-6) ResizeCanvas(value, _live.Canvas.HeightMm); }
-            else { if (Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
-        }
+        get => _live.Canvas.HeightMm;
+        set { if (value > 0 && Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
     }
 
     /// <summary>Target printhead width (mm), 0 when unknown.</summary>
