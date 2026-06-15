@@ -40,7 +40,7 @@
             <NumericUpDown Grid.Column="3" Value="{Binding H, Converter={StaticResource Nz}}" Minimum="1" FormatString="0.#" Increment="0.5" />
         </Grid>
 
-        <Grid ColumnDefinitions="90,*" Margin="0,1">
+        <Grid ColumnDefinitions="90,*" Margin="0,1" ToolTip.Tip="Rotate this element about its own centre, in degrees (clockwise). Independent of the label's print orientation.">
             <TextBlock Classes="lbl" Text="Rotation" />
             <NumericUpDown Grid.Column="1" Value="{Binding Rotation, Converter={StaticResource Nz}}" Minimum="0" Maximum="360" FormatString="0" />
         </Grid>
