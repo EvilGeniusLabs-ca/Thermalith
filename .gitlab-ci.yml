@@ -33,7 +33,11 @@ stages:
 # lives in the separate job below.
 build:linux:
   stage: build
-  image: mcr.microsoft.com/dotnet/sdk:10.0   # provides an SDK >= 10.0.204 (global.json)
+  image:
+    name: mcr.microsoft.com/dotnet/sdk:10.0   # provides an SDK >= 10.0.204 (global.json)
+    # Reuse a cached image instead of re-pulling every job — avoids MCR's anonymous-pull rate limit
+    # ("Too many requests"). Falls back to a pull when the image isn't already on the runner.
+    pull_policy: ["if-not-present", "always"]
   # Single self-hosted runner today, so this job is left UNTAGGED to land on the
   # only runner. If that runner is set to NOT run untagged jobs, add its tag:
   #   tags: [ <runner-tag> ]
@@ -82,7 +86,9 @@ build:macos:
 # Linux runner (which runs untagged jobs); the runner pulls this image per-job.
 docs:manual:
   stage: build
-  image: pandoc/latex:latest          # TODO: pin to a specific tag once validated
+  image:
+    name: pandoc/latex:latest          # TODO: pin to a specific tag once validated
+    pull_policy: ["if-not-present", "always"]   # reuse the cached image (rate-limit friendly)
   rules:
     - if: '$CI_COMMIT_TAG'             # tag pushes only, like the build jobs
   before_script:
