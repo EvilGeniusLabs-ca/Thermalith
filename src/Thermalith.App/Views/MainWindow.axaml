@@ -149,6 +149,14 @@
                     <NumericUpDown Width="140" Value="{Binding Editor.CanvasHeightMm, Converter={StaticResource Nz}}" Minimum="1" FormatString="0.#"
                              VerticalAlignment="Center" ToolTip.Tip="Canvas height (mm)" />
                     <TextBlock Text="mm" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
+                    <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="4,0" />
+                    <!-- Rotate the label orientation: turns the design view; the physical label stays fixed. -->
+                    <Button Command="{Binding RotateLeftCommand}" ToolTip.Tip="Rotate label left 90°">
+                        <mi:MaterialIcon Kind="RotateLeft" Width="16" Height="16" />
+                    </Button>
+                    <Button Command="{Binding RotateRightCommand}" ToolTip.Tip="Rotate label right 90°">
+                        <mi:MaterialIcon Kind="RotateRight" Width="16" Height="16" />
+                    </Button>
                 </StackPanel>
                 <!-- Right: connected printer + remaining labels (from the RFID roll), then Print pinned far-right. -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="8,0,0,0">

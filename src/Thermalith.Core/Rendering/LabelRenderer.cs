@@ -33,7 +33,7 @@ public sealed class LabelRenderer
         {
             // Stage 4: threshold to a burn mask, then apply whole-label orientation by exact pixel remap.
             var burn = Threshold(bmp, w, h, options.TextThreshold);
-            return Orient(burn, w, h, label.Canvas.OrientationDeg);
+            return Orient(burn, w, h, options.ApplyOrientation ? label.Canvas.OrientationDeg : 0);
         }
     }
 
@@ -46,6 +46,7 @@ public sealed class LabelRenderer
     /// raster); images are already dithered by the crisp-vs-dither rule. Not for printing.</summary>
     public GrayBitmap RenderGray(ResolvedLabel label, RenderOptions? options = null)
     {
+        options ??= RenderOptions.Default;
         var (bmp, w, h) = Composite(label);
         using (bmp)
         {
@@ -56,7 +57,7 @@ public sealed class LabelRenderer
                     var c = bmp.GetPixel(x, y);
                     gray[y * w + x] = (byte)((c.Red * 299 + c.Green * 587 + c.Blue * 114) / 1000);
                 }
-            return OrientGray(gray, w, h, label.Canvas.OrientationDeg);
+            return OrientGray(gray, w, h, options.ApplyOrientation ? label.Canvas.OrientationDeg : 0);
         }
     }
 

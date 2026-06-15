@@ -197,7 +197,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
         Printer.ApplyPaperType(roll.PaperType);
         RememberCanvas();
-        return Editor.PrintableInsetXMm > 0; // a printable margin exists (label wider than the head)
+        return Editor.HasPrintableMargin; // a printable margin exists (label wider than the head)
     }
 
     private static string MapPaper(LabelType t) => t switch
@@ -317,6 +317,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand] private void ZoomIn() => Editor.ZoomIn();
     [RelayCommand] private void ZoomOut() => Editor.ZoomOut();
     [RelayCommand] private void ZoomFit() => Editor.FitToWindow();
+    [RelayCommand] private void RotateLeft() => Editor.RotateLeft();
+    [RelayCommand] private void RotateRight() => Editor.RotateRight();
 
     private bool CanUndo() => Editor.CanUndo;
     private bool CanRedo() => Editor.CanRedo;

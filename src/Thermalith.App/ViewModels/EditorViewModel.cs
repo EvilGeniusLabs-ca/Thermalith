@@ -819,6 +819,7 @@ public sealed partial class EditorViewModel : ObservableObject
                 Shape = string.IsNullOrEmpty(shape) ? _live.Canvas.Shape : shape,
                 Dpi = dpi is > 0 ? dpi.Value : _live.Canvas.Dpi,
                 PrintheadWidthMm = printheadWidthMm ?? _live.Canvas.PrintheadWidthMm,
+                OrientationDeg = 0, // a freshly-applied roll re-establishes the physical label: view = physical
             },
         };
         _history.Commit(_live);
@@ -854,31 +855,83 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseState();
     }
 
-    /// <summary>Canvas width in mm, surfaced for the toolbar quick-edit (worklist §C). Setting it resizes the
-    /// canvas as a committed change; the value stays in sync with the inspector via <see cref="RaiseState"/>.</summary>
+    /// <summary>True when the design view is turned 90°/270° relative to the physical label
+    /// (label-orientation, §A). At those orientations the view's width/height are the physical
+    /// height/width.</summary>
+    private bool ViewRotated => (((_live.Canvas.OrientationDeg % 360) + 360) % 360) is 90 or 270;
+
+    /// <summary>The label's current orientation in degrees (0/90/180/270) — view → physical-feed rotation.</summary>
+    public int OrientationDeg => (((_live.Canvas.OrientationDeg % 360) + 360) % 360);
+
+    /// <summary>Physical label width in mm — the loaded label's fixed dimension, surfaced for the toolbar
+    /// quick-edit (worklist §C). Independent of the view's orientation: rotating the canvas does NOT change
+    /// it. Setting it resizes the physical label as a committed change.</summary>
     public double CanvasWidthMm
     {
-        get => _live.Canvas.WidthMm;
-        set { if (value > 0 && Math.Abs(value - _live.Canvas.WidthMm) > 1e-6) ResizeCanvas(value, _live.Canvas.HeightMm); }
+        get => ViewRotated ? _live.Canvas.HeightMm : _live.Canvas.WidthMm;
+        set
+        {
+            if (value <= 0) return;
+            if (ViewRotated) { if (Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
+            else { if (Math.Abs(value - _live.Canvas.WidthMm) > 1e-6) ResizeCanvas(value, _live.Canvas.HeightMm); }
+        }
     }
 
-    /// <summary>Canvas height in mm, surfaced for the toolbar quick-edit (worklist §C).</summary>
+    /// <summary>Physical label height in mm, surfaced for the toolbar quick-edit (worklist §C). Fixed across rotation.</summary>
     public double CanvasHeightMm
     {
-        get => _live.Canvas.HeightMm;
-        set { if (value > 0 && Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
+        get => ViewRotated ? _live.Canvas.WidthMm : _live.Canvas.HeightMm;
+        set
+        {
+            if (value <= 0) return;
+            if (ViewRotated) { if (Math.Abs(value - _live.Canvas.WidthMm) > 1e-6) ResizeCanvas(value, _live.Canvas.HeightMm); }
+            else { if (Math.Abs(value - _live.Canvas.HeightMm) > 1e-6) ResizeCanvas(_live.Canvas.WidthMm, value); }
+        }
     }
 
     /// <summary>Target printhead width (mm), 0 when unknown.</summary>
     public double PrintheadWidthMm => _live.Canvas.PrintheadWidthMm ?? 0;
 
-    /// <summary>Horizontal printable inset per side (mm): (label − printhead)/2 when the label is wider
-    /// than the head, else 0 (a label narrower than the head prints edge-to-edge — no margin).</summary>
-    public double PrintableInsetXMm =>
-        _live.Canvas.PrintheadWidthMm is { } ph && ph > 0 && ph < _live.Canvas.WidthMm ? (_live.Canvas.WidthMm - ph) / 2 : 0;
+    /// <summary>Printable margin per side (mm) along the physical-width axis: (physicalWidth − printhead)/2
+    /// when the physical label is wider than the head, else 0.</summary>
+    private double PrintheadMarginMm
+    {
+        get
+        {
+            var physicalWidth = ViewRotated ? _live.Canvas.HeightMm : _live.Canvas.WidthMm;
+            return _live.Canvas.PrintheadWidthMm is { } ph && ph > 0 && ph < physicalWidth ? (physicalWidth - ph) / 2 : 0;
+        }
+    }
 
-    /// <summary>Vertical printable inset (mm) — full-height for now (no confirmed top/bottom blind zone).</summary>
-    public double PrintableInsetYMm => 0;
+    /// <summary>Horizontal printable inset per side (mm). The printhead limits the physical-width axis,
+    /// which is the view's X axis at 0/180 and its Y axis at 90/270 — so the margin moves to
+    /// <see cref="PrintableInsetYMm"/> when the view is turned.</summary>
+    public double PrintableInsetXMm => ViewRotated ? 0 : PrintheadMarginMm;
+
+    /// <summary>Vertical printable inset (mm) — carries the printhead margin when the view is turned 90°/270°.</summary>
+    public double PrintableInsetYMm => ViewRotated ? PrintheadMarginMm : 0;
+
+    /// <summary>True when a printable margin/crop exists on either axis (label wider than the head).</summary>
+    public bool HasPrintableMargin => PrintheadMarginMm > 0;
+
+    /// <summary>Turn the label 90° clockwise (rotate-right): the design view turns and content turns with
+    /// it; the physical label dimensions stay fixed (label-orientation, §A).</summary>
+    public void RotateRight() => RotateLabel(clockwise: true);
+
+    /// <summary>Turn the label 90° counter-clockwise (rotate-left).</summary>
+    public void RotateLeft() => RotateLabel(clockwise: false);
+
+    private void RotateLabel(bool clockwise)
+    {
+        FlushGesture();
+        _live = LabelOrientation.Rotate(_live, clockwise);
+        _history.Commit(_live);
+        _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
+        if (SelectedEditor is null) OnPropertyChanged(nameof(InspectorTarget));
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
 
     private void ResizeCanvas(double widthMm, double heightMm)
     {
@@ -1740,17 +1793,20 @@ public sealed partial class EditorViewModel : ObservableObject
         try
         {
             var ctx = new ResolveContext { Now = DateTimeOffset.Now, Assets = _assets, RowIndex = 0 };
+            // The editor shows the upright design *view*; orientation is applied only at print/export
+            // (RenderForPrint), where the view maps onto the fixed physical label (label-orientation, §A).
+            var opts = new RenderOptions { ApplyOrientation = false };
             int wpx, hpx;
             if (SmoothPreview)
             {
-                var gray = _renderer.RenderGray(_live, ctx);
+                var gray = _renderer.RenderGray(_live, ctx, opts);
                 Preview = PreviewImage.FromGray(gray);
                 wpx = gray.WidthPx;
                 hpx = gray.HeightPx;
             }
             else
             {
-                var mono = _renderer.Render(_live, ctx);
+                var mono = _renderer.Render(_live, ctx, opts);
                 Preview = PreviewImage.FromMonochrome(mono);
                 wpx = mono.WidthPx;
                 hpx = mono.HeightPx;
@@ -1803,8 +1859,9 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private void UpdateSafeArea()
     {
-        // The printable guide is drawn only when there's an actual margin (label wider than the printhead).
-        HasSafeArea = ShowSafeArea && PrintableInsetXMm > 0;
+        // The printable guide is drawn only when there's an actual margin (label wider than the printhead),
+        // on whichever axis the physical-width limit falls (X normally, Y when the view is turned).
+        HasSafeArea = ShowSafeArea && HasPrintableMargin;
     }
 
     // Positioning is decimal-mm (reverted from whole-mm 2026-06-10): snap to the grid when enabled,
@@ -1886,6 +1943,9 @@ public sealed partial class EditorViewModel : ObservableObject
         OnPropertyChanged(nameof(CanvasHeightMm));
         OnPropertyChanged(nameof(PrintheadWidthMm));
         OnPropertyChanged(nameof(PrintableInsetXMm));
+        OnPropertyChanged(nameof(PrintableInsetYMm));
+        OnPropertyChanged(nameof(HasPrintableMargin));
+        OnPropertyChanged(nameof(OrientationDeg));
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 }
