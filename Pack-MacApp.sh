@@ -32,6 +32,13 @@ CSPROJ="$REPO_ROOT/src/Thermalith.App/Thermalith.App.csproj"
 VERSION="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$CSPROJ" | head -1)"
 VERSION="${VERSION:-0.1.0}"
 
+# CFBundleVersion / CFBundleShortVersionString must be numeric, dot-separated (digits only); a
+# pre-release like "0.5.0-beta" is invalid for the bundle. Strip any -prerelease / +build suffix for
+# the plist. The full version (incl. -beta) still ships in the build and shows in the app's About box.
+BUNDLE_VERSION="${VERSION%%-*}"
+BUNDLE_VERSION="${BUNDLE_VERSION%%+*}"
+BUNDLE_VERSION="${BUNDLE_VERSION:-0.1.0}"
+
 if [ ! -x "$PUBLISH_DIR/$EXECUTABLE" ]; then
     echo "ERROR: $PUBLISH_DIR/$EXECUTABLE not found (publish first)." >&2
     exit 1
@@ -63,8 +70,8 @@ cat > "$APP_DIR/Contents/Info.plist" <<PLIST
     <key>CFBundleIdentifier</key>            <string>$BUNDLE_ID</string>
     <key>CFBundleExecutable</key>            <string>$EXECUTABLE</string>
     <key>CFBundleIconFile</key>              <string>thermalith</string>
-    <key>CFBundleVersion</key>               <string>$VERSION</string>
-    <key>CFBundleShortVersionString</key>    <string>$VERSION</string>
+    <key>CFBundleVersion</key>               <string>$BUNDLE_VERSION</string>
+    <key>CFBundleShortVersionString</key>    <string>$BUNDLE_VERSION</string>
     <key>CFBundlePackageType</key>           <string>APPL</string>
     <key>CFBundleInfoDictionaryVersion</key> <string>6.0</string>
     <key>LSMinimumSystemVersion</key>        <string>$MIN_MACOS</string>
@@ -88,4 +95,4 @@ fi
 
 # Normalize the path for display
 RESOLVED="$(cd "$(dirname "$APP_DIR")" && pwd)/$APP_NAME.app"
-echo "OK: assembled $RESOLVED (v$VERSION)"
+echo "OK: assembled $RESOLVED (v$VERSION, bundle $BUNDLE_VERSION)"
