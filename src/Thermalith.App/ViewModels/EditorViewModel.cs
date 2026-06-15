@@ -809,17 +809,22 @@ public sealed partial class EditorViewModel : ObservableObject
     public bool ApplyRoll(double widthMm, double heightMm, string? shape, int? dpi, double? printheadWidthMm = null)
     {
         FlushGesture();
-        var w = widthMm > 0 ? widthMm : _live.Canvas.WidthMm;
+        // The roll gives the physical label size; map it through the CURRENT orientation so a printer
+        // connect / re-detect doesn't snap a rotated canvas back to un-rotated (the orientation is the
+        // user's choice — only an explicit New starts at 0). When rotated, the view dims are swapped.
+        var rotated = ViewRotated;
+        var physW = widthMm > 0 ? widthMm : (rotated ? _live.Canvas.HeightMm : _live.Canvas.WidthMm);
+        var physH = heightMm > 0 ? heightMm : (rotated ? _live.Canvas.WidthMm : _live.Canvas.HeightMm);
         _live = _live with
         {
             Canvas = _live.Canvas with
             {
-                WidthMm = w,
-                HeightMm = heightMm > 0 ? heightMm : _live.Canvas.HeightMm,
+                WidthMm = rotated ? physH : physW,
+                HeightMm = rotated ? physW : physH,
                 Shape = string.IsNullOrEmpty(shape) ? _live.Canvas.Shape : shape,
                 Dpi = dpi is > 0 ? dpi.Value : _live.Canvas.Dpi,
                 PrintheadWidthMm = printheadWidthMm ?? _live.Canvas.PrintheadWidthMm,
-                OrientationDeg = 0, // a freshly-applied roll re-establishes the physical label: view = physical
+                // OrientationDeg preserved.
             },
         };
         _history.Commit(_live);
@@ -828,7 +833,7 @@ public sealed partial class EditorViewModel : ObservableObject
         MarkDirty();
         RenderNow();
         RaiseState();
-        return printheadWidthMm is > 0 && w > printheadWidthMm.Value;
+        return printheadWidthMm is > 0 && physW > printheadWidthMm.Value;
     }
 
     /// <summary>True when the document has any elements (a design in progress to protect from auto-resize).</summary>
