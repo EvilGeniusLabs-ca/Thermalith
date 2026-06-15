@@ -15,8 +15,8 @@ controls, the label **W**/**H** boxes, the two rotate buttons, the printer statu
 
 Two buttons sit just after the **W**/**H** boxes:
 
-- **Rotate canvas counter-clockwise** (the ↺ icon) — turns the whole label 90° counter-clockwise.
-- **Rotate canvas clockwise** (the ↻ icon) — turns the whole label 90° clockwise.
+- **Rotate canvas counter-clockwise** (the counter-clockwise arrow icon) — turns the whole label 90° counter-clockwise.
+- **Rotate canvas clockwise** (the clockwise arrow icon) — turns the whole label 90° clockwise.
 
 Rotating reshapes the canvas, so a tall label becomes a wide one and back again, and the printed output
 turns to match the label. Your placed elements keep their positions and stay upright (text is not spun

@@ -88,14 +88,22 @@ docs:manual:
   stage: build
   image:
     name: pandoc/latex:latest          # TODO: pin to a specific tag once validated
+    # The pandoc/latex image has ENTRYPOINT ["pandoc"]; clear it so the runner runs the job shell
+    # instead of feeding before_script/script to pandoc (which else fails with "withBinaryFile: does not exist").
+    entrypoint: [""]
     pull_policy: ["if-not-present", "always"]   # reuse the cached image (rate-limit friendly)
   rules:
     - if: '$CI_COMMIT_TAG'             # tag pushes only, like the build jobs
   before_script:
-    # pandoc/latex is Alpine: bash (the script uses bashisms) + fontconfig (XeTeX
-    # font lookup). fancyhdr/newunicodechar aren't always in the slim TeX Live.
+    # pandoc/latex is Alpine: bash (the script uses bashisms) + fontconfig (XeTeX font lookup).
     - apk add --no-cache bash fontconfig
-    - tlmgr install fancyhdr newunicodechar 2>/dev/null || true
+    # Make the repo-bundled Lato (body) + DejaVu Sans (glyph fallback) resolvable by name: register them
+    # with fontconfig. OSFONTDIR alone doesn't make fontspec find them by name in the clean image.
+    - mkdir -p /usr/share/fonts/thermalith && cp Documentation/Manual/fonts/*.ttf /usr/share/fonts/thermalith/ && fc-cache -f
+    # The image's TeX Live is behind CTAN, so tlmgr refuses to install until it updates itself first.
+    # newunicodechar (used by header.tex) isn't in the base install; fancyhdr is, but install both to be safe.
+    - tlmgr update --self
+    - tlmgr install fancyhdr newunicodechar
   script:
     - bash Documentation/Manual/build-pdf.sh
   artifacts:
