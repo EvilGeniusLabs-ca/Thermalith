@@ -43,6 +43,15 @@
                            PointerPressed="OnVisitSite" ToolTip.Tip="Open evilgeniuslabs.ca" />
             </StackPanel>
 
+            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,2">
+                <TextBlock Text="Check for updates" VerticalAlignment="Center"
+                           Foreground="#2D7DF6" TextDecorations="Underline" Cursor="Hand"
+                           PointerPressed="OnCheckUpdates" ToolTip.Tip="Open the Thermalith releases page (GitLab)" />
+                <TextBlock Text="Request beta access" VerticalAlignment="Center"
+                           Foreground="#2D7DF6" TextDecorations="Underline" Cursor="Hand"
+                           PointerPressed="OnRequestBeta" ToolTip.Tip="Email to request access to the Thermalith betas" />
+            </StackPanel>
+
             <Separator Margin="0,4" />
 
             <TextBlock Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap"

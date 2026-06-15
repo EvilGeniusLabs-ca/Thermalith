@@ -13,6 +13,12 @@ public partial class AboutDialog : Window
     private const string DonateUrl = "https://evilgeniuslabs.ca/donate/?from=thermalith";
     private const string SiteUrl = "https://evilgeniuslabs.ca/?from=thermalith";
 
+    // Releases / "check for updates" landing page, and the beta-access request mailto.
+    // TODO(Richard): confirm these before launch — the GitLab project is private during beta, and the
+    // beta inbox below is a placeholder on the EGL domain (point it at the real monitored address).
+    private const string UpdatesUrl = "https://gitlab.evilgeniuslabs.ca/eg-projects/thermalith";
+    private const string BetaRequestUrl = "mailto:beta@evilgeniuslabs.ca?subject=Thermalith%20beta%20access%20request";
+
     public AboutDialog()
     {
         InitializeComponent();
@@ -24,6 +30,10 @@ public partial class AboutDialog : Window
 
     // The website link and the banner both lead to the EvilGeniusLabs site.
     private void OnVisitSite(object? sender, PointerPressedEventArgs e) => Open(SiteUrl);
+
+    private void OnCheckUpdates(object? sender, PointerPressedEventArgs e) => Open(UpdatesUrl);
+
+    private void OnRequestBeta(object? sender, PointerPressedEventArgs e) => Open(BetaRequestUrl);
 
     private async void Open(string url)
     {
