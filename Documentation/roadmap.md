@@ -35,17 +35,18 @@ Future / wishlist — things we want to do but aren't active. Move items here wh
     (~couple MB, untrimmable) — fine for desktop; revisit if size bites.
 18. Distribution / packaging (Phase 6) — single-file + `EnableCompressionInSingleFile`, per-RID,
     ReadyToRun choice, `.icns` into the macOS `.app`. No trimming (Avalonia is reflection-heavy).
-19. 3 skipped Niimbot.Net tests — flip via a real print.txt capture (optional).
+19. ~~3 skipped Niimbot.Net tests~~ — no longer skipped (suite runs 0-skip). Item closed.
 21. **Implement EGL Donation from the NuGet** (Phase 6) — consume the external
     `EvilGeniusLabs.DonationWare` MIT NuGet (its own repo)
     in Help/About: render the provider affordance(s) + inject the launcher. The package's own build-out
     and publish are tracked in that repo, not here. Off the critical path; wire in late.
 20. **App UI localization / multi-language (i18n)** — future (EvilGenius, 2026-06-08). Localize Thermalith's
     own UI (menus, dialogs, inspector labels, messages) into multiple languages — relevant to the global
-    NIIMBOT audience. Distinct layer from the §6.3.4 **CJK font** gap (that's rendering CJK text *on the
-    label*; this is translating the *app chrome*). Means extracting hardcoded XAML/VM strings into resource
-    files + a culture/locale switch (Avalonia resx or a localization lib). Big-ish refactor; do once the
-    UI has settled so strings aren't churning. Pairs with the CJK font for a real international release.
+    NIIMBOT audience. This is the *app chrome*, distinct from rendering CJK text *on the label* — and that
+    label-text side is already handled by per-glyph OS font fallback (§6.3.4; no bundled CJK font, decided
+    2026-06-15). So i18n is purely the chrome-translation work: extracting hardcoded XAML/VM strings into
+    resource files + a culture/locale switch (Avalonia resx or a localization lib). Big-ish refactor; do
+    once the UI has settled so strings aren't churning.
 
 ## J. Data merge / variable data (PLAN — not started, 2026-06-08)
 
@@ -80,8 +81,11 @@ decision.)
 
 ## Niimbot.Net broad-model support — hardware test matrix
 
-The Niimbot.Net v1 goal is "drive every catalogue printer"; only B1 is hardware-verified today.
-Broadening coverage means exercising three axes — width, print-engine, and dpi:
+The Niimbot.Net v1 goal is "drive every catalogue printer". **B1 and B4 are hardware-verified** (B4 added
+2026-06-15); D11 is the next unit incoming. Profiles are now **catalogue-derived** (worklist §A / §A.8 done),
+so any listed model resolves real geometry, dpi, and density from `printers.json`; the open part is
+per-engine **print-path** verification on hardware. Broadening coverage means exercising three axes — width,
+print-engine, and dpi:
 
 - **Width:** 12 / 48 / 104 mm · **Engine:** D110 + Left feed (D11) vs B1 + Top feed (B1, B4) ·
   **dpi:** 203 (B1, B4) + 229 (D11) — beyond the all-203/8-dots-per-mm baseline.
@@ -92,12 +96,15 @@ same "confirm against hardware" discipline as the per-SKU roll key. The D11 espe
 - **Narrow end — D11 "upgraded" (~12 mm).** The higher-dpi variant maps to catalogue
   **D11_H / D11_Pro (229 dpi / 108 px, ids 528/531)**. NIIMBOT markets it "300 dpi" but `devices.json`
   says **229** — CONFIRM the real reported dpi against hardware (drives render dot-pitch). Covers the narrow
-  form factor *and* the different engine (`PrintTaskVersion.D110` + `PrintDirection.Left`) — the path the
-  current generic-B1 fallback definitely gets wrong — *and* the non-203 dpi path.
+  form factor *and* the different engine (`PrintTaskVersion.D110` + `PrintDirection.Left`) *and* the
+  non-203 dpi path. The catalogue + `KnownPrinterFacts` now resolve D11 to the D110 engine + Left feed
+  already (no longer the generic-B1 fallback), but that mapping is best-known and **unverified** — the D11
+  is what confirms the D110 print path on real hardware.
 - **Middle — B1 (203 dpi / 384 px).** The verified reference unit, mid-width. (B1 Pro at 229 dpi exists,
   skipped — not a hole, the 300-dpi D11 already exercises the non-203 path.)
-- **Wide end — B4 (4" / 104 mm).** Proves the driver holds at 104 mm. **No app-side "shipping" work
-  exists to do:** a 4" label is just a 104 mm canvas the app already accepts (size fields take 3 digits),
+- **Wide end — B4 (4" / 104 mm) — VERIFIED 2026-06-15.** The driver holds at 104 mm: a full 98×148 mm
+  shipping label prints correct and complete (after the tall-label run-length fix). **No app-side
+  "shipping" work exists to do:** a 4" label is just a 104 mm canvas the app already accepts (size fields take 3 digits),
   printed one at a time like any other size. The whole requirement is that **Niimbot.Net lets a developer
   drive the printer** (the v1 NuGet goal) — the app comes along for free. The only additive "shipping-ish"
   capability, printing many labels in a run, is **data-merge / variable-data (§J)** — printer-agnostic and

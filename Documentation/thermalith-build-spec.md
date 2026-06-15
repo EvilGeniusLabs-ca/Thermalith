@@ -61,7 +61,7 @@ Directory.Build.props                 # shared: net10.0, Nullable, ImplicitUsing
 Directory.Packages.props              # central package management (versions live here, not in csproj)
 global.json                           # pin the .NET SDK
 ├── src/
-│   ├── Niimbot.Net/                 # (1) NuGet: protocol + transport. PURE. No UI, no render, no data.
+│   ├── Niimbot.Net/                 # (1) NuGet: protocol + transport + device catalogue. No UI, no render, no label data.
 │   ├── Thermalith.Core/         # (2) Label engine: document model, render, serialize, data-bind.
 │   │                                #     Depends on Niimbot.Net. No UI.
 │   ├── Thermalith.App/           # (3) Avalonia desktop editor. Depends on Core.
@@ -86,7 +86,7 @@ Niimbot.Net  ←  Thermalith.Core  ←  Thermalith.App
                           └──────────────  Thermalith.Server
 ```
 
-Nothing depends "up". `Niimbot.Net` knows nothing about labels, rendering, or data. `Core` knows nothing about Avalonia. The App and Server are siblings that share `Core`. Donation support is the **external `EvilGeniusLabs.DonationWare` MIT NuGet** (its own repo, §4.2) consumed by the App at Phase 6 — it sits entirely outside this solution and the Niimbot domain graph.
+Nothing depends "up". `Niimbot.Net` knows nothing about labels or rendering (it does carry its own device-spec catalogue, `printers.json` — printer metadata belongs at the protocol layer; see §5 / worklist §A). `Core` knows nothing about Avalonia. The App and Server are siblings that share `Core`. Donation support is the **external `EvilGeniusLabs.DonationWare` MIT NuGet** (its own repo, §4.2) consumed by the App at Phase 6 — it sits entirely outside this solution and the Niimbot domain graph.
 
 > **Note on the "implementation project":** the label document model, rendering, serialization, and data binding are shared between the editor and the server, so they belong in `Thermalith.Core`, not inside the app. The app is the editor *UI* on top of Core; the server is headless access *to* Core. This keeps the three-project intent intact while avoiding duplicated engine logic.
 
@@ -119,7 +119,7 @@ worklist live in that repo's `Documentation/`. URL-only, no money handled in-pro
 
 Already scoped in prior planning. Recap of boundaries:
 
-**In:** packet framing (header/opcode/length/payload/checksum/footer), full command set, request/response handling, 1bpp row encoding @ 8px/mm (incl. RLE + print-task-version variants), client/session API (connect, status, density/label-type, print, progress poll, disconnect), `INiimbotTransport` abstraction with `SerialTransport` (`System.IO.Ports`) as first impl, per-model profiles (B1 first). **Profiles carry resolution (DPI / px-per-mm) and max print width** — Core reads these to seed `canvas.dpi` (§6.1), since this varies across models (203 vs 300 DPI).
+**In:** packet framing (header/opcode/length/payload/checksum/footer), full command set, request/response handling, 1bpp row encoding @ 8px/mm (incl. RLE + print-task-version variants), client/session API (connect, status, density/label-type, print, progress poll, disconnect), `INiimbotTransport` abstraction with `SerialTransport` (`System.IO.Ports`) as first impl, per-model profiles **derived from an embedded device catalogue** (`printers.json`, mined from NIIMBOT's `devices.json`; B1 + B4 hardware-verified, the rest catalogue-derived — worklist §A). **Profiles carry resolution (DPI / px-per-mm) and max print width** — Core reads these to seed `canvas.dpi` (§6.1), since this varies across models (203 vs 300 DPI).
 
 **Capability & loaded-label query (drive setup from the hardware).** On connect, query the device for **model / firmware**, resolve it to a profile, and expose a `PrinterCapabilities` record (resolution, max print width, density range, supported label types). Where the model and the loaded roll support it (the **B1 reads RFID-tagged label rolls**), also query the **loaded label's dimensions/type** and surface it. Core uses this to auto-seed `canvas.dpi` *and* `canvas.widthMm/heightMm` (§6.1) — the user only sets up manually when the hardware can't report it. This is a read; the user can always override.
 
@@ -262,7 +262,7 @@ The model is a root with canvas + a flat, ordered control collection (optionally
 
 Hardware finding (B1, validated 2026-06-07): real prints carry a small **constant** mechanical skew — the label tracks through the head at a slight fixed angle, shearing straight lines — plus a registration offset. The **vendor app skews the identical square the same way**, confirming this is hardware, not the raster we send. Design intent: **slight skew is acceptable; content printing off the label is not.** The engine therefore optimizes for *staying on-label*, not for perfect straightness.
 
-- **Safe print area.** The canvas carries an inset **safe area** — a margin smaller than the full label — sized so worst-case skew + registration cannot push content past the label edge. Authoring defaults inside it; content may extend toward the bleed edge, but validation (§6.7) flags anything at risk of clipping. The inset is per-profile and calibratable.
+- **Safe print area.** The canvas carries an inset **safe area** — a margin smaller than the full label — sized so worst-case skew + registration cannot push content past the label edge. Authoring defaults inside it; content may extend toward the bleed edge, but validation (§6.7) flags anything at risk of clipping. *Implemented 2026-06-15* as a **user-set per-document margin** (`Canvas.SafeAreaInsetMm`, the "Margin mm" canvas field), uniform on all edges, drawn as a guide and a validator warning - never a clamp/crop, so the user may place outside it. It persists with the label and as the default for new labels. A **per-printer default** (auto-seeded per model, the original "per-profile/calibratable" intent) is a future extension (worklist §A).
 - **Editor guides (§7).** The editor draws the safe-area rectangle (vertical + horizontal guides) on the canvas so the user lays out within it; the bleed/edge zone is visually distinct.
 - **Transparency.** When output is skewed, the product says plainly it is printer registration/skew (a hardware limit): we send a clean raster, the head prints it straight, the paper path shears it. No implication of a design defect.
 - **Optional counter-shear (secondary).** Because the skew is constant, the calibration system (§6.3.6) *may* pre-shear the raster to cancel it — exceeding vendor fidelity (the app does not). A nice-to-have, not required to ship; the safe area is the primary mitigation.
@@ -326,8 +326,10 @@ Implementation: pre-dither each image to a 1-bit blit; draw text/vector with the
 
 SkiaSharp resolves fonts against whatever the host OS provides, so a label authored on Windows can render differently — or tofu-out entirely for CJK — on Linux/macOS or on the headless server. Strategy (resolved, see §11):
 - **Any system TTF is selectable.** The font picker enumerates all installed fonts via SkiaSharp's `SKFontManager` — no allow-list. The user designs with whatever they have.
-- **Bundle a minimal default set** with the app/Core purely as the guaranteed fallback floor: one Latin family + one CJK-capable family, both **OFL/Apache-licensed** (e.g. Inter + Noto Sans CJK) so there is no redistribution risk.
-- **Missing-font fallback chain**, applied at render time: `[requested family] → [bundled default] → [OS default]`. When a loaded `.nlbl` names a font that isn't installed locally, Core falls back, the editor **flags the substitution**, and the user can reassign to any available font.
+- **Bundle one Latin family** (Roboto, Apache-licensed) as the guaranteed fallback floor, so Latin text never tofus-out and the headless server and the editor agree on the floor. **No CJK font is bundled** (decided 2026-06-15): a CJK face is large, and the per-glyph OS fallback below already covers CJK from whatever the machine has installed. Win/macOS always ship CJK fonts.
+- **Missing-font fallback**, applied at render time, on two levels:
+  - *Family:* `[requested family] → [bundled Roboto] → [OS default]`. A loaded `.nlbl` naming a font that isn't installed falls back, the editor **flags the substitution** (validator warning, §6.7), and the user can reassign.
+  - *Glyph:* for any character the chosen face lacks (CJK, symbols), the renderer asks the OS font manager for a face that has it (`FontService.FallbackForCodepoint` → `SKFontManager.MatchCharacter`), so CJK renders from the local font cache. If no installed font has the glyph (e.g. a minimal Linux box with no CJK font) it tofus; surfacing that as a validation warning is the lighter future fix, not a bundled CJK face.
 - The `.nlbl` package stores the **font family name only** — never the font file. (No embedding; keeps the format lean.)
 - `canvas.dpi` drives the pt→px conversion, so font sizing is correct on 300-DPI models, not just 203.
 
