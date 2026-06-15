@@ -917,6 +917,9 @@ public sealed partial class EditorViewModel : ObservableObject
         _live = LabelOrientation.Rotate(_live, clockwise);
         _history.Commit(_live);
         _canvasEditor = new CanvasEditorViewModel(_live, OnCanvasEdited);
+        // Rotate reposition+swaps every element, so the selected element's inspector must re-read the
+        // model — otherwise it keeps the pre-rotate X/Y/W/H and desyncs from the canvas.
+        RefreshPrimaryEditorGeometry();
         if (SelectedEditor is null) OnPropertyChanged(nameof(InspectorTarget));
         MarkDirty();
         RenderNow();
