@@ -5,10 +5,11 @@ namespace Thermalith.Core.Model;
 /// of a fixed-size physical label so the designer can work in whichever orientation suits the content;
 /// at print the view is rotated onto the physical feed via <see cref="Canvas.OrientationDeg"/>.
 ///
-/// A rotate swaps the view's width/height and moves each element's <b>centre</b> to the reoriented spot
-/// so content stays on the reshaped canvas. It deliberately does <b>NOT</b> change any element's own
-/// <see cref="LabelElement.Rotation"/> — the controls stay upright in the editor (a horizontal text box
-/// stays horizontal). The 90° turn shows up <b>only in the print output</b>: the renderer applies
+/// A rotate swaps the view's width/height and rotates each element's <b>bounding box</b> with it
+/// (position + W/H swap) so footprints follow the label — a box filling the canvas keeps filling it.
+/// It deliberately does <b>NOT</b> change any element's own <see cref="LabelElement.Rotation"/>: the
+/// controls stay upright in the editor (a horizontal text box stays horizontal, just reshaped to the
+/// reoriented footprint). The 90° turn shows up <b>only in the print output</b>: the renderer applies
 /// <see cref="Canvas.OrientationDeg"/> when rasterizing for the printer. <see cref="Canvas.OrientationDeg"/>
 /// is adjusted so the physical feed dimensions stay fixed. Four rotates in one direction return to the
 /// original document.
@@ -26,15 +27,15 @@ public static class LabelOrientation
         var c = doc.Canvas;
         double oldW = c.WidthMm, oldH = c.HeightMm;
 
-        // Move each element's centre to the reoriented position so it stays on the reshaped canvas;
-        // keep its W/H and angle untouched — controls stay upright in the editor (only the print rotates).
+        // Rotate each element's bounding box with the label: reposition + swap W/H so footprints
+        // reorient (a box filling the canvas keeps filling it). Angle is left untouched — controls stay
+        // upright in the editor; the 90° turn shows up only in the print output (via OrientationDeg).
         var elements = doc.Elements.Select(e =>
         {
-            double cx = e.X + e.W / 2, cy = e.Y + e.H / 2;
-            double ncx, ncy;
-            if (clockwise) { ncx = oldH - cy; ncy = cx; }
-            else { ncx = cy; ncy = oldW - cx; }
-            return e with { X = ncx - e.W / 2, Y = ncy - e.H / 2 };
+            double nx, ny;
+            if (clockwise) { nx = oldH - (e.Y + e.H); ny = e.X; }
+            else { nx = e.Y; ny = oldW - (e.X + e.W); }
+            return e with { X = nx, Y = ny, W = e.H, H = e.W };
         }).ToList();
 
         // rotate-right turns the view +90° CW, so the view→physical rotation drops 90°; left adds 90°.
