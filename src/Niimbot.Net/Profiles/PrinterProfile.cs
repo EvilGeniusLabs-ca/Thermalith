@@ -34,6 +34,11 @@ public sealed record PrinterProfile
 {
     public required PrinterModel Model { get; init; }
 
+    /// <summary>The catalogue display name (e.g. "B1", "D110", "P1S"). Carries the real name even for
+    /// models outside the <see cref="PrinterModel"/> enum, where <see cref="Model"/> is
+    /// <see cref="PrinterModel.Unknown"/>.</summary>
+    public string ModelName { get; init; } = "Unknown";
+
     /// <summary>Device model id(s) reported by <c>PrinterInfo(PrinterModelId)</c>.</summary>
     public required IReadOnlyList<int> ModelIds { get; init; }
 
@@ -57,6 +62,10 @@ public sealed record PrinterProfile
 
     /// <summary>Whether this model reads RFID-tagged label rolls (drives auto label setup, spec §5).</summary>
     public required bool SupportsRfid { get; init; }
+
+    /// <summary>True only for models confirmed on real hardware (B1, B4). Everything else is
+    /// catalogue-derived-but-unverified — geometry should be right, the print path is best-effort.</summary>
+    public bool Verified { get; init; }
 
     /// <summary>Pixels per millimetre, <c>Dpi / 25.4</c> (e.g. 203 dpi → ~7.992).</summary>
     public double PixelsPerMm => Dpi / 25.4;

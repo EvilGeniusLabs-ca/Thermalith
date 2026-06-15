@@ -12,7 +12,7 @@ internal static class Program
     {
         // Dev/maintenance: regenerate the bundled printer catalog from NIIMBOT's public device list,
         // using the app's own importer (no separate tool). Runs headless, then exits.
-        //   Thermalith.App --update-catalog --out <path-to>/src/Thermalith.Core/Catalog/printers.json
+        //   Thermalith.App --update-catalog --out <path-to>/src/Niimbot.Net/Profiles/printers.json
         if (Array.IndexOf(args, "--update-catalog") >= 0)
         {
             UpdateCatalog(args);

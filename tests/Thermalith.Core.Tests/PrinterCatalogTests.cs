@@ -1,4 +1,4 @@
-using Thermalith.Core.Catalog;
+using Niimbot.Net.Profiles;
 using Xunit;
 
 namespace Thermalith.Core.Tests;
@@ -27,6 +27,8 @@ public class PrinterCatalogTests
         Assert.Equal(50, b1.StockWidthMm);
         Assert.Equal(3, b1.DensityDefault);
         Assert.Contains(1, b1.PaperTypes);            // gap
+        Assert.Equal(0, b1.PrintDirectionDeg);        // top-fed (re-mined field)
+        Assert.True(b1.Verified);                     // B1 is hardware-verified
     }
 
     [Fact]

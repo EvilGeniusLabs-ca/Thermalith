@@ -79,7 +79,7 @@ public sealed partial class PrinterViewModel : ObservableObject
 
     /// <summary>The port we connected on / the connected model — for persistence + startup reconnect.</summary>
     public string? ConnectedPort { get; private set; }
-    public string? ConnectedModel => _caps?.Model.ToString();
+    public string? ConnectedModel => _caps?.ModelName;
     [ObservableProperty] private string _message = "";
     // Nullable so the bound ComboBox can briefly hold null while LabelTypes is cleared on reconnect
     // (binding a null back into a non-nullable enum threw InvalidCastException on the interface).
@@ -110,7 +110,7 @@ public sealed partial class PrinterViewModel : ObservableObject
                 if (probe is not null) found++;
                 var transport = SerialPortTransport.Describe(info.PortName);
                 var tag = transport is null ? "" : $" ({transport})";
-                var label = (probe is null ? $"{info.PortName} — no printer" : $"{info.PortName} — {probe.Model}") + tag;
+                var label = (probe is null ? $"{info.PortName} — no printer" : $"{info.PortName} — {probe.ModelName}") + tag;
                 Ports.Add(new PortItem(info.PortName, label, probe is not null));
             }
             SelectedPort = Ports.FirstOrDefault(p => p.IsNiimbot) ?? Ports.FirstOrDefault();
@@ -151,7 +151,7 @@ public sealed partial class PrinterViewModel : ObservableObject
             foreach (var t in _caps.SupportedLabelTypes) LabelTypes.Add(t);
             SelectedLabelType = LabelTypes.Count > 0 ? LabelTypes[0] : LabelType.WithGaps;
 
-            ConnectionInfo = $"{_caps.Model} · {_caps.Dpi} dpi · head {_caps.PrintheadPixels}px"
+            ConnectionInfo = $"{_caps.ModelName} · {_caps.Dpi} dpi · head {_caps.PrintheadPixels}px"
                 + (_caps.FirmwareVersion is { Length: > 0 } fw ? $" · fw {fw}" : "");
             Message = "Connected.";
             ConnectedPort = SelectedPort.Port;
@@ -296,7 +296,7 @@ public sealed partial class PrinterViewModel : ObservableObject
             LoadedRollText = "No printer";
             return;
         }
-        var model = _caps.Model.ToString();
+        var model = _caps.ModelName;
         if (rfid is { TagPresent: true } r && r.TotalLabels > 0)
         {
             var used = r.UsedLabels < 0 ? 0 : r.UsedLabels;

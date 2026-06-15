@@ -5,7 +5,11 @@ using Niimbot.Net.Profiles;
 namespace Niimbot.Net.Transport;
 
 /// <summary>The outcome of probing a port: which model answered, and its raw id.</summary>
-public sealed record ProbeResult(string PortName, PrinterModel Model, int ModelId, PrinterProfile Profile);
+public sealed record ProbeResult(string PortName, PrinterModel Model, int ModelId, PrinterProfile Profile)
+{
+    /// <summary>The catalogue display name (real name even for models outside the <see cref="PrinterModel"/> enum).</summary>
+    public string ModelName => Profile.ModelName;
+}
 
 /// <summary>
 /// Confirms whether a real NIIMBOT printer is on a given port and identifies the model (spec §5.1).

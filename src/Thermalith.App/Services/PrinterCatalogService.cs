@@ -1,30 +1,38 @@
 using System.Net.Http;
-using Thermalith.Core.Catalog;
+using Niimbot.Net.Profiles;
 
 namespace Thermalith.App.Services;
 
 /// <summary>
-/// Resolves and refreshes the printer-capability catalog (worklist §A). Load order: per-platform
-/// app-data cache → embedded baseline. Update fetches the public NIIMBOT device list, imports it to
-/// our format, and writes the cache. The fetch is user-initiated (no automatic cloud calls).
+/// Resolves and refreshes the printer-capability catalog (worklist §A). The active catalog is the
+/// embedded baseline (inside the single-file exe) <b>merged with</b> an optional app-data override —
+/// so a dropped-in "additions" file can carry just new models, and the app still runs fully without
+/// one. Update fetches the public NIIMBOT device list, imports it to our format, and writes the
+/// cache. The fetch is user-initiated (no automatic cloud calls).
 /// </summary>
 public sealed class PrinterCatalogService
 {
     private string CachePath => Path.Combine(PlatformDirectories.AppData(), "printers.json");
 
-    /// <summary>Load the catalog: app-data cache if present and valid, otherwise the embedded baseline.</summary>
+    /// <summary>
+    /// Load the active catalog: the embedded baseline merged with the app-data override (override
+    /// wins per model). Also pushes it into <see cref="PrinterProfiles"/> so profile resolution at the
+    /// protocol layer sees the same data. Call once at startup.
+    /// </summary>
     public PrinterCatalog Load()
     {
+        var catalog = PrinterCatalog.LoadEmbedded();
         try
         {
             if (File.Exists(CachePath))
-                return PrinterCatalog.FromJson(File.ReadAllText(CachePath));
+                catalog = catalog.MergedWith(PrinterCatalog.FromJson(File.ReadAllText(CachePath)));
         }
         catch
         {
-            // Corrupt cache shouldn't block startup — fall back to the baked-in baseline.
+            // Corrupt override shouldn't block startup — fall back to the baked-in baseline.
         }
-        return PrinterCatalog.LoadEmbedded();
+        PrinterProfiles.UseCatalog(catalog);
+        return catalog;
     }
 
     /// <summary>

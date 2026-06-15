@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "source": "https://oss-print.niimbot.com/public_resources/static_resources/devices.json",
-  "fetchedUtc": "2026-06-08T12:02:28.6808888\u002B00:00",
+  "fetchedUtc": "2026-06-15T13:06:12.9613750\u002B00:00",
   "printers": [
     {
       "model": "A1 Pro",
@@ -25,7 +25,9 @@
         4,
         3
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 270,
+      "verified": false
     },
     {
       "model": "A20",
@@ -50,7 +52,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "A203",
@@ -75,7 +79,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "A63",
@@ -100,7 +106,9 @@
         5,
         2
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "A8",
@@ -125,7 +133,9 @@
         1,
         3
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "A8_P",
@@ -150,7 +160,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B1",
@@ -175,7 +187,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": true
     },
     {
       "model": "B1 Pro",
@@ -200,7 +214,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B1 SE",
@@ -225,7 +241,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B11",
@@ -252,7 +270,9 @@
         4,
         5
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B16",
@@ -276,7 +296,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 270,
+      "verified": false
     },
     {
       "model": "B18",
@@ -303,7 +325,9 @@
         11,
         3
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "B18S",
@@ -330,7 +354,9 @@
         11,
         3
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "B2",
@@ -355,7 +381,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B2 Pro",
@@ -380,7 +408,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B203",
@@ -405,7 +435,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B21",
@@ -431,7 +463,9 @@
         3,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B21-C2B",
@@ -458,7 +492,9 @@
         5,
         2
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B21-L2B",
@@ -483,7 +519,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B21S",
@@ -509,7 +547,9 @@
         3,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B21S-C2B",
@@ -534,7 +574,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B21_Pro",
@@ -560,7 +602,9 @@
         3,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B3",
@@ -586,7 +630,9 @@
         3,
         5
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B31",
@@ -611,7 +657,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B32",
@@ -635,7 +683,9 @@
         1,
         5
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B32R",
@@ -658,7 +708,9 @@
       "paperTypes": [
         1
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B3S",
@@ -686,7 +738,9 @@
         3,
         5
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B3S_P",
@@ -712,7 +766,9 @@
         3,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B4",
@@ -737,7 +793,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": true
     },
     {
       "model": "B4 Pro",
@@ -762,7 +820,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B50",
@@ -788,7 +848,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "B50W",
@@ -814,7 +876,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "Betty",
@@ -838,7 +902,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "C1",
@@ -861,7 +927,9 @@
       "paperTypes": [
         3
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D101",
@@ -885,7 +953,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D11",
@@ -909,7 +979,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D110",
@@ -934,7 +1006,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D110_M",
@@ -958,7 +1032,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D11S",
@@ -982,7 +1058,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D11_H",
@@ -1006,7 +1084,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D11_Pro",
@@ -1030,7 +1110,9 @@
         5,
         1
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D41",
@@ -1052,7 +1134,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "D61",
@@ -1074,7 +1158,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "Dxx",
@@ -1096,7 +1182,34 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
+    },
+    {
+      "model": "EP1C",
+      "series": "C1",
+      "ids": [
+        5121
+      ],
+      "dpi": 229,
+      "defaultWidthMm": 12,
+      "defaultHeightMm": 40,
+      "stockWidthMm": 50,
+      "maxHeightMm": 50,
+      "printableWidthMm": 15,
+      "printheadPx": 135,
+      "widthMinMm": 12,
+      "widthMaxMm": 15,
+      "densityMin": 1,
+      "densityMax": 5,
+      "densityDefault": 3,
+      "paperTypes": [
+        3
+      ],
+      "rfidType": 2,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "EP2M_H",
@@ -1122,7 +1235,9 @@
         2,
         10
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "EP3M",
@@ -1148,7 +1263,9 @@
         2,
         10
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "ET10",
@@ -1171,7 +1288,9 @@
       "paperTypes": [
         3
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "Fust",
@@ -1195,7 +1314,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "H1",
@@ -1219,7 +1340,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "H1S",
@@ -1244,7 +1367,9 @@
         3,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "Hi-D110",
@@ -1268,7 +1393,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "Hi-NB-D11",
@@ -1292,7 +1419,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "JC-M90",
@@ -1318,7 +1447,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "JCB3S",
@@ -1344,7 +1475,9 @@
         3,
         5
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "K2",
@@ -1369,7 +1502,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "K3",
@@ -1394,7 +1529,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "K3_ITD",
@@ -1419,7 +1556,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "K3_W",
@@ -1444,7 +1583,36 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
+    },
+    {
+      "model": "K4",
+      "series": "K3 \u7CFB\u5217",
+      "ids": [
+        7168
+      ],
+      "dpi": 203,
+      "defaultWidthMm": 50,
+      "defaultHeightMm": 30,
+      "stockWidthMm": 82,
+      "maxHeightMm": 300,
+      "printableWidthMm": 104,
+      "printheadPx": 832,
+      "widthMinMm": 20,
+      "widthMaxMm": 104,
+      "densityMin": 1,
+      "densityMax": 15,
+      "densityDefault": 7,
+      "paperTypes": [
+        1,
+        2,
+        5
+      ],
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "M2_H",
@@ -1470,7 +1638,9 @@
         2,
         10
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "M3",
@@ -1496,7 +1666,9 @@
         2,
         10
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "MP3K",
@@ -1521,7 +1693,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "MP3K_W",
@@ -1546,7 +1720,9 @@
         2,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "N1",
@@ -1573,7 +1749,9 @@
         10,
         3
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "P1",
@@ -1596,7 +1774,9 @@
       "paperTypes": [
         6
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "P18",
@@ -1619,7 +1799,9 @@
       "paperTypes": [
         6
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "P1S",
@@ -1642,7 +1824,9 @@
       "paperTypes": [
         6
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 90,
+      "verified": false
     },
     {
       "model": "S1",
@@ -1668,7 +1852,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "S3",
@@ -1694,7 +1880,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "S6",
@@ -1722,7 +1910,9 @@
         2,
         5
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "S6_P",
@@ -1746,7 +1936,9 @@
         1,
         5
       ],
-      "rfidType": 1
+      "rfidType": 1,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "T2S",
@@ -1770,7 +1962,9 @@
         1,
         2
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "T6",
@@ -1796,7 +1990,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "T7",
@@ -1822,7 +2018,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "T8",
@@ -1848,7 +2046,9 @@
         3,
         4
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "T8S",
@@ -1871,7 +2071,9 @@
       "paperTypes": [
         1
       ],
-      "rfidType": 0
+      "rfidType": 0,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "TP2M_H",
@@ -1896,7 +2098,9 @@
         2,
         5
       ],
-      "rfidType": 3
+      "rfidType": 3,
+      "printDirectionDeg": 0,
+      "verified": false
     },
     {
       "model": "Z401",
@@ -1920,7 +2124,9 @@
         1,
         5
       ],
-      "rfidType": 2
+      "rfidType": 2,
+      "printDirectionDeg": 0,
+      "verified": false
     }
   ]
 }

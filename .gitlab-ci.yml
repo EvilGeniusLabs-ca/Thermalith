@@ -142,7 +142,7 @@ release:github:
       [ -n "$TITLE" ] || TITLE="$CI_COMMIT_TAG"
       PREFLAG=""
       if [ "$PRERELEASE" = "true" ]; then PREFLAG="--prerelease"; fi
-      ASSETS=$(find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' -o -name '*.dmg' -o -name '*.nupkg' \) 2>/dev/null; find Documentation/Manual/pdf -type f -name '*.pdf' 2>/dev/null)
+      ASSETS=$(find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' -o -name '*.dmg' -o -name '*.nupkg' \) 2>/dev/null; find Documentation/Manual/pdf -type f -name '*.pdf' 2>/dev/null; ls src/Niimbot.Net/Profiles/printers.json 2>/dev/null)
       echo "Publishing $CI_COMMIT_TAG to $GH_REPO (prerelease=${PRERELEASE:-false})"
       echo "Assets:"; echo "$ASSETS"
       if gh release view "$CI_COMMIT_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then

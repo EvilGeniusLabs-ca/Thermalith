@@ -163,7 +163,7 @@ public sealed class NiimbotClient : IAsyncDisposable
 
         if (bitmap.WidthPx > profile.PrintheadPixels)
             throw new ArgumentException(
-                $"Bitmap width {bitmap.WidthPx}px exceeds the {profile.Model} printhead ({profile.PrintheadPixels}px).",
+                $"Bitmap width {bitmap.WidthPx}px exceeds the {profile.ModelName} printhead ({profile.PrintheadPixels}px).",
                 nameof(bitmap));
 
         // Position the label-width raster on the full printhead (the protocol has no horizontal

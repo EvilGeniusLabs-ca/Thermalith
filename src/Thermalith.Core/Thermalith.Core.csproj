@@ -17,7 +17,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Fonts\Roboto-Regular.ttf" />
     <EmbeddedResource Include="Catalog\label-stock.json" />
-    <EmbeddedResource Include="Catalog\printers.json" />
   </ItemGroup>
 
 </Project>

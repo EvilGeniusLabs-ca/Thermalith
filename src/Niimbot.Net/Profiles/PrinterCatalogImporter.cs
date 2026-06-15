@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Thermalith.Core.Catalog;
+namespace Niimbot.Net.Profiles;
 
 /// <summary>
 /// Maps NIIMBOT's raw <c>devices.json</c> into our lean <see cref="PrinterCatalog"/> (worklist §A).
@@ -32,12 +32,13 @@ public static class PrinterCatalogImporter
 
             var paccuracy = Num(d, "paccuracy") ?? 8.0;            // px/mm; 8 → 203 dpi
             var widthSetEnd = Num(d, "widthSetEnd") ?? Num(d, "maxPrintWidth") ?? 0;
+            var ids = Ints(d, "codes");
 
             entries.Add(new PrinterEntry
             {
                 Model = name,
                 Series = Str(d, "seriesName"),
-                Ids = Ints(d, "codes"),
+                Ids = ids,
                 Dpi = (int)Math.Round(paccuracy * 25.4),
                 DefaultWidthMm = Num(d, "defaultWidth") ?? 0,
                 DefaultHeightMm = Num(d, "defaultHeigth") ?? 0,   // NIIMBOT's spelling
@@ -52,6 +53,8 @@ public static class PrinterCatalogImporter
                 DensityDefault = (int)(Num(d, "solubilitySetDefault") ?? 1),
                 PaperTypes = CsvInts(Str(d, "paperType")),
                 RfidType = (int)(Num(d, "rfidType") ?? 0),
+                PrintDirectionDeg = (int)(Num(d, "printDirection") ?? 0),
+                Verified = KnownPrinterFacts.IsVerified(ids),
             });
         }
 

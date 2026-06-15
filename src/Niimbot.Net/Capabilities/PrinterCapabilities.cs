@@ -13,6 +13,9 @@ public sealed record PrinterCapabilities
 {
     public required PrinterModel Model { get; init; }
 
+    /// <summary>The catalogue display name (real name even for models outside the enum).</summary>
+    public string ModelName { get; init; } = "Unknown";
+
     public required int ModelId { get; init; }
 
     public required int Dpi { get; init; }
@@ -43,6 +46,7 @@ public sealed record PrinterCapabilities
     internal static PrinterCapabilities FromProfile(PrinterProfile profile, int modelId) => new()
     {
         Model = profile.Model,
+        ModelName = profile.ModelName,
         ModelId = modelId,
         Dpi = profile.Dpi,
         PixelsPerMm = profile.PixelsPerMm,
