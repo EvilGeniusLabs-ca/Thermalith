@@ -17,7 +17,7 @@
     <StackPanel Spacing="3">
         <TextBlock Text="{Binding TypeLabel}" FontWeight="Bold" Margin="0,0,0,2" />
 
-        <Grid ColumnDefinitions="90,*" Margin="0,1">
+        <Grid ColumnDefinitions="90,*" Margin="0,1" ToolTip.Tip="This element's name — shown in the Elements list. Doesn't print.">
             <TextBlock Classes="lbl" Text="Name" />
             <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
@@ -26,14 +26,14 @@
 
         <!-- Decimal-mm positioning (0.5-mm spinner steps). X/Y allow negatives so elements can be
              positioned off the canvas edge (bleed model); W/H stay >= 1. -->
-        <Grid ColumnDefinitions="90,*,22,*" Margin="0,1">
+        <Grid ColumnDefinitions="90,*,22,*" Margin="0,1" ToolTip.Tip="Top-left position of the element in mm, measured from the label's top-left corner. Negative values place it off the edge.">
             <TextBlock Classes="lbl" Text="X" />
             <NumericUpDown Grid.Column="1" Value="{Binding X, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
             <TextBlock Classes="lbl" Grid.Column="2" Text="Y" Margin="6,0,4,0" />
             <NumericUpDown Grid.Column="3" Value="{Binding Y, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
         </Grid>
 
-        <Grid ColumnDefinitions="90,*,22,*" Margin="0,1">
+        <Grid ColumnDefinitions="90,*,22,*" Margin="0,1" ToolTip.Tip="Width and height of the element's box in mm.">
             <TextBlock Classes="lbl" Text="W" />
             <NumericUpDown Grid.Column="1" Value="{Binding W, Converter={StaticResource Nz}}" Minimum="1" FormatString="0.#" Increment="0.5" />
             <TextBlock Classes="lbl" Grid.Column="2" Text="H" Margin="6,0,4,0" />

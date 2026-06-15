@@ -497,11 +497,11 @@
                             <DataTemplate DataType="ed:CanvasEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <TextBlock Text="Label" FontWeight="Bold" Margin="0,0,0,4" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Width mm" /><NumericUpDown Grid.Column="1" Value="{Binding WidthMm, Converter={StaticResource Nz}}" Minimum="1" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Height mm" /><NumericUpDown Grid.Column="1" Value="{Binding HeightMm, Converter={StaticResource Nz}}" Minimum="1" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="The label's name — used as the file-name suggestion and in the title bar. Doesn't print."><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Physical label width in mm (the media's printable width). Usually set automatically from the loaded roll."><TextBlock Text="Width mm" /><NumericUpDown Grid.Column="1" Value="{Binding WidthMm, Converter={StaticResource Nz}}" Minimum="1" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Physical label height in mm (the feed length). Usually set automatically from the loaded roll."><TextBlock Text="Height mm" /><NumericUpDown Grid.Column="1" Value="{Binding HeightMm, Converter={StaticResource Nz}}" Minimum="1" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Print resolution (dots per inch). Seeded from the connected printer — 203 for most NIIMBOT models."><TextBlock Text="DPI" /><NumericUpDown Grid.Column="1" Value="{Binding Dpi, Converter={StaticResource Nz}}" Minimum="50" FormatString="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Label outline shape: rectangle, rounded rectangle, or circle. Used for the safe-area guide and round-label rendering."><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.CanvasShape}" SelectedItem="{Binding Shape}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Corner radius (mm) when Shape is rounded. 0 = square corners."><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Print orientation. Rotates the printed output 90/180/270° onto the physical label; the canvas reshapes to match. Same as the toolbar rotate buttons."><TextBlock Text="Orient°" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Orientation}" SelectedItem="{Binding OrientationDeg}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Bleed margin (mm) outside the label edge. The validator warns when content sits past it — used for deliberate over-print onto continuous media."><TextBlock Text="Bleed mm" /><NumericUpDown Grid.Column="1" Value="{Binding BleedMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
@@ -516,10 +516,11 @@
                                     <views:BaseElementFields />
 
                                     <TextBlock Classes="section" Text="Content" />
-                                    <TextBox Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="48" />
+                                    <TextBox Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="48"
+                                             ToolTip.Tip="The text to print. Use {token} placeholders for data-merge fields; Enter adds a line break." />
 
                                     <TextBlock Classes="section" Text="Font" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Font" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fonts}" SelectedItem="{Binding SelectedFont}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Typeface. The list is the app's bundled fonts; an unavailable font falls back at render (flagged by the validator)."><TextBlock Text="Font" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fonts}" SelectedItem="{Binding SelectedFont}" /></Grid>
                                     <!-- Size + B/I/U share one row. -->
                                     <Grid Classes="frow" ColumnDefinitions="90,120,*">
                                         <TextBlock Text="Size (pt)" />
@@ -534,7 +535,7 @@
                                     <TextBlock Classes="section" Text="Paragraph" />
                                     <CheckBox IsChecked="{Binding AutoSize}" Content="Auto-size box to text" Margin="0,2"
                                               ToolTip.Tip="The box hugs the text (no resize handles). Turn off for a fixed box with word-wrap." />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*" IsEnabled="{Binding !AutoSize}"><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" IsEnabled="{Binding !AutoSize}" ToolTip.Tip="How text wraps in a fixed box: word, character, or none (single line, may clip). Disabled when Auto-size is on."><TextBlock Text="Wrap" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Wrap}" SelectedItem="{Binding Wrap}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Line-height multiplier for multi-line text. 1.0 = single spacing, 2.0 = double."><TextBlock Text="Line spacing" /><NumericUpDown Grid.Column="1" Value="{Binding LineSpacing, Converter={StaticResource Nz}}" Minimum="0" Increment="0.1" FormatString="0.0#" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
@@ -543,9 +544,9 @@
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Barcode symbology (Code128, EAN-13, …). Pick the one your scanner/system expects; some require a specific value length."><TextBlock Text="Symbology" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Symbology}" SelectedItem="{Binding Symbology}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="The data to encode in the barcode. Must be valid for the chosen symbology (e.g. EAN-13 needs 12–13 digits)."><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <CheckBox IsChecked="{Binding ShowText}" Content="Show text" Margin="0,4" ToolTip.Tip="Print the human-readable value beneath/above the bars." />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Where the human-readable text sits relative to the bars (above / below). Only used when Show text is on."><TextBlock Text="Text pos" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.TextPosition}" SelectedItem="{Binding TextPosition}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Width of the narrowest bar (the 'module'). Larger = a wider, more scannable barcode; too small may not scan."><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Quiet mm" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /><NumericUpDown Grid.Column="1" Value="{Binding QuietZoneMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" ToolTip.Tip="Blank margin on each side of the barcode, required for reliable scanning." /></Grid>
                                 </StackPanel>
@@ -554,7 +555,7 @@
                             <DataTemplate DataType="ed:QrEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="The data to encode in the QR code — text, a URL, etc."><TextBlock Text="Value" /><TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Character encoding for the QR payload (e.g. UTF-8 / byte). Use the default unless the target reader needs a specific mode."><TextBlock Text="Encoding" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.QrEncoding}" SelectedItem="{Binding Encoding}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Error-correction level — higher recovers from more damage/smudging but makes the code denser. L≈7%, M≈15%, Q≈25%, H≈30%."><TextBlock Text="EC level" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.EcLevel}" SelectedItem="{Binding EcLevel}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Module mm" /><NumericUpDown Grid.Column="1" Value="{Binding ModuleSizeMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" Watermark="auto" /></Grid>
@@ -569,25 +570,25 @@
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Increment between consecutive labels (1, 2, 3… by Step)."><TextBlock Text="Step" /><NumericUpDown Grid.Column="1" Value="{Binding Step, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Pad the number to this many digits with the pad character (e.g. 4 → 0007). 0 = no padding."><TextBlock Text="Pad len" /><NumericUpDown Grid.Column="1" Value="{Binding PadLength, Converter={StaticResource Nz}}" Minimum="0" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Character used to pad to Pad len (usually 0)."><TextBlock Text="Pad char" /><TextBox Grid.Column="1" Text="{Binding PadChar, UpdateSourceTrigger=PropertyChanged}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Prefix" /><TextBox Grid.Column="1" Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Suffix" /><TextBox Grid.Column="1" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Fixed text placed before the number (e.g. 'SN-' → SN-0007)."><TextBlock Text="Prefix" /><TextBox Grid.Column="1" Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Fixed text placed after the number."><TextBlock Text="Suffix" /><TextBox Grid.Column="1" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:DateTimeEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Kind" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateKind}" SelectedItem="{Binding Kind}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="What to show: date, time, or date+time."><TextBlock Text="Kind" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateKind}" SelectedItem="{Binding Kind}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Date/time format string (.NET): yyyy=year, MM=month, dd=day, HH=24h, mm=min. E.g. yyyy-MM-dd or dd MMM yyyy."><TextBlock Text="Format" /><TextBox Grid.Column="1" Text="{Binding Format, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="printNow = stamped with the date/time at print; fixed = use the Fixed value below."><TextBlock Text="Source" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.DateSource}" SelectedItem="{Binding Source}" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Fixed value" /><TextBox Grid.Column="1" Text="{Binding FixedValueUtc, UpdateSourceTrigger=PropertyChanged}" Watermark="ISO-8601 UTC" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="The date/time to use when Source = fixed (ISO-8601 UTC, e.g. 2026-06-15T00:00:00Z). Ignored when Source = printNow."><TextBlock Text="Fixed value" /><TextBox Grid.Column="1" Text="{Binding FixedValueUtc, UpdateSourceTrigger=PropertyChanged}" Watermark="ISO-8601 UTC" /></Grid>
                                 </StackPanel>
                             </DataTemplate>
 
                             <DataTemplate DataType="ed:ShapeEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.ShapeType}" SelectedItem="{Binding ShapeType}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Shape to draw: rectangle, rounded rectangle, ellipse, or line."><TextBlock Text="Shape" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.ShapeType}" SelectedItem="{Binding ShapeType}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Outline thickness in mm. 0 = no outline (use Fill = solid for a filled shape)."><TextBlock Text="Stroke mm" /><NumericUpDown Grid.Column="1" Value="{Binding StrokeWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="none = outline only; solid = filled black."><TextBlock Text="Fill" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fill}" SelectedItem="{Binding Fill}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Corner radius (mm) for a rounded rectangle. 0 = sharp corners. Ignored for ellipse."><TextBlock Text="Corner mm" /><NumericUpDown Grid.Column="1" Value="{Binding CornerRadiusMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
@@ -597,16 +598,16 @@
                             <DataTemplate DataType="ed:LineEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <TextBlock Text="Line" FontWeight="Bold" Margin="0,0,0,2" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="This element's name — shown in the Elements list. Doesn't print."><TextBlock Text="Name" /><TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></Grid>
 
                                     <TextBlock Classes="section" Text="Endpoints" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1">
+                                    <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1" ToolTip.Tip="Start point of the line — X and Y in mm from the label's top-left. Or drag the endpoint handle on the canvas.">
                                         <TextBlock Text="Point 1" />
                                         <NumericUpDown Grid.Column="1" Value="{Binding P1X, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
                                         <TextBlock Grid.Column="2" Text="Y" Margin="6,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
                                         <NumericUpDown Grid.Column="3" Value="{Binding P1Y, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
                                     </Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1">
+                                    <Grid Classes="frow" ColumnDefinitions="90,*,22,*" Margin="0,1" ToolTip.Tip="End point of the line — X and Y in mm from the label's top-left.">
                                         <TextBlock Text="Point 2" />
                                         <NumericUpDown Grid.Column="1" Value="{Binding P2X, Converter={StaticResource Nz}}" FormatString="0.#" Increment="0.5" />
                                         <TextBlock Grid.Column="2" Text="Y" Margin="6,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
@@ -632,7 +633,7 @@
                                     <Button HorizontalAlignment="Stretch" Margin="0,2"
                                             Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ChooseImageCommand}"
                                             Content="Choose image…" />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId, UpdateSourceTrigger=PropertyChanged}" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="The packaged image asset this element draws. Set by 'Choose image…'; rarely edited by hand."><TextBlock Text="Asset id" /><TextBox Grid.Column="1" Text="{Binding AssetId, UpdateSourceTrigger=PropertyChanged}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="How the image fills its box: fill (cover, may crop), fit (whole image, may letterbox), stretch (distort to box), center (no scale)."><TextBlock Text="Fit" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Fit}" SelectedItem="{Binding Fit}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="How the image is reduced to 1-bit black/white for the thermal head: threshold = hard cut; Floyd–Steinberg / Atkinson / ordered = dot patterns that fake grey shading."><TextBlock Text="Dither" /><ComboBox Classes="fld" Grid.Column="1" ItemsSource="{x:Static ed:EditorOptions.Dither}" SelectedItem="{Binding Dither}" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Black/white cutoff (0–255), used only when Dither = threshold. Lower = more pixels turn black."><TextBlock Text="Threshold" /><NumericUpDown Grid.Column="1" Value="{Binding Threshold, Converter={StaticResource Nz}}" Minimum="0" Maximum="255" FormatString="0" /></Grid>
@@ -650,8 +651,8 @@
                             <DataTemplate DataType="ed:TableEditorViewModel">
                                 <StackPanel Spacing="2">
                                     <views:BaseElementFields />
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Cols, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
-                                    <Grid Classes="frow" ColumnDefinitions="90,*"><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Rows, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Number of columns. Changing it adds/removes columns from the right."><TextBlock Text="Cols" /><NumericUpDown Grid.Column="1" Value="{Binding Cols, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
+                                    <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Number of rows. Changing it adds/removes rows from the bottom."><TextBlock Text="Rows" /><NumericUpDown Grid.Column="1" Value="{Binding Rows, Converter={StaticResource Nz}}" Minimum="1" FormatString="0" /></Grid>
                                     <Grid Classes="frow" ColumnDefinitions="90,*" ToolTip.Tip="Grid line / border thickness in mm. 0 = no borders."><TextBlock Text="Line Weight" /><NumericUpDown Grid.Column="1" Value="{Binding BorderWidthMm, Converter={StaticResource Nz}}" Increment="0.1" Minimum="0" /></Grid>
                                     <TextBlock Text="Double-click the table to edit cells (select, type, merge, fill, header)."
                                                Foreground="{DynamicResource TextHint}" FontSize="11" TextWrapping="Wrap" Margin="0,6" />
