@@ -13,9 +13,9 @@ public partial class AboutDialog : Window
     private const string DonateUrl = "https://evilgeniuslabs.ca/donate/?from=thermalith";
     private const string SiteUrl = "https://evilgeniuslabs.ca/?from=thermalith";
 
-    // Releases / "check for updates" landing page, and the beta-access request mailto.
-    // TODO(Richard): confirm the updates URL before launch — the GitLab project is private during beta.
-    private const string UpdatesUrl = "https://gitlab.evilgeniuslabs.ca/eg-projects/thermalith";
+    // Releases / "check for updates" page (GitHub hosts the published releases), and the beta-access
+    // request mailto. The repo is private until launch, so the releases link 404s for the public until then.
+    private const string UpdatesUrl = "https://github.com/EvilGeniusLabs-ca/Thermalith/releases";
     private const string BetaRequestUrl = "mailto:evilgenius@evilgeniuslabs.ca?subject=Thermalith%20beta%20access%20request";
 
     public AboutDialog()
