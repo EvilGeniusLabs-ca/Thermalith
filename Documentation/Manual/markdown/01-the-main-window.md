@@ -9,7 +9,8 @@ The window has six areas:
 - **Menu bar** — *File · Edit · View · Insert · Arrange · Printer · Help*. Every command lives here,
   and the most common ones are mirrored on the toolbar and the right-click menu.
 - **Toolbar** — quick access to **New**, **Open**, **Save**, **Undo**, **Redo**, the zoom controls
-  (**−**, **Fit**, **+**), and the label's **W**(idth) and **H**(eight) in millimetres. On the right
+  (**−**, **Fit**, **+**), the label's **W**(idth) and **H**(eight) in millimetres, and the two
+  **rotate** buttons that turn the whole label counter-clockwise or clockwise. On the right
   it shows the current printer status (e.g. *No printer*) and the **Print** button.
 - **Insert palette** (left, under *Insert*) — one button per element type you can add to the label:
   Text, Barcode, QR Code, Serial, Date / Time, Shape, Line, Image, Table.

@@ -9,7 +9,19 @@ and the right-click menu.
 ![The toolbar](assets/toolbars.png)
 
 The toolbar carries the everyday commands: **New**, **Open**, **Save**, **Undo**, **Redo**, the zoom
-controls, the label **W**/**H** boxes, the printer status, and **Print**.
+controls, the label **W**/**H** boxes, the two rotate buttons, the printer status, and **Print**.
+
+## Rotating the label
+
+Two buttons sit just after the **W**/**H** boxes:
+
+- **Rotate canvas counter-clockwise** (the ↺ icon) — turns the whole label 90° counter-clockwise.
+- **Rotate canvas clockwise** (the ↻ icon) — turns the whole label 90° clockwise.
+
+Rotating reshapes the canvas, so a tall label becomes a wide one and back again, and the printed output
+turns to match the label. Your placed elements keep their positions and stay upright (text is not spun
+on its side), so after a rotate you may want to nudge them to suit the new orientation. This is the same
+setting as **Orient°** in the label's Properties (see *[Creating a label](02-creating-a-label.md)*).
 
 ## Undo and redo
 
