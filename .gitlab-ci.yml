@@ -154,6 +154,15 @@ release:github:
       set -e
       export GH_TOKEN="$GITHUB_PAT"
 
+      # Fail fast with a clear message if the token didn't reach the job. A common cause: GITHUB_PAT is
+      # set as a *Protected* CI variable but this tag isn't a protected tag, so it isn't injected.
+      if [ -z "$GITHUB_PAT" ]; then
+        echo "ERROR: GITHUB_PAT is empty. Set it in Settings > CI/CD > Variables (masked). If it's marked"
+        echo "Protected, protect the release tags too (Settings > Repository > Protected tags, e.g. v*),"
+        echo "or untick Protected on the variable. The token needs Contents: write on $GH_REPO."
+        exit 1
+      fi
+
       # One-way source mirror: push this tagged commit (as main) + the tag to GitHub so the repo source
       # is there and the release's auto-generated "Source code (zip/tar.gz)" archives exist. GitLab is the
       # source of truth, so force is intentional. The token-bearing URL is never echoed.
