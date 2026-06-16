@@ -13,8 +13,8 @@
     <!-- Windows executable icon. macOS .icns is assembled into the .app at packaging (Phase 6). -->
     <ApplicationIcon>Assets\thermalith.ico</ApplicationIcon>
     <!-- Single source of truth for the displayed/About version + artifact filenames. Keep in step with
-         the git tag you push (release-plan). v0.9.0 = end-to-end deploy test (GitHub still private). -->
-    <Version>0.9.0</Version>
+         the git tag you push (release-plan). v1.0.0 = first public release (B1 + B4 verified on hardware). -->
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,5 +1,7 @@
 # Thermalith
 
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
 **Open-Source NIIMBOT System** — a local-first, cross-platform label designer and printer driver for NIIMBOT thermal label printers.
 
 Thermalith is a free, FOSS alternative to the vendor's cloud-tethered desktop app: design labels, bind data, and print — entirely on your machine. No account, no cloud, no telemetry.
@@ -8,11 +10,25 @@ Thermalith is a free, FOSS alternative to the vendor's cloud-tethered desktop ap
 
 ## Status
 
-Past the scaffold and in active development; not yet at a tagged release.
+First public release (1.0.0).
 
-- **Printing works on real hardware.** The full design → render → print path is verified end-to-end on a NIIMBOT **B1** (203 dpi). Other models resolve their geometry from a 77-printer capability catalogue (built from the vendor's device data); broadening verified driver coverage across the printer family is in progress, with a B4 and a D11 joining the test matrix.
+- **Printing works on real hardware.** The full design → render → print path is verified end-to-end on the NIIMBOT **B1** and **B4** (203 dpi). Other models resolve their geometry from a 79-printer capability catalogue (built from the vendor's device data); broadening verified driver coverage across the printer family is ongoing, with a D11 next on the test matrix.
 - **The editor is usable.** Text, barcode, QR, serial, date/time, shape, line, image, and table elements; on-canvas drag / resize / align / distribute / group, layers, undo/redo, rulers with grid snap, a printable-area guide, click-to-type editing, and light / dark / system themes.
-- Currently in a usability/cleanup pass ahead of Release 1.
+- The binaries are not code-signed yet (see the platform notes below); signing and notarization come in a later release.
+
+## Download
+
+Grab the build for your platform from the [latest release](https://github.com/EvilGeniusLabs-ca/Thermalith/releases/latest). The app is a self-contained single-file binary — nothing to install, not even the .NET runtime. Just download and run.
+
+| Platform | Asset |
+|---|---|
+| **Windows** | `win-x64` `.zip` |
+| **Linux** (Intel/AMD) | `linux-x64` `.tar.gz` |
+| **Linux** (ARM, e.g. Raspberry Pi) | `linux-arm64` `.tar.gz` |
+| **macOS** (Apple Silicon) | `osx-arm64` `.dmg` |
+| **macOS** (Intel) | `osx-x64` `.dmg` |
+
+First launch shows an unsigned-app warning on macOS and Windows — that's expected; see [Running the unsigned macOS build](#running-the-unsigned-macos-build) and the Linux note below. The user manual PDF and the `Niimbot.Net` driver package are attached to each release too.
 
 ## What's here
 
