@@ -143,9 +143,23 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Editor.NewDocument();
         Editor.ApplyRoll(def.WidthMm, def.HeightMm, def.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
+        AutoOrientForSideFed();
         Printer.ApplyPaperType(def.PaperType);
         _rollStore.Remember(def);
         RememberCanvas();
+    }
+
+    /// <summary>Side-fed D-series printers feed the label lengthwise through a narrow head, so a
+    /// long-and-skinny design laid out un-rotated is cropped to the head width at print. When such a
+    /// printer is connected, rotate a fresh (empty, un-rotated) canvas left so the design fits the head
+    /// and feeds along its length. An existing or already-rotated design is left alone — the user's
+    /// orientation wins. The caller persists via <see cref="RememberCanvas"/>.</summary>
+    private void AutoOrientForSideFed()
+    {
+        if (Printer.ConnectedPrintDirection == Niimbot.Net.Profiles.PrintDirection.Left
+            && !Editor.HasElements
+            && Editor.OrientationDeg == 0)
+            Editor.RotateLeft();
     }
 
     // ── Loaded-roll detection (worklist §B) ───────────────────────────────────────────────────────
@@ -198,6 +212,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Editor.SetPrinterTarget(Printer.ConnectedPrintableWidthMm, Printer.ConnectedDpi);
         else
             Editor.ApplyRoll(roll.WidthMm, roll.HeightMm, roll.Shape, Printer.ConnectedDpi, Printer.ConnectedPrintableWidthMm);
+        AutoOrientForSideFed();
         Printer.ApplyPaperType(roll.PaperType);
         RememberCanvas();
         return Editor.HasPrintableMargin; // a printable margin exists (label wider than the head)

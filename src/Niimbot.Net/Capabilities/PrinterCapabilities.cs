@@ -26,6 +26,10 @@ public sealed record PrinterCapabilities
 
     public required double MaxPrintWidthMm { get; init; }
 
+    /// <summary>The feed direction the head expects: <see cref="PrintDirection.Left"/> for the small
+    /// side-fed D-series (the design must be oriented across the narrow head), else <see cref="PrintDirection.Top"/>.</summary>
+    public required PrintDirection PrintDirection { get; init; }
+
     public required int DensityMin { get; init; }
 
     public required int DensityMax { get; init; }
@@ -52,6 +56,7 @@ public sealed record PrinterCapabilities
         PixelsPerMm = profile.PixelsPerMm,
         PrintheadPixels = profile.PrintheadPixels,
         MaxPrintWidthMm = profile.MaxPrintWidthMm,
+        PrintDirection = profile.PrintDirection,
         DensityMin = profile.DensityMin,
         DensityMax = profile.DensityMax,
         DensityDefault = profile.DensityDefault,
