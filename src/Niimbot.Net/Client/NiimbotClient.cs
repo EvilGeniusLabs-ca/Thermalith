@@ -181,9 +181,21 @@ public sealed class NiimbotClient : IAsyncDisposable
         await SendAsync(PacketGenerator.SetLabelType(options.LabelType), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
         await SendStartAsync(profile, totalPages, options.PageColor, ct).ConfigureAwait(false);
 
-        // Page.
+        // Page. The D11/D110 task opens every page with PrintClear (resets the printer's retained
+        // job state — without it the prior quantity/page count sticks, e.g. a wedged 3-copy count).
+        // The B1 task has no PrintClear and is hardware-verified, so it's skipped there.
+        if (profile.PrintTaskVersion != PrintTaskVersion.B1)
+            await SendAsync(PacketGenerator.PrintClear(), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
         await SendAsync(PacketGenerator.PageStart(), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
         await SendPageSizeAsync(profile, page, totalPages, ct).ConfigureAwait(false);
+
+        // D110 family: the copy count rides a dedicated SetPrintQuantity command — its generic
+        // PrintStart and 4-byte SetPageSize carry no count, so without this the printer reuses its
+        // last-held quantity (e.g. 3 copies for a 1-copy job). The B1 already folds copies into its
+        // 6-byte SetPageSize, so it skips this. Order (after SetPageSize, before rows) matches the
+        // niimprint reference sequence.
+        if (profile.PrintTaskVersion != PrintTaskVersion.B1)
+            await SendAsync(PacketGenerator.SetPrintQuantity(totalPages), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
 
         foreach (var row in rows)
             await SendAsync(row, options.PageTimeout, ct).ConfigureAwait(false); // one-way
