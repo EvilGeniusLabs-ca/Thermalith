@@ -6,11 +6,27 @@ the file matching the tag being released and uses it to create the GitHub releas
 
 ## How a release happens
 
-1. Copy `TEMPLATE.md` to `<tag>.md` (e.g. `v1.2.0.md`), fill it in, and commit it.
-2. Push the tag (`git tag v1.2.0 && git push origin v1.2.0`). All platforms and the
-   manual PDF build automatically.
-3. Press play on the **`release:github`** job to publish. It uploads every built
-   artifact (binaries, `Niimbot.Net` nupkg, the manual PDF) to the GitHub release.
+**Everything in step 1 goes into a single commit _before_ you tag.** The tag only points
+CI at a commit; the build reads the version and notes from that commit's files, never from
+the tag name — so anything you forget here ships mislabelled.
+
+1. Prepare the release commit (notes + version + changelog, committed together):
+   - **Notes** — copy `TEMPLATE.md` to `<tag>.md` (e.g. `v1.2.0.md`) and fill it in.
+   - **Version** — bump `<Version>` in `src/Thermalith.App/Thermalith.App.csproj` to match the
+     tag. Artifact filenames and the in-app About box read this, **not** the git tag, so a
+     mismatch ships binaries labelled with the old version.
+   - **Changelog** — in `CHANGELOG.md`, move the `[Unreleased]` items into a dated
+     `[<version>] - YYYY-MM-DD` section and refresh the compare links at the bottom.
+   - Commit all three together.
+2. Tag that commit and push: `git tag v1.2.0 && git push origin v1.2.0`. All platforms and the
+   manual PDF build automatically (tag pushes only).
+3. Press play on the **`release:github`** job to publish. It mirrors the source + tag to GitHub
+   and uploads every built artifact (binaries, the `Niimbot.Net` nupkg, the manual PDF, and
+   `printers.json`) to the release.
+
+The `Niimbot.Net` nupkg has **no `<Version>` of its own**, so it currently packs as `1.0.0`
+regardless of the app version. If the driver package ever needs its own version, set
+`<Version>` in `src/Niimbot.Net/Niimbot.Net.csproj` before tagging.
 
 ## File format
 
