@@ -295,6 +295,8 @@ public sealed class NiimbotClient : IAsyncDisposable
         {
             // B1 wants the 6-byte form; the 4-byte form misprints on the B1.
             PrintTaskVersion.B1 => SendAsync(PacketGenerator.SetPageSize(bitmap.HeightPx, bitmap.WidthPx, copies), TimeSpan.FromSeconds(1), ct),
+            // D11/D110: the 2-byte rows-only form. Hardware (D11_H) burns image data with this; the
+            // 4-byte rows+cols form prints blank. Matches niimbluelib's OldD11PrintTask (setPageSize2b).
             _ => SendAsync(PacketGenerator.SetPageSize(bitmap.HeightPx), TimeSpan.FromSeconds(1), ct),
         };
 

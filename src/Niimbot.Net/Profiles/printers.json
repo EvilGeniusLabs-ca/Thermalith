@@ -1068,13 +1068,13 @@
       "ids": [
         528
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 30,
       "defaultHeightMm": 12,
       "stockWidthMm": 15,
       "maxHeightMm": 200,
       "printableWidthMm": 12,
-      "printheadPx": 108,
+      "printheadPx": 142,
       "widthMinMm": 12,
       "widthMaxMm": 12,
       "densityMin": 1,

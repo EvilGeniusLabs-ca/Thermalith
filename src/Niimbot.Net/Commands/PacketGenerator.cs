@@ -34,7 +34,8 @@ public static class PacketGenerator
     public static NiimbotPacket SetLabelType(LabelType value) =>
         Mapped(RequestCommandId.SetLabelType, [(byte)value]);
 
-    /// <summary>2-byte page size: rows only.</summary>
+    /// <summary>2-byte page size: rows only. The form the D11/D110 print task uses — the D11_H burns
+    /// image data with this; the 4-byte rows+cols form prints blank on that firmware.</summary>
     public static NiimbotPacket SetPageSize(int rows) =>
         Mapped(RequestCommandId.SetPageSize, U16(rows));
 
