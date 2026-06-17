@@ -4,8 +4,10 @@
     <IsPackable>true</IsPackable>
     <PackageId>Niimbot.Net</PackageId>
     <!-- Versioned independently of the app (this is a standalone NuGet — bump on the library's own
-         semver cadence, not on app releases). 1.1.0 adds the D110M-v4 print task over the implicit 1.0.0. -->
+         semver cadence, not on app releases). 1.1.0 adds the D110M-v4 print task over the implicit 1.0.0.
+         Keep <Version> + <PackageReleaseNotes> + Documentation/releases/niimbot.net/v<Version>.md in step. -->
     <Version>1.1.0</Version>
+    <PackageReleaseNotes>1.1.0 — adds the D110M-v4 print task (D11_H and the B1 Pro / B21 Pro / D110-M v4) and corrects the D11_H catalogue geometry to 300 dpi / 142 px. Additive and backward-compatible; the B1 path is unchanged. Full notes: Documentation/releases/niimbot.net/v1.1.0.md.</PackageReleaseNotes>
     <Description>C# protocol and transport library for NIIMBOT thermal label printers. Independent of any UI or label engine.</Description>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>

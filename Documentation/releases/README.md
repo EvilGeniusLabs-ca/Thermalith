@@ -17,17 +17,21 @@ the tag name — so anything you forget here ships mislabelled.
      mismatch ships binaries labelled with the old version.
    - **Changelog** — in `CHANGELOG.md`, move the `[Unreleased]` items into a dated
      `[<version>] - YYYY-MM-DD` section and refresh the compare links at the bottom.
-   - Commit all three together.
+   - **Driver (only if it changed this release)** — bump `<Version>` + `<PackageReleaseNotes>` in
+     `src/Niimbot.Net/Niimbot.Net.csproj`, and add a `v<driver-version>.md` under
+     [`niimbot.net/`](niimbot.net/). It versions independently — leave it untouched if the release
+     only touched the app.
+   - Commit all of the above together.
 2. Tag that commit and push: `git tag v1.2.0 && git push origin v1.2.0`. All platforms and the
    manual PDF build automatically (tag pushes only).
 3. Press play on the **`release:github`** job to publish. It mirrors the source + tag to GitHub
    and uploads every built artifact (binaries, the `Niimbot.Net` nupkg, the manual PDF, and
    `printers.json`) to the release.
 
-The `Niimbot.Net` nupkg is **versioned independently** of the app — its `<Version>` lives in
-`src/Niimbot.Net/Niimbot.Net.csproj` and follows the library's own semver (bump it when the driver's
-protocol/behaviour changes, not on every app release). If the driver changed in a given release, bump
-that `<Version>` in the same step-1 commit.
+The `Niimbot.Net` nupkg is **versioned independently** of the app and keeps its own release notes — see
+[`niimbot.net/`](niimbot.net/). Its `<Version>` and `<PackageReleaseNotes>` live in
+`src/Niimbot.Net/Niimbot.Net.csproj`, and it builds/packs in this same pipeline (no separate build).
+Bump it only when the driver's protocol/behaviour changes, not on every app release.
 
 ## File format
 
