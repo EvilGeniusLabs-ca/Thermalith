@@ -3,6 +3,9 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>Niimbot.Net</PackageId>
+    <!-- Versioned independently of the app (this is a standalone NuGet — bump on the library's own
+         semver cadence, not on app releases). 1.1.0 adds the D110M-v4 print task over the implicit 1.0.0. -->
+    <Version>1.1.0</Version>
     <Description>C# protocol and transport library for NIIMBOT thermal label printers. Independent of any UI or label engine.</Description>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>

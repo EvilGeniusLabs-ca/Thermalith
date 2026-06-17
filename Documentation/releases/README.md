@@ -24,9 +24,10 @@ the tag name — so anything you forget here ships mislabelled.
    and uploads every built artifact (binaries, the `Niimbot.Net` nupkg, the manual PDF, and
    `printers.json`) to the release.
 
-The `Niimbot.Net` nupkg has **no `<Version>` of its own**, so it currently packs as `1.0.0`
-regardless of the app version. If the driver package ever needs its own version, set
-`<Version>` in `src/Niimbot.Net/Niimbot.Net.csproj` before tagging.
+The `Niimbot.Net` nupkg is **versioned independently** of the app — its `<Version>` lives in
+`src/Niimbot.Net/Niimbot.Net.csproj` and follows the library's own semver (bump it when the driver's
+protocol/behaviour changes, not on every app release). If the driver changed in a given release, bump
+that `<Version>` in the same step-1 commit.
 
 ## File format
 
