@@ -14,8 +14,9 @@ namespace Niimbot.Net.Profiles;
 /// </summary>
 public static class KnownPrinterFacts
 {
-    /// <summary>Model ids confirmed on real hardware. B1 (4096) and B4 (6656) as of 2026-06-14.</summary>
-    public static readonly IReadOnlySet<int> VerifiedModelIds = new HashSet<int> { 4096, 6656 };
+    /// <summary>Model ids confirmed on real hardware. B1 (4096) and B4 (6656) as of 2026-06-14; D11_H
+    /// (528) as of 2026-06-17 — the first verified D110-family / side-fed / 300-dpi unit.</summary>
+    public static readonly IReadOnlySet<int> VerifiedModelIds = new HashSet<int> { 4096, 6656, 528 };
 
     /// <summary>
     /// Model ids that use the <see cref="PrintTaskVersion.D110"/> print sequence (2-byte PrintStart /
@@ -27,15 +28,28 @@ public static class KnownPrinterFacts
     {
         // B21S (B21-series body, D110 print task)
         777,
-        // D11 series
-        512, 513, 514, 528, 531,
+        // D11 series (528 = D11_H uses the D110M-v4 task — see D110MV4PrintTaskModelIds)
+        512, 513, 514, 531,
         // D110 series
         2304, 2305, 2320,
         // D101 series
         2560, 2561,
     };
 
+    /// <summary>
+    /// Model ids that use the <see cref="PrintTaskVersion.D110MV4"/> print sequence (9-byte PrintStart,
+    /// 13-byte SetPageSize with the copy count embedded, no PrintClear/PageStart/SetPrintQuantity). The
+    /// D11_H is hardware-confirmed (id 528); D110_M v4, B1_PRO, B21_PRO share it per niimbluelib but are
+    /// unverified here. Checked before <see cref="D110PrintTaskModelIds"/>.
+    /// </summary>
+    public static readonly IReadOnlySet<int> D110MV4PrintTaskModelIds = new HashSet<int>
+    {
+        528, // D11_H — hardware-confirmed
+    };
+
     public static bool IsVerified(IEnumerable<int> modelIds) => modelIds.Any(VerifiedModelIds.Contains);
 
     public static bool UsesD110PrintTask(IEnumerable<int> modelIds) => modelIds.Any(D110PrintTaskModelIds.Contains);
+
+    public static bool UsesD110MV4PrintTask(IEnumerable<int> modelIds) => modelIds.Any(D110MV4PrintTaskModelIds.Contains);
 }

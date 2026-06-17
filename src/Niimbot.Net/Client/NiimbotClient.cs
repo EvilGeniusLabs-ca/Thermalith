@@ -181,21 +181,29 @@ public sealed class NiimbotClient : IAsyncDisposable
         await SendAsync(PacketGenerator.SetLabelType(options.LabelType), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
         await SendStartAsync(profile, totalPages, options.PageColor, ct).ConfigureAwait(false);
 
-        // Page. The D11/D110 task opens every page with PrintClear (resets the printer's retained
-        // job state — without it the prior quantity/page count sticks, e.g. a wedged 3-copy count).
-        // The B1 task has no PrintClear and is hardware-verified, so it's skipped there.
-        if (profile.PrintTaskVersion != PrintTaskVersion.B1)
-            await SendAsync(PacketGenerator.PrintClear(), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
-        await SendAsync(PacketGenerator.PageStart(), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
-        await SendPageSizeAsync(profile, page, totalPages, ct).ConfigureAwait(false);
+        // Page sequence — the three task families diverge here.
+        if (profile.PrintTaskVersion == PrintTaskVersion.D110MV4)
+        {
+            // D110M-v4 (D11_H, hardware-confirmed): no PrintClear / PageStart. A one-way PrintStatus,
+            // then the 13-byte SetPageSize that carries the copy count itself — there is no separate
+            // SetPrintQuantity in this task. Matches niimbluelib D110MV4PrintTask.
+            await TrySendAsync(PacketGenerator.PrintStatus(), TimeSpan.FromMilliseconds(500), ct).ConfigureAwait(false);
+            await SendAsync(PacketGenerator.SetPageSize13b(page.HeightPx, page.WidthPx, totalPages), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
+        }
+        else
+        {
+            // B1 + OldD11/D110: the D110 family opens the page with PrintClear (resets retained job
+            // state); the B1 (hardware-verified) skips it. Then PageStart and the task's SetPageSize.
+            if (profile.PrintTaskVersion != PrintTaskVersion.B1)
+                await SendAsync(PacketGenerator.PrintClear(), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
+            await SendAsync(PacketGenerator.PageStart(), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
+            await SendPageSizeAsync(profile, page, totalPages, ct).ConfigureAwait(false);
 
-        // D110 family: the copy count rides a dedicated SetPrintQuantity command — its generic
-        // PrintStart and 4-byte SetPageSize carry no count, so without this the printer reuses its
-        // last-held quantity (e.g. 3 copies for a 1-copy job). The B1 already folds copies into its
-        // 6-byte SetPageSize, so it skips this. Order (after SetPageSize, before rows) matches the
-        // niimprint reference sequence.
-        if (profile.PrintTaskVersion != PrintTaskVersion.B1)
-            await SendAsync(PacketGenerator.SetPrintQuantity(totalPages), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
+            // OldD11/D110: the copy count rides a dedicated SetPrintQuantity (its SetPageSize carries
+            // none). The B1 folds copies into its 6-byte SetPageSize, so it skips this.
+            if (profile.PrintTaskVersion != PrintTaskVersion.B1)
+                await SendAsync(PacketGenerator.SetPrintQuantity(totalPages), TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
+        }
 
         foreach (var row in rows)
             await SendAsync(row, options.PageTimeout, ct).ConfigureAwait(false); // one-way
@@ -203,6 +211,10 @@ public sealed class NiimbotClient : IAsyncDisposable
         await SendAsync(PacketGenerator.PageEnd(), options.PageTimeout, ct).ConfigureAwait(false);
 
         await WaitForPrintFinishedAsync(totalPages, options.StatusPollInterval, progress, ct).ConfigureAwait(false);
+
+        // D110M-v4 sends a one-way heartbeat just before ending the job.
+        if (profile.PrintTaskVersion == PrintTaskVersion.D110MV4)
+            await TrySendAsync(PacketGenerator.Heartbeat(HeartbeatType.Advanced1), TimeSpan.FromMilliseconds(500), ct).ConfigureAwait(false);
 
         await SendAsync(PacketGenerator.PrintEnd(), TimeSpan.FromSeconds(2), ct).ConfigureAwait(false);
     }
@@ -287,6 +299,8 @@ public sealed class NiimbotClient : IAsyncDisposable
         profile.PrintTaskVersion switch
         {
             PrintTaskVersion.B1 => SendAsync(PacketGenerator.PrintStart(totalPages, pageColor), TimeSpan.FromSeconds(2), ct),
+            // D110M-v4 carries the page count in the 9-byte PrintStart.
+            PrintTaskVersion.D110MV4 => SendAsync(PacketGenerator.PrintStart9b(totalPages, pageColor), TimeSpan.FromSeconds(2), ct),
             _ => SendAsync(PacketGenerator.PrintStart(), TimeSpan.FromSeconds(2), ct),
         };
 

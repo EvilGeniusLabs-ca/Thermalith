@@ -335,16 +335,6 @@ public sealed partial class PrinterViewModel : ObservableObject
                        $"(head {_caps?.PrintheadPixels}px), orient {_editor.OrientationDeg}°, " +
                        $"canvas {_editor.CanvasWidthMm:0.#}×{_editor.CanvasHeightMm:0.#}mm @ {_caps?.Dpi}dpi";
             Console.WriteLine("[Thermalith print] " + diag);
-            // TEMP D11 geometry diagnostic — route to a fixed file so it's captured regardless of how
-            // the app was launched. Remove once the side-fed scale bug is closed.
-            try
-            {
-                var line = $"[{DateTimeOffset.Now:HH:mm:ss}] copies={Math.Max(1, Copies)} labelType={SelectedLabelType} " + diag;
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(System.IO.Path.GetTempPath(), "thermalith-print-diag.log"),
-                    line + System.Environment.NewLine);
-            }
-            catch { /* diagnostic only */ }
 
             var options = new PrintOptions
             {

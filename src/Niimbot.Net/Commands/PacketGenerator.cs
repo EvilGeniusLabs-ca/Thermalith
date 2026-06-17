@@ -49,6 +49,15 @@ public static class PacketGenerator
     public static NiimbotPacket SetPrintQuantity(int quantity) =>
         Mapped(RequestCommandId.PrintQuantity, U16(quantity));
 
+    /// <summary>13-byte page size: rows, cols, copies, cutHeight (each u16), cutType, reserved, sendAll
+    /// (each 1 byte), partHeight (u16). The D110M-v4 form (D11_H) — the copy count rides here rather than
+    /// in a separate SetPrintQuantity. Extra fields default to 0. Matches niimbluelib setPageSize13b.</summary>
+    public static NiimbotPacket SetPageSize13b(int rows, int cols, int copies,
+        int cutHeight = 0, int cutType = 0, int sendAll = 0, int partHeight = 0) =>
+        Mapped(RequestCommandId.SetPageSize,
+            [.. U16(rows), .. U16(cols), .. U16(copies), .. U16(cutHeight),
+             (byte)cutType, 0x00, (byte)sendAll, .. U16(partHeight)]);
+
     public static NiimbotPacket PrintStatus() => Mapped(RequestCommandId.PrintStatus);
 
     /// <summary>1-byte print start (generic).</summary>
@@ -60,6 +69,12 @@ public static class PacketGenerator
     /// </summary>
     public static NiimbotPacket PrintStart(int totalPages, int pageColor = 0) =>
         Mapped(RequestCommandId.PrintStart, [.. U16(totalPages), 0x00, 0x00, 0x00, 0x00, (byte)pageColor]);
+
+    /// <summary>9-byte print start: total pages (u16) + 4 reserved + page color + speed + flag. The
+    /// D110M-v4 family's start (D11_H, B1_PRO, …) — carries the page count the firmware prints.</summary>
+    public static NiimbotPacket PrintStart9b(int totalPages, int pageColor = 0, int speed = 0, bool flag = false) =>
+        Mapped(RequestCommandId.PrintStart,
+            [.. U16(totalPages), 0x00, 0x00, 0x00, 0x00, (byte)pageColor, (byte)speed, (byte)(flag ? 1 : 0)]);
 
     public static NiimbotPacket PrintEnd() => Mapped(RequestCommandId.PrintEnd);
 

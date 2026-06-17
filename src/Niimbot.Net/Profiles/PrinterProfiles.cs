@@ -72,7 +72,9 @@ public static class PrinterProfiles
         Dpi = e.Dpi,
         PrintheadPixels = e.PrintheadPx,
         PrintDirection = e.PrintDirectionDeg is 90 or 270 ? PrintDirection.Left : PrintDirection.Top,
-        PrintTaskVersion = KnownPrinterFacts.UsesD110PrintTask(e.Ids) ? PrintTaskVersion.D110 : PrintTaskVersion.B1,
+        PrintTaskVersion = KnownPrinterFacts.UsesD110MV4PrintTask(e.Ids) ? PrintTaskVersion.D110MV4
+            : KnownPrinterFacts.UsesD110PrintTask(e.Ids) ? PrintTaskVersion.D110
+            : PrintTaskVersion.B1,
         DensityMin = e.DensityMin,
         DensityMax = e.DensityMax,
         DensityDefault = e.DensityDefault,

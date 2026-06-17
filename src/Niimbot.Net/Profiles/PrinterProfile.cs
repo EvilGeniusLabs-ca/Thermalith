@@ -23,6 +23,11 @@ public enum PrintTaskVersion
 
     /// <summary>D110 family: 2-byte PrintStart + 4-byte SetPageSize.</summary>
     D110,
+
+    /// <summary>D110M-v4 family (D11_H, B1_PRO, B21_PRO, D110_M v4): 9-byte PrintStart, a one-way
+    /// PrintStatus, then a 13-byte SetPageSize that carries the copy count (no PrintClear / PageStart /
+    /// SetPrintQuantity). Matches niimbluelib's D110MV4PrintTask.</summary>
+    D110MV4,
 }
 
 /// <summary>
