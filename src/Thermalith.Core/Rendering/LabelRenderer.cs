@@ -189,7 +189,11 @@ public sealed class LabelRenderer
 
         var m = paint.FontMetrics;
         var lineH = (m.Descent - m.Ascent) * (float)(props.LineSpacing ?? 1.0);
-        var totalH = lineH * Math.Max(1, lines.Length);
+        // Height ignores trailing blank lines: auto-size hugs the glyphs, so a stray trailing newline
+        // (e.g. Enter pressed to finish typing in the in-place editor) must not double the box.
+        var lineCount = lines.Length;
+        while (lineCount > 1 && lines[lineCount - 1].Length == 0) lineCount--;
+        var totalH = lineH * lineCount;
 
         return (Math.Max(1.0, maxW / pxPerMm), Math.Max(1.0, totalH / pxPerMm));
     }
