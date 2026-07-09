@@ -123,6 +123,11 @@
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About Thermalith" Command="{Binding AboutCommand}" />
+                <Separator />
+                <MenuItem Header="_Connection Logging" ToggleType="CheckBox"
+                          IsChecked="{Binding ConnectionLogging, Mode=TwoWay}"
+                          ToolTip.Tip="Record printer connection details to a log file for troubleshooting" />
+                <MenuItem Header="Open _Log Folder…" Command="{Binding OpenLogFolderCommand}" />
             </MenuItem>
         </Menu>
 

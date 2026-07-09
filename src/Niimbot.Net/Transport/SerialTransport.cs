@@ -1,6 +1,7 @@
 using System.IO.Ports;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using Niimbot.Net.Diagnostics;
 
 namespace Niimbot.Net.Transport;
 
@@ -41,6 +42,8 @@ public sealed class SerialTransport : INiimbotTransport
             return ValueTask.CompletedTask;
 
         StateChanged?.Invoke(this, TransportState.Connecting);
+        NiimbotTrace.Log("serial", $"open {_portName} @ {_baudRate} 8N1, DTR/RTS high, " +
+                                   $"read {_readTimeoutMs}ms / write {_writeTimeoutMs}ms");
         try
         {
             var port = new SerialPort(_portName, _baudRate, Parity.None, 8, StopBits.One)
@@ -55,12 +58,14 @@ public sealed class SerialTransport : INiimbotTransport
             port.Open();
             _port = port;
         }
-        catch
+        catch (Exception ex)
         {
+            NiimbotTrace.Log("serial", $"open FAILED {_portName}: {ex.GetType().Name}: {ex.Message}");
             StateChanged?.Invoke(this, TransportState.Faulted);
             throw;
         }
 
+        NiimbotTrace.Log("serial", $"open OK {_portName}");
         StateChanged?.Invoke(this, TransportState.Connected);
         return ValueTask.CompletedTask;
     }
@@ -88,6 +93,8 @@ public sealed class SerialTransport : INiimbotTransport
     public async ValueTask WriteAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         var port = Port;
+        if (NiimbotTrace.IsEnabled)
+            NiimbotTrace.Bytes("serial", "→ write", data.Span);
         // Synchronous Write on a worker. SerialPort.BaseStream's async methods are unreliable on
         // Windows; the synchronous API honors WriteTimeout and is far more predictable.
         // Catch on the worker thread (a WriteTimeout fires when e.g. the printer is powered off) so
@@ -112,6 +119,9 @@ public sealed class SerialTransport : INiimbotTransport
             }
         }, ct).ConfigureAwait(false);
 
+        if (failure is not null)
+            NiimbotTrace.Log("serial", $"write FAILED {_portName}: " +
+                $"{failure.SourceException.GetType().Name}: {failure.SourceException.Message}");
         failure?.Throw();
     }
 
@@ -130,7 +140,7 @@ public sealed class SerialTransport : INiimbotTransport
             // returns immediately and never times out. We also honor cancellation every ~15 ms, which
             // is more responsive than the old 500 ms ReadTimeout granularity. (BaseStream.ReadAsync is
             // not an option — on Windows it ignores both the token and the timeout.)
-            return await Task.Run(() =>
+            var read = await Task.Run(() =>
             {
                 try
                 {
@@ -168,6 +178,10 @@ public sealed class SerialTransport : INiimbotTransport
                     return 0;
                 }
             }, ct).ConfigureAwait(false);
+
+            if (read > 0 && NiimbotTrace.IsEnabled)
+                NiimbotTrace.Bytes("serial", "← read", buffer.Span[..read]);
+            return read;
         }
         catch (OperationCanceledException)
         {

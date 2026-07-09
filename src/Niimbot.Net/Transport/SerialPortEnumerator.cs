@@ -1,4 +1,5 @@
 using System.IO.Ports;
+using Niimbot.Net.Diagnostics;
 
 namespace Niimbot.Net.Transport;
 
@@ -16,10 +17,13 @@ public static class SerialPortEnumerator
     /// non-printer pseudo-devices are filtered out (see <see cref="FilterMacPorts"/>).</summary>
     public static IReadOnlyList<SerialPortInfo> Enumerate()
     {
-        var names = SerialPort.GetPortNames();
-        if (OperatingSystem.IsMacOS())
-            names = FilterMacPorts(names);
+        var raw = SerialPort.GetPortNames();
+        var names = OperatingSystem.IsMacOS() ? FilterMacPorts(raw) : raw;
         Array.Sort(names, StringComparer.OrdinalIgnoreCase);
+        if (NiimbotTrace.IsEnabled)
+            NiimbotTrace.Log("ports",
+                $"enumerated {raw.Length}, kept {names.Length} → [{string.Join(", ", names)}]" +
+                (raw.Length == names.Length ? "" : $"  (raw: [{string.Join(", ", raw)}])"));
         return Array.ConvertAll(names, n => new SerialPortInfo(n));
     }
 

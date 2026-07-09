@@ -19,6 +19,12 @@ internal static class Program
             return;
         }
 
+        // Connection-logging can also be armed before the window shows, for CI / power users:
+        //   THERMALITH_DEBUG=1  (env)  or  --debug  (flag). The Help menu toggles it at runtime too.
+        if (Array.IndexOf(args, "--debug") >= 0 ||
+            Environment.GetEnvironmentVariable("THERMALITH_DEBUG") is "1" or "true")
+            DiagnosticLog.Enable();
+
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 

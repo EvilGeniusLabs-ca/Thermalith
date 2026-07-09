@@ -1,6 +1,7 @@
 using System.Buffers;
 using Niimbot.Net.Capabilities;
 using Niimbot.Net.Commands;
+using Niimbot.Net.Diagnostics;
 using Niimbot.Net.Encoding;
 using Niimbot.Net.Framing;
 using Niimbot.Net.Profiles;
@@ -67,6 +68,7 @@ public sealed class NiimbotClient : IAsyncDisposable
     /// </summary>
     public async Task<PrinterCapabilities> ConnectAsync(CancellationToken ct = default)
     {
+        NiimbotTrace.Log("client", "ConnectAsync — opening transport + handshake");
         await _transport.ConnectAsync(ct).ConfigureAwait(false);
 
         _pumpCts = new CancellationTokenSource();
@@ -77,9 +79,12 @@ public sealed class NiimbotClient : IAsyncDisposable
 
         // Protocol version drives heartbeat variant selection.
         _protocolVersion = await TryReadProtocolVersionAsync(ct).ConfigureAwait(false);
+        NiimbotTrace.Log("client", $"protocol version {_protocolVersion}");
 
         var modelId = await ReadModelIdAsync(ct).ConfigureAwait(false);
         var profile = PrinterProfiles.FromModelId(modelId);
+        NiimbotTrace.Log("client", $"model id {modelId} → {profile.ModelName} " +
+            $"(engine {profile.PrintTaskVersion}, feed {profile.PrintDirection})");
         Profile = profile;
 
         var caps = PrinterCapabilities.FromProfile(profile, modelId);
@@ -522,6 +527,7 @@ public sealed class NiimbotClient : IAsyncDisposable
         {
             if (packet.OneWay)
             {
+                NiimbotTrace.Log("cmd", $"→ {(RequestCommandId)packet.Command} (one-way)");
                 await _transport.WriteAsync(packet.ToBytes(), ct).ConfigureAwait(false);
                 return null;
             }
@@ -530,16 +536,20 @@ public sealed class NiimbotClient : IAsyncDisposable
             lock (_pendingLock)
                 _pending = pending;
 
+            NiimbotTrace.Log("cmd", $"→ {(RequestCommandId)packet.Command} (await ≤ {timeout.TotalMilliseconds:0} ms)");
             await _transport.WriteAsync(packet.ToBytes(), ct).ConfigureAwait(false);
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             timeoutCts.CancelAfter(timeout);
             try
             {
-                return await pending.Tcs.Task.WaitAsync(timeoutCts.Token).ConfigureAwait(false);
+                var reply = await pending.Tcs.Task.WaitAsync(timeoutCts.Token).ConfigureAwait(false);
+                NiimbotTrace.Log("cmd", $"← reply to {(RequestCommandId)packet.Command} (cmd 0x{reply.Command:X2})");
+                return reply;
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
+                NiimbotTrace.Log("cmd", $"✗ timeout {(RequestCommandId)packet.Command} after {timeout.TotalMilliseconds:0} ms");
                 throw new NiimbotTimeoutException(
                     $"No response to {(RequestCommandId)packet.Command} within {timeout.TotalMilliseconds:0} ms.");
             }

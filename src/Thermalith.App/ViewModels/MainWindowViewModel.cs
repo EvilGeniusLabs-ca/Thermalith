@@ -394,6 +394,23 @@ public partial class MainWindowViewModel : ViewModelBase
         if (Dialogs is not null) await Dialogs.ShowAboutAsync();
     }
 
+    // ── Diagnostics ───────────────────────────────────────────────────────────────────────────────
+
+    /// <summary>Help ▸ Connection Logging toggle. Records the printer connection conversation to a
+    /// log file (app-data <c>logs/</c>) so an undetected-printer report can be diagnosed from the log.</summary>
+    [ObservableProperty] private bool _connectionLogging = DiagnosticLog.IsEnabled;
+
+    partial void OnConnectionLoggingChanged(bool value)
+    {
+        if (value) DiagnosticLog.Enable(); else DiagnosticLog.Disable();
+        StatusMessage = value
+            ? $"Connection logging on → {DiagnosticLog.CurrentLogPath}"
+            : "Connection logging off.";
+    }
+
+    [RelayCommand]
+    private void OpenLogFolder() => DiagnosticLog.OpenLogFolder();
+
     // ── MRU / settings ──────────────────────────────────────────────────────────────────────────
 
     private void AddRecent(string path)
