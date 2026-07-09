@@ -6,6 +6,17 @@ All notable changes to Thermalith are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-07-09
+
+### Added
+- Connection logging for printer troubleshooting. **Help ▸ Connection Logging** records the connection
+  conversation — ports found, whether each opened, bytes sent, and what came back — to a timestamped log
+  file under the app-data `logs/` folder; **Help ▸ Open Log Folder…** reveals it. Can also be armed before
+  launch with `--debug` or `THERMALITH_DEBUG=1`. The log holds only local device information, nothing from
+  label designs.
+- `Niimbot.Net` 1.2.0: `NiimbotTrace`, an opt-in, dependency-free diagnostic sink underlying the above, so
+  other integrations can capture the same trace.
+
 ## [1.0.1] - 2026-06-17
 
 ### Added
@@ -54,7 +65,8 @@ Initial public beta: the cross-platform desktop label designer (Windows, macOS, 
 WYSIWYG editor, text / barcode / QR / shape / line / image / table / serial / date-time elements, the
 `.nlbl` file format, and the verified B1 print path over USB and Bluetooth.
 
-[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v0.5.0-beta...v1.0.0
 [0.5.0-beta]: https://github.com/EvilGeniusLabs-ca/Thermalith/releases/tag/v0.5.0-beta
