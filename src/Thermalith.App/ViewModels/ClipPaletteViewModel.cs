@@ -83,7 +83,7 @@ public sealed partial class ClipFontTabViewModel : ViewModelBase
     private readonly ClipFontCatalog? _catalog;
     private readonly string? _fontKey;
     private IReadOnlyList<ClipGlyphItemViewModel>? _glyphs;
-    private int _columns;
+    private int _columns = 1;
 
     public string Header { get; }
     public bool IsSearch { get; }
@@ -115,7 +115,7 @@ public sealed partial class ClipFontTabViewModel : ViewModelBase
     }
 
     public IReadOnlyList<ClipGlyphRow> Rows =>
-        BuildGlyphs().Chunk(_columns).Select(c => new ClipGlyphRow(c)).ToList();
+        BuildGlyphs().Chunk(Math.Max(1, _columns)).Select(c => new ClipGlyphRow(c)).ToList();
 
     private IReadOnlyList<ClipGlyphItemViewModel> BuildGlyphs() =>
         _glyphs ??= _fontKey is null || _index is null || _catalog is null
