@@ -12,14 +12,29 @@ namespace Thermalith.App.ViewModels;
 /// The clip-art palette (GitHub #2). Loads the embedded glyph index + font catalog and exposes a tab per
 /// bundled font (plus a Search tab). Gauge build: browse only — search and canvas-insert are not wired yet.
 /// </summary>
-public sealed class ClipPaletteViewModel : ViewModelBase, IDisposable
+public sealed partial class ClipPaletteViewModel : ViewModelBase, IDisposable
 {
+    /// <summary>Smallest usable palette size (drag handle can't shrink below this).</summary>
+    public const double MinWidth = 420;
+    public const double MinHeight = 300;
+
     private readonly ClipFontCatalog _catalog;
+    private readonly Action<double, double>? _onSizeChanged;
 
     public IReadOnlyList<ClipFontTabViewModel> Tabs { get; }
 
-    public ClipPaletteViewModel()
+    // The flyout size — seeded from settings, updated live by the drag handle, persisted on drag end.
+    [ObservableProperty] private double _width;
+    [ObservableProperty] private double _height;
+
+    public ClipPaletteViewModel() : this(920, 520, null) { }
+
+    public ClipPaletteViewModel(double width, double height, Action<double, double>? onSizeChanged)
     {
+        _width = Math.Max(MinWidth, width);
+        _height = Math.Max(MinHeight, height);
+        _onSizeChanged = onSizeChanged;
+
         var index = ClipIndex.LoadEmbedded();
         _catalog = ClipFontCatalog.CreateEmbedded();
 
@@ -27,6 +42,9 @@ public sealed class ClipPaletteViewModel : ViewModelBase, IDisposable
         tabs.AddRange(index.Fonts.Select(f => new ClipFontTabViewModel(f, index, _catalog)));
         Tabs = tabs;
     }
+
+    /// <summary>Persist the current size (called when the user finishes dragging the resize handle).</summary>
+    public void SaveSize() => _onSizeChanged?.Invoke(Width, Height);
 
     public void Dispose() => _catalog.Dispose();
 }

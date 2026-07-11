@@ -56,9 +56,17 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>The clip-art palette (GitHub #2), created lazily on first open so it never costs startup
-    /// (loading the embedded glyph index + font catalog happens the first time the flyout binds).</summary>
-    public ClipPaletteViewModel ClipPalette => _clipPalette ??= new ClipPaletteViewModel();
+    /// (loading the embedded glyph index + font catalog happens the first time the flyout binds). Its
+    /// user-resized size is seeded from and persisted to settings, like the panel widths.</summary>
+    public ClipPaletteViewModel ClipPalette => _clipPalette ??=
+        new ClipPaletteViewModel(_settings.ClipPaletteWidth, _settings.ClipPaletteHeight, PersistClipPaletteSize);
     private ClipPaletteViewModel? _clipPalette;
+
+    private void PersistClipPaletteSize(double width, double height)
+    {
+        _settings = _settings with { ClipPaletteWidth = width, ClipPaletteHeight = height };
+        _settingsService.Save(_settings);
+    }
 
     /// <summary>Persist the connected printer so the next startup can scan + reconnect to it.</summary>
     private void OnPrinterConnected(object? sender, EventArgs e)

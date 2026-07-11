@@ -14,6 +14,10 @@ public sealed record AppSettings
     public double LeftPanelWidth { get; init; } = 200;
     public double RightPanelWidth { get; init; } = 300;
 
+    // Clip-art palette flyout size — user-resizable via its drag handle, remembered across sessions (#2).
+    public double ClipPaletteWidth { get; init; } = 920;
+    public double ClipPaletteHeight { get; init; } = 520;
+
     /// <summary>UI theme: "Default" (follow OS), "Light", or "Dark". Applied at startup + on change.</summary>
     public string Theme { get; init; } = "Default";
 

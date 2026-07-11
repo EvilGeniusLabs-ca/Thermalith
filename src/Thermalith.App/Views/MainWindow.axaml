@@ -230,7 +230,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Sticker" Width="15" Height="15" Foreground="{DynamicResource IconStroke}" /><TextBlock Text="Clip Art" VerticalAlignment="Center" /></StackPanel>
                         <Button.Flyout>
                             <Flyout Placement="Right">
-                                <views:ClipPalette DataContext="{Binding ClipPalette}" Width="460" Height="520" />
+                                <views:ClipPalette DataContext="{Binding ClipPalette}" />
                             </Flyout>
                         </Button.Flyout>
                     </Button>
