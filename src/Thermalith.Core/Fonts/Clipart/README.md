@@ -55,6 +55,15 @@ here are the *source*, not shipped as-is.
 Metadata files inherit their upstream project licenses (already captured in `LICENSES/`); they are
 build-time source, not embedded in the binary.
 
+## Compiled index (`clip-index.json`)
+
+The shipped search index — the unified `{ fonts:[{key,label,count}], glyphs:[{f,c,n,t}] }` view the
+palette browses/searches (f=font key, c=codepoint, n=name, t=extra keyword tags). Built by
+`tools/build-clip-index/build_clip_index.py` (fontTools), which reads each font's `cmap` for the present
+codepoints and joins name+tags from the metadata above. ~21k glyphs, ~2.1 MB minified. This is the ONLY
+clip metadata that ships; the raw `metadata/` files are build-time source. Regenerate after changing the
+font set: `python tools/build-clip-index/build_clip_index.py`.
+
 ## Sources
 
 - Material Design Icons — https://github.com/Templarian/MaterialDesign-Webfont
