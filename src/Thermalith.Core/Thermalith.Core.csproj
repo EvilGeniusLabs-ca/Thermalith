@@ -17,6 +17,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Fonts\Roboto-Regular.ttf" />
     <EmbeddedResource Include="Catalog\label-stock.json" />
+    <!-- Clip-art palette (GitHub #2): the glyph fonts + the compiled search index ship embedded.
+         Top-level files only — the LICENSES/ and metadata/ subfolders stay build-time source. -->
+    <EmbeddedResource Include="Fonts\Clipart\*.ttf" />
+    <EmbeddedResource Include="Fonts\Clipart\clip-index.json" />
   </ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -82,6 +83,18 @@ public sealed class ClipIndex
     {
         using var fs = File.OpenRead(path);
         return Load(fs);
+    }
+
+    /// <summary>Load the compiled index embedded in <paramref name="assembly"/> (default: the assembly that
+    /// owns this type) — the runtime source. Throws if the resource is missing.</summary>
+    public static ClipIndex LoadEmbedded(Assembly? assembly = null)
+    {
+        var asm = assembly ?? typeof(ClipIndex).Assembly;
+        var name = Array.Find(asm.GetManifestResourceNames(),
+            r => r.EndsWith(".Clipart.clip-index.json", StringComparison.Ordinal))
+            ?? throw new InvalidOperationException("Embedded clip-index.json resource not found.");
+        using var s = asm.GetManifestResourceStream(name)!;
+        return Load(s);
     }
 
     public static ClipIndex Load(Stream json)
