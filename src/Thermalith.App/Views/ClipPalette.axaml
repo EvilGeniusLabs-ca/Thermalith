@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Thermalith.App.Views.ClipPalette"
              x:DataType="vm:ClipPaletteViewModel">
 
@@ -8,7 +9,7 @@
         <!-- Smaller, tighter tab headers. -->
         <Style Selector="TabItem">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Padding" Value="8,3" />
             <Setter Property="MinHeight" Value="0" />
         </Style>
         <!-- Kill the whole-row ListBox hover/selection paint; hover belongs on the glyph, not the row. -->
@@ -31,71 +32,94 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid Width="{Binding Width}" Height="{Binding Height}">
+    <Border Width="{Binding Width}" Height="{Binding Height}"
+            Background="{DynamicResource SurfacePanel}"
+            BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1" CornerRadius="4"
+            BoxShadow="0 4 16 0 #40000000">
+        <Grid RowDefinitions="Auto,*">
 
-        <TabControl ItemsSource="{Binding Tabs}" Padding="0">
-            <TabControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:ClipFontTabViewModel">
-                    <TextBlock Text="{Binding Header}" />
-                </DataTemplate>
-            </TabControl.ItemTemplate>
+            <!-- Header: title + close (upper right). -->
+            <Grid Row="0" ColumnDefinitions="*,Auto" Margin="8,4,4,4">
+                <TextBlock Text="Clip Art" FontWeight="Bold" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextStrong}" />
+                <Button Grid.Column="1" Command="{Binding CloseCommand}" Padding="4" Background="Transparent"
+                        BorderThickness="0" ToolTip.Tip="Close">
+                    <mi:MaterialIcon Kind="Close" Width="16" Height="16" />
+                </Button>
+            </Grid>
 
-            <TabControl.ContentTemplate>
-                <DataTemplate x:DataType="vm:ClipFontTabViewModel">
-                    <DockPanel Margin="4">
-                        <!-- Inert in the gauge build: shows the intended per-tab search layout. -->
-                        <TextBox DockPanel.Dock="Top" Text="{Binding Filter}"
-                                 Watermark="Search (coming soon)…" Margin="0,0,0,4" />
+            <Grid Row="1">
+                <TabControl ItemsSource="{Binding Tabs}" Padding="0" Margin="4,0,4,4">
+                    <TabControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </TabControl.ItemsPanel>
 
-                        <Grid>
-                            <ListBox ItemsSource="{Binding Rows}" IsVisible="{Binding !IsSearch}"
-                                     Background="Transparent" BorderThickness="0" Padding="0"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:ClipGlyphRow">
-                                        <ItemsControl ItemsSource="{Binding Cells}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Orientation="Horizontal" Spacing="2" />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="vm:ClipGlyphItemViewModel">
-                                                    <Border Classes="glyph" Width="50" Height="50" Margin="1"
-                                                            CornerRadius="3" Background="White"
-                                                            ToolTip.Tip="{Binding Name}">
-                                                        <Image Source="{Binding Preview}" Width="40" Height="40"
-                                                               Stretch="Uniform" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                    <TabControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ClipFontTabViewModel">
+                            <TextBlock Text="{Binding Header}" />
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
 
-                            <TextBlock IsVisible="{Binding IsSearch}"
-                                       Text="Cross-font search — coming next"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource TextSecondary}" />
-                        </Grid>
-                    </DockPanel>
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate x:DataType="vm:ClipFontTabViewModel">
+                            <DockPanel Margin="0,4,0,0">
+                                <!-- Inert in the gauge build: shows the intended per-tab search layout. -->
+                                <TextBox DockPanel.Dock="Top" Text="{Binding Filter}"
+                                         Watermark="Search (coming soon)…" Margin="0,0,0,4" />
 
-        <!-- Resize handle, bottom-right — drags the palette bigger/smaller; size persisted on release. -->
-        <Thumb Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,2"
-               Cursor="BottomRightCorner" Background="Transparent"
-               DragDelta="OnResizeDragDelta" DragCompleted="OnResizeDragCompleted">
-            <Thumb.Template>
-                <ControlTemplate>
-                    <Border Background="Transparent">
-                        <Path Stroke="{DynamicResource TextSecondary}" StrokeThickness="1" Stretch="None"
-                              Data="M15,5 L5,15 M15,9 L9,15 M15,13 L13,15" />
-                    </Border>
-                </ControlTemplate>
-            </Thumb.Template>
-        </Thumb>
-    </Grid>
+                                <Grid>
+                                    <ListBox ItemsSource="{Binding Rows}" IsVisible="{Binding !IsSearch}"
+                                             Background="Transparent" BorderThickness="0" Padding="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ClipGlyphRow">
+                                                <ItemsControl ItemsSource="{Binding Cells}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal" Spacing="2" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:ClipGlyphItemViewModel">
+                                                            <Border Classes="glyph" Width="50" Height="50" Margin="1"
+                                                                    CornerRadius="3" Background="White"
+                                                                    ToolTip.Tip="{Binding Name}">
+                                                                <Image Source="{Binding Preview}" Width="40" Height="40"
+                                                                       Stretch="Uniform" />
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <TextBlock IsVisible="{Binding IsSearch}"
+                                               Text="Cross-font search — coming next"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" />
+                                </Grid>
+                            </DockPanel>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+
+                <!-- Resize handle, bottom-right — drags the palette bigger/smaller; size persisted on release. -->
+                <Thumb Width="18" Height="18" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                       Cursor="BottomRightCorner" Background="Transparent"
+                       DragDelta="OnResizeDragDelta" DragCompleted="OnResizeDragCompleted">
+                    <Thumb.Template>
+                        <ControlTemplate>
+                            <Border Background="Transparent">
+                                <Path Stroke="{DynamicResource TextSecondary}" StrokeThickness="1.2" Stretch="None"
+                                      Data="M16,6 L6,16 M16,10 L10,16 M16,14 L14,16" />
+                            </Border>
+                        </ControlTemplate>
+                    </Thumb.Template>
+                </Thumb>
+            </Grid>
+        </Grid>
+    </Border>
 </UserControl>

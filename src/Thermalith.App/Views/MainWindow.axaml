@@ -226,14 +226,13 @@
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="image">
                         <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconImage}" /><TextBlock Text="Image" VerticalAlignment="Center" /></StackPanel>
                     </Button>
-                    <Button Classes="insert">
+                    <Button Classes="insert" Name="ClipArtButton" Command="{Binding ToggleClipPaletteCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Sticker" Width="15" Height="15" Foreground="{DynamicResource IconStroke}" /><TextBlock Text="Clip Art" VerticalAlignment="Center" /></StackPanel>
-                        <Button.Flyout>
-                            <Flyout Placement="Right">
-                                <views:ClipPalette DataContext="{Binding ClipPalette}" />
-                            </Flyout>
-                        </Button.Flyout>
                     </Button>
+                    <Popup IsOpen="{Binding ClipPaletteOpen}" PlacementTarget="{Binding #ClipArtButton}"
+                           Placement="Right" HorizontalOffset="6" IsLightDismissEnabled="False">
+                        <views:ClipPalette DataContext="{Binding ClipPalette}" />
+                    </Popup>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="table">
                         <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconTable}" /><TextBlock Text="Table" VerticalAlignment="Center" /></StackPanel>
                     </Button>

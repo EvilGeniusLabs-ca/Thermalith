@@ -56,11 +56,20 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>The clip-art palette (GitHub #2), created lazily on first open so it never costs startup
-    /// (loading the embedded glyph index + font catalog happens the first time the flyout binds). Its
+    /// (loading the embedded glyph index + font catalog happens the first time the popup binds). Its
     /// user-resized size is seeded from and persisted to settings, like the panel widths.</summary>
     public ClipPaletteViewModel ClipPalette => _clipPalette ??=
-        new ClipPaletteViewModel(_settings.ClipPaletteWidth, _settings.ClipPaletteHeight, PersistClipPaletteSize);
+        new ClipPaletteViewModel(_settings.ClipPaletteWidth, _settings.ClipPaletteHeight, PersistClipPaletteSize, CloseClipPalette);
     private ClipPaletteViewModel? _clipPalette;
+
+    /// <summary>Whether the clip-art palette popup is open. It's a persistent popup (no light-dismiss) —
+    /// stays open until the user closes it or (later) clicks a glyph.</summary>
+    [ObservableProperty] private bool _clipPaletteOpen;
+
+    [RelayCommand]
+    private void ToggleClipPalette() => ClipPaletteOpen = !ClipPaletteOpen;
+
+    private void CloseClipPalette() => ClipPaletteOpen = false;
 
     private void PersistClipPaletteSize(double width, double height)
     {
