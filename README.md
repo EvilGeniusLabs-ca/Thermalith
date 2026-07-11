@@ -43,7 +43,7 @@ One solution, factored so each piece is independently useful:
 
 Also in the tree: `tools/print-harness` (a console probe/print tool for hardware bring-up) and `tests/` (78 tests across Niimbot.Net, Thermalith.Core, and Thermalith.Server).
 
-Design docs live in [`Documentation/`](Documentation/): start with the [build spec](Documentation/thermalith-build-spec.md), the [`.nlbl` format spec](Documentation/label-json-spec.md), and the [roadmap](Documentation/roadmap.md).
+Design docs live in [`Documentation/`](Documentation/): start with the [build spec](Documentation/thermalith-build-spec.md) and the [`.nlbl` format spec](Documentation/label-json-spec.md). Future work and wishlist items are tracked as [GitHub issues](https://github.com/EvilGeniusLabs-ca/Thermalith/issues).
 
 ## User manual
 

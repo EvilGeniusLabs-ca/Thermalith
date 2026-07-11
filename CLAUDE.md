@@ -15,14 +15,15 @@ B1 print path is verified on real hardware. Currently mid **usability/cleanup pa
 - `tests/` — Niimbot.Net / Thermalith.Core / Thermalith.Server (**78 tests**).
 - `tools/print-harness` — console probe/print tool for hardware.
 - `EvilGeniusLabs.DonationWare` is NOT here — it was extracted to its own repo at
-  `d:\Projects\EvilGeniusLabs.DonationWare` (MIT NuGet). Thermalith only consumes it (roadmap).
+  `d:\Projects\EvilGeniusLabs.DonationWare` (MIT NuGet). Thermalith only consumes it.
 
 ## Docs (read on demand)
 
 Public docs (shipped in the repo / mirrored to GitHub):
 
-- `Documentation/roadmap.md` — future / wishlist (clip-art, i18n, data-merge, MCP, help, community DB).
-- `Documentation/reference-data.md` — endpoints / RFID / devices.json facts.
+- Future / wishlist work (clip-art, i18n, data-merge, MCP, help, community DB) is tracked as **GitHub
+  issues** at `EvilGeniusLabs-ca/Thermalith` — no in-repo roadmap doc.
+- `Documentation/reference-data.md` — endpoints / RFID / devices.json facts + Niimbot.Net model test matrix.
 - `Documentation/thermalith-build-spec.md` — canonical §-numbered design. `label-json-spec.md` — `.nlbl` schema.
 
 Internal/private docs (`Documentation/internal/` — separate private repo `richard_barnes/internal-docs`,
@@ -56,7 +57,7 @@ gitignored here, **never mirrored to public GitHub**):
 - **Edit shortcuts guarded**: `TextAwareCommand` makes Delete/Cut/Copy/Paste/Dup/Undo/Redo edit the
   focused text field instead of the document when a text box has focus.
 - **Icons**: Material Design Icons via `Material.Icons.Avalonia` (`<mi:MaterialIcon Kind="…"/>`) going
-  forward; some hand-drawn `StreamGeometry` glyphs remain (full migration tracked in roadmap).
+  forward; some hand-drawn `StreamGeometry` glyphs remain (full migration tracked in GitHub #4).
 - Inspector section headers use the `TextBlock.section` style.
 - **No `---` horizontal rules in markdown.** Commit messages: **Richard Barnes only, no `Co-Authored-By`
   trailer**. Commit AND push together.

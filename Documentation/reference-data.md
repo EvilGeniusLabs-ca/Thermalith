@@ -96,3 +96,33 @@ Findings:
 - No image/template scraping — facts only.
 - No trimming (Avalonia is reflection-heavy, per global rule + build spec). Size levers at
   packaging: `EnableCompressionInSingleFile`, per-RID, ReadyToRun choice.
+
+## Niimbot.Net broad-model support — hardware test matrix
+
+The Niimbot.Net v1 goal is "drive every catalogue printer". **B1 and B4 are hardware-verified** (B4 added
+2026-06-15); D11 is the next unit incoming. Profiles are **catalogue-derived**, so any listed model resolves
+real geometry, dpi, and density from `printers.json`; the open part is per-engine **print-path** verification
+on hardware. Broadening coverage means exercising three axes — width, print-engine, and dpi:
+
+- **Width:** 12 / 48 / 104 mm · **Engine:** D110 + Left feed (D11) vs B1 + Top feed (B1, B4) ·
+  **dpi:** 203 (B1, B4) + 229 (D11) — beyond the all-203/8-dots-per-mm baseline.
+
+**Per-unit task:** read each printer's reported **model-id + dpi** and reconcile against the catalogue —
+same "confirm against hardware" discipline as the per-SKU roll key.
+
+- **Narrow end — D11 "upgraded" (~12 mm).** Maps to catalogue **D11_H / D11_Pro (229 dpi / 108 px,
+  ids 528/531)**. NIIMBOT markets it "300 dpi" but `devices.json` says **229** — CONFIRM the real reported
+  dpi against hardware (drives render dot-pitch). Covers the narrow form factor *and* the different engine
+  (`PrintTaskVersion.D110` + `PrintDirection.Left`) *and* the non-203 dpi path. The catalogue +
+  `KnownPrinterFacts` resolve D11 to the D110 engine + Left feed, but that mapping is best-known and
+  **unverified** — the D11 is what confirms the D110 print path on real hardware.
+- **Middle — B1 (203 dpi / 384 px).** The verified reference unit, mid-width. (B1 Pro at 229 dpi exists,
+  skipped — the 300-dpi D11 already exercises the non-203 path.)
+- **Wide end — B4 (4" / 104 mm) — VERIFIED 2026-06-15.** A full 98×148 mm shipping label prints correct and
+  complete (after the tall-label run-length fix). A 4" label is just a 104 mm canvas the app already accepts;
+  the requirement is that Niimbot.Net lets a developer drive the printer. The only additive "shipping-ish"
+  capability — printing many labels in a run — is data-merge / variable-data (GitHub #7), printer-agnostic
+  and orthogonal to the B4.
+
+Note: 25×78 mm "cable" labels are B-series stock — the B1 prints them. A D-series is a *different*
+(narrow wire-marker) cable form factor, not a printer for those labels.
