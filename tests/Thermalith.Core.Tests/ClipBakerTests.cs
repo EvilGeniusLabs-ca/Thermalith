@@ -119,6 +119,28 @@ public class ClipBakerTests
     }
 
     [Fact]
+    public void BakeCentered_sizes_to_half_the_shortest_side_and_centers()
+    {
+        using var cat = OpenCatalog();
+        var cp = FirstGlyph(cat.Resolve(Mdi)!);
+
+        // 40×30 canvas → shortest side 30 → nominal glyph height 15 mm.
+        var result = ClipBaker.BakeCentered(cat, Mdi, cp, "clip1", canvasWidthMm: 40, canvasHeightMm: 30, dpi: 203);
+
+        Assert.NotNull(result);
+        var (el, assetId, png) = result!.Value;
+        Assert.Equal("clip1", assetId);
+        Assert.Equal(Mdi, el.Props.ClipFont);
+        Assert.True(el.H is > 10 and < 16, $"height {el.H} not ~15mm");
+        // Centered: left/right and top/bottom margins equal.
+        Assert.Equal(40 - el.W - el.X, el.X, precision: 6);
+        Assert.Equal(30 - el.H - el.Y, el.Y, precision: 6);
+        Assert.NotEmpty(png);
+
+        Assert.Null(ClipBaker.BakeCentered(cat, "no-font", cp, "x", 40, 30, 203));
+    }
+
+    [Fact]
     public void Rebake_keeps_the_asset_id_and_updates_dpi_and_size()
     {
         using var cat = OpenCatalog();

@@ -83,8 +83,8 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="vm:ClipGlyphItemViewModel">
                                                             <Border Classes="glyph" Width="50" Height="50" Margin="1"
-                                                                    CornerRadius="3" Background="White"
-                                                                    ToolTip.Tip="{Binding Name}">
+                                                                    CornerRadius="3" Background="White" Cursor="Hand"
+                                                                    ToolTip.Tip="{Binding Name}" Tapped="OnGlyphTapped">
                                                                 <Image Source="{Binding Preview}" Width="40" Height="40"
                                                                        Stretch="Uniform" />
                                                             </Border>

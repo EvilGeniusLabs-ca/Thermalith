@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Thermalith.App.ViewModels;
 
 namespace Thermalith.App.Views;
@@ -8,6 +9,12 @@ namespace Thermalith.App.Views;
 public partial class ClipPalette : UserControl
 {
     public ClipPalette() => InitializeComponent();
+
+    private void OnGlyphTapped(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control { DataContext: ClipGlyphItemViewModel vm })
+            vm.InsertCommand.Execute(null);
+    }
 
     private void OnResizeDragDelta(object? sender, VectorEventArgs e)
     {

@@ -564,6 +564,21 @@ public sealed partial class EditorViewModel : ObservableObject
         RaiseState();
     }
 
+    /// <summary>Insert a fully-baked clip (GitHub #2): append the image element and embed its bitmap as a
+    /// package asset in one checkpoint, then select + render it — the clip-art palette's insert path.</summary>
+    public void AddClip(ImageElement element, string assetId, byte[] png)
+    {
+        FlushGesture();
+        _assets = new Dictionary<string, byte[]>(_assets) { [assetId] = png };
+        _live = _live with { Elements = _live.Elements.Append((LabelElement)element).ToList() };
+        _history.Commit(_live);
+        RebuildLayers();
+        SelectedLayer = Layers.FirstOrDefault(l => l.Id == element.Id);
+        MarkDirty();
+        RenderNow();
+        RaiseState();
+    }
+
     // ── Z-order (Arrange, §6.2) ─────────────────────────────────────────────────────────────────
 
     public void BringToFront() => Reorder(els => { var e = Take(els, out var rest); rest.Add(e); return rest; });

@@ -6,6 +6,8 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Thermalith.Core.Fonts;
+using Thermalith.Core.Model;
+using Thermalith.Core.Rendering;
 
 namespace Thermalith.App.ViewModels;
 
@@ -38,9 +40,10 @@ public sealed partial class ClipPaletteViewModel : ViewModelBase, IDisposable
     /// <summary>Columns that fit the current width (drives the responsive grid).</summary>
     public int Columns { get; private set; }
 
-    public ClipPaletteViewModel() : this(920, 520, null, null) { }
+    public ClipPaletteViewModel() : this(920, 520, null, null, null) { }
 
-    public ClipPaletteViewModel(double width, double height, Action<double, double>? onSizeChanged, Action? onRequestClose)
+    public ClipPaletteViewModel(double width, double height, Action<double, double>? onSizeChanged,
+        Action? onRequestClose, Action<ClipGlyph>? onInsert)
     {
         _width = Math.Max(MinWidth, width);
         _height = Math.Max(MinHeight, height);
@@ -51,10 +54,16 @@ public sealed partial class ClipPaletteViewModel : ViewModelBase, IDisposable
         var index = ClipIndex.LoadEmbedded();
         _catalog = ClipFontCatalog.CreateEmbedded();
 
-        var tabs = new List<ClipFontTabViewModel> { ClipFontTabViewModel.SearchTab(index, _catalog, Columns) };
-        tabs.AddRange(index.Fonts.Select(f => new ClipFontTabViewModel(f, index, _catalog, Columns)));
+        var tabs = new List<ClipFontTabViewModel> { ClipFontTabViewModel.SearchTab(index, _catalog, Columns, onInsert) };
+        tabs.AddRange(index.Fonts.Select(f => new ClipFontTabViewModel(f, index, _catalog, Columns, onInsert)));
         Tabs = tabs;
     }
+
+    /// <summary>Bake a clicked glyph, centered at half the canvas's shortest side. Returns the element + the
+    /// <c>(assetId, png)</c> to add to the document, or <c>null</c> if it can't be rendered.</summary>
+    public (ImageElement Element, string AssetId, byte[] Png)? BakeCentered(ClipGlyph glyph, double canvasWidthMm, double canvasHeightMm, int dpi) =>
+        ClipBaker.BakeCentered(_catalog, glyph.Font, glyph.Codepoint,
+            "clip_" + Guid.NewGuid().ToString("N")[..8], canvasWidthMm, canvasHeightMm, dpi);
 
     private static int ColumnsFor(double width) => Math.Max(1, (int)((width - ChromeWidth) / CellSize));
 
@@ -84,6 +93,7 @@ public sealed partial class ClipFontTabViewModel : ViewModelBase
     private readonly ClipIndex _index;
     private readonly ClipFontCatalog _catalog;
     private readonly string? _fontKey;   // null on the Search tab (searches across all fonts)
+    private readonly Action<ClipGlyph>? _onInsert;
     private readonly Dictionary<(string Font, int Cp), ClipGlyphItemViewModel> _itemCache = new();
     private int _columns = 1;
 
@@ -94,22 +104,24 @@ public sealed partial class ClipFontTabViewModel : ViewModelBase
     // Live filter — per-font tabs scope to their font, the Search tab spans all fonts.
     [ObservableProperty] private string _filter = "";
 
-    private ClipFontTabViewModel(string header, bool isSearch, string? fontKey, ClipIndex index, ClipFontCatalog catalog, int columns)
+    private ClipFontTabViewModel(string header, bool isSearch, string? fontKey, ClipIndex index,
+        ClipFontCatalog catalog, int columns, Action<ClipGlyph>? onInsert)
     {
         Header = header;
         IsSearch = isSearch;
         _fontKey = fontKey;
         _index = index;
         _catalog = catalog;
+        _onInsert = onInsert;
         _columns = Math.Max(1, columns);
         Watermark = isSearch ? "Search all fonts…" : $"Search {header}…";
     }
 
-    public static ClipFontTabViewModel SearchTab(ClipIndex index, ClipFontCatalog catalog, int columns) =>
-        new("Search", isSearch: true, fontKey: null, index, catalog, columns);
+    public static ClipFontTabViewModel SearchTab(ClipIndex index, ClipFontCatalog catalog, int columns, Action<ClipGlyph>? onInsert) =>
+        new("Search", isSearch: true, fontKey: null, index, catalog, columns, onInsert);
 
-    public ClipFontTabViewModel(ClipFontInfo font, ClipIndex index, ClipFontCatalog catalog, int columns)
-        : this(font.Label, isSearch: false, font.Key, index, catalog, columns) { }
+    public ClipFontTabViewModel(ClipFontInfo font, ClipIndex index, ClipFontCatalog catalog, int columns, Action<ClipGlyph>? onInsert)
+        : this(font.Label, isSearch: false, font.Key, index, catalog, columns, onInsert) { }
 
     /// <summary>Shown when the Search tab has no query yet — a hint to start typing.</summary>
     public bool ShowEmptyHint => IsSearch && string.IsNullOrWhiteSpace(Filter);
@@ -142,7 +154,7 @@ public sealed partial class ClipFontTabViewModel : ViewModelBase
     {
         var key = (g.Font, g.Codepoint);
         if (!_itemCache.TryGetValue(key, out var vm))
-            _itemCache[key] = vm = new ClipGlyphItemViewModel(g, _catalog);
+            _itemCache[key] = vm = new ClipGlyphItemViewModel(g, _catalog, _onInsert);
         return vm;
     }
 }
@@ -156,22 +168,27 @@ public sealed class ClipGlyphRow
 
 /// <summary>One glyph cell. Its preview bitmap is rasterized once, on first access (only realized cells in a
 /// virtualized grid ask for it).</summary>
-public sealed class ClipGlyphItemViewModel
+public sealed partial class ClipGlyphItemViewModel
 {
     private const int PreviewPx = 48;
 
     private readonly ClipGlyph _glyph;
     private readonly ClipFontCatalog _catalog;
+    private readonly Action<ClipGlyph>? _onInsert;
     private Bitmap? _preview;
     private bool _rendered;
 
-    public ClipGlyphItemViewModel(ClipGlyph glyph, ClipFontCatalog catalog)
+    public ClipGlyphItemViewModel(ClipGlyph glyph, ClipFontCatalog catalog, Action<ClipGlyph>? onInsert)
     {
         _glyph = glyph;
         _catalog = catalog;
+        _onInsert = onInsert;
     }
 
     public string Name => _glyph.Name;
+
+    [RelayCommand]
+    private void Insert() => _onInsert?.Invoke(_glyph);
 
     public Bitmap? Preview
     {

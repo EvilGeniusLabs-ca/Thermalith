@@ -59,8 +59,19 @@ public partial class MainWindowViewModel : ViewModelBase
     /// (loading the embedded glyph index + font catalog happens the first time the popup binds). Its
     /// user-resized size is seeded from and persisted to settings, like the panel widths.</summary>
     public ClipPaletteViewModel ClipPalette => _clipPalette ??=
-        new ClipPaletteViewModel(_settings.ClipPaletteWidth, _settings.ClipPaletteHeight, PersistClipPaletteSize, CloseClipPalette);
+        new ClipPaletteViewModel(_settings.ClipPaletteWidth, _settings.ClipPaletteHeight, PersistClipPaletteSize, CloseClipPalette, InsertClip);
     private ClipPaletteViewModel? _clipPalette;
+
+    /// <summary>Place a clicked clip glyph: bake it centered at half the canvas's shortest side, add it to
+    /// the document, and close the palette (#2).</summary>
+    private void InsertClip(Thermalith.Core.Fonts.ClipGlyph glyph)
+    {
+        var (wMm, hMm, dpi, _, _, _) = Editor.CurrentCanvas();
+        var baked = ClipPalette.BakeCentered(glyph, wMm, hMm, dpi);
+        if (baked is null) return;
+        Editor.AddClip(baked.Value.Element, baked.Value.AssetId, baked.Value.Png);
+        ClipPaletteOpen = false;
+    }
 
     /// <summary>Whether the clip-art palette popup is open. It's a persistent popup (no light-dismiss) —
     /// stays open until the user closes it or (later) clicks a glyph.</summary>

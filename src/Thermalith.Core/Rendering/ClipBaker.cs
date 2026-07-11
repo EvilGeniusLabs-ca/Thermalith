@@ -1,4 +1,5 @@
 using SkiaSharp;
+using Thermalith.Core.Fonts;
 using Thermalith.Core.Model;
 
 namespace Thermalith.Core.Rendering;
@@ -60,6 +61,29 @@ public static class ClipBaker
             },
         };
         return (el, id, baked.Png);
+    }
+
+    /// <summary>
+    /// One-call insert: resolve the font from <paramref name="catalog"/>, bake the glyph at half the canvas's
+    /// shortest side, and place it centered on a <paramref name="canvasWidthMm"/>×<paramref name="canvasHeightMm"/>
+    /// canvas. Returns the element + its <c>(assetId, png)</c> to store, or <c>null</c> if the font/glyph can't
+    /// be rendered.
+    /// </summary>
+    public static (ImageElement Element, string AssetId, byte[] Png)? BakeCentered(
+        ClipFontCatalog catalog, string fontKey, int codepoint, string id,
+        double canvasWidthMm, double canvasHeightMm, int dpi)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        var typeface = catalog.Resolve(fontKey);
+        if (typeface is null) return null;
+
+        var nominalSizeMm = 0.5 * Math.Min(canvasWidthMm, canvasHeightMm);
+        var baked = Bake(typeface, codepoint, nominalSizeMm, dpi);
+        if (baked is null) return null;
+
+        var x = Math.Max(0, (canvasWidthMm - baked.WidthMm) / 2);
+        var y = Math.Max(0, (canvasHeightMm - baked.HeightMm) / 2);
+        return CreateElement(id, fontKey, codepoint, x, y, baked, dpi);
     }
 
     /// <summary>
