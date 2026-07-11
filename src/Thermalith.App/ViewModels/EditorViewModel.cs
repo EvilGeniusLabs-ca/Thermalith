@@ -117,6 +117,18 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>Render the current document to the 1bpp raster for printing (same path as the preview, §6.3).</summary>
     public Niimbot.Net.Encoding.MonochromeBitmap RenderForPrint() =>
         _renderer.Render(_live, new ResolveContext { Now = DateTimeOffset.Now, Assets = _assets, RowIndex = 0 });
+
+    /// <summary>Render one merge row (GitHub #7): tokens resolve against the row's data, the serial/row
+    /// index advances, everything else stays the current document. Same render path as <see cref="RenderForPrint()"/>.</summary>
+    public Niimbot.Net.Encoding.MonochromeBitmap RenderForPrint(Thermalith.Core.Data.MergeRow row, int rowIndex) =>
+        _renderer.Render(_live, new ResolveContext
+        {
+            Now = DateTimeOffset.Now,
+            Assets = _assets,
+            RowIndex = rowIndex,
+            Data = row.ByName,
+            DataByOrdinal = row.ByOrdinal,
+        });
     public string? FilePath { get; private set; }
     public string DocumentName => _live.Metadata.Name;
     public bool CanUndo => _history.CanUndo;

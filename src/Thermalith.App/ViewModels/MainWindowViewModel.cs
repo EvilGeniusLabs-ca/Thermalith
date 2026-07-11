@@ -31,12 +31,19 @@ public partial class MainWindowViewModel : ViewModelBase
         _settings = settingsService.Load();
         Editor = new EditorViewModel();
         Printer = new PrinterViewModel(Editor);
+        DataMerge = new DataMergeViewModel(Editor, Printer, s => StatusMessage = s);
         RecentFiles = new ObservableCollection<string>(_settings.RecentFiles);
 
         Editor.StateChanged += (_, _) => OnEditorStateChanged();
         Editor.PropertyChanged += OnEditorPropertyChanged;
         Printer.RollDetected += OnRollDetected;
         Printer.Connected += OnPrinterConnected;
+        // Keep the merge-print command's enablement current with the printer's connection/busy state.
+        Printer.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(PrinterViewModel.IsConnected) or nameof(PrinterViewModel.IsBusy))
+                DataMerge.RefreshPrintable();
+        };
 
         // Seed the startup canvas to the last applied roll's (printable) size, so designs don't start at
         // the generic 50×30 and then jump when a printer with a narrower printhead is attached.
@@ -110,6 +117,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public EditorViewModel Editor { get; }
     public PrinterViewModel Printer { get; }
+
+    /// <summary>Data merge / variable data (GitHub #7): CSV source, column token palette, batch print.</summary>
+    public DataMergeViewModel DataMerge { get; }
+
     public ObservableCollection<string> RecentFiles { get; }
 
     /// <summary>Set by the view before first use.</summary>

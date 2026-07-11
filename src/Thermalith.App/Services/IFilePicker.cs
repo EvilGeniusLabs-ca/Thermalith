@@ -9,4 +9,7 @@ public interface IFilePicker
     Task<string?> OpenLabelAsync();
     Task<string?> SaveLabelAsync(string? suggestedName);
     Task<string?> OpenImageAsync();
+
+    /// <summary>Choose a CSV data source for a merge run (GitHub #7). Returns the local path, or null on cancel.</summary>
+    Task<string?> OpenCsvAsync();
 }

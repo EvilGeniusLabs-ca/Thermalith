@@ -84,6 +84,16 @@
                 <MenuItem Header="_Image" Command="{Binding InsertCommand}" CommandParameter="image" />
                 <MenuItem Header="Ta_ble" Command="{Binding InsertCommand}" CommandParameter="table" />
             </MenuItem>
+            <MenuItem Header="_Data Merge">
+                <MenuItem Header="_Select Data File…" Command="{Binding DataMerge.SelectFileCommand}" />
+                <MenuItem Header="_Clear Data Source" Command="{Binding DataMerge.ClearCommand}" />
+                <Separator />
+                <MenuItem Header="_Columns" Name="MiMergeColumns" IsEnabled="{Binding DataMerge.HasData}"
+                          ToolTip.Tip="Click a text field, then a column here to insert its token" />
+                <MenuItem Header="{Binding DataMerge.SourceInfo}" IsEnabled="False" />
+                <Separator />
+                <MenuItem Header="_Print Merge…" Command="{Binding DataMerge.PrintMergeCommand}" />
+            </MenuItem>
             <MenuItem Header="_Arrange">
                 <MenuItem Name="MiGroup" Header="_Group" Command="{Binding GroupCommand}" />
                 <MenuItem Name="MiUngroup" Header="_Ungroup" Command="{Binding UngroupCommand}" />

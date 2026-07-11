@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -24,6 +25,16 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         InitializeComponent();
         Loaded += OnWindowLoaded;
         Closing += OnWindowClosing;
+        // Track the last focused text field so Data Merge ▸ Columns can insert a token at its caret even
+        // after opening the menu steals keyboard focus (#7).
+        AddHandler(InputElement.GotFocusEvent, OnAnyGotFocus, RoutingStrategies.Bubble);
+    }
+
+    private TextBox? _lastFocusedTextBox;
+
+    private void OnAnyGotFocus(object? sender, GotFocusEventArgs e)
+    {
+        if (e.Source is TextBox tb) _lastFocusedTextBox = tb;
     }
 
     private MainWindowViewModel? Vm => DataContext as MainWindowViewModel;
@@ -34,7 +45,13 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
 
         vm.FilePicker = this;
         vm.Dialogs = this;
+        vm.DataMerge.FilePicker = this;
+        vm.DataMerge.Dialogs = this;
         vm.CloseRequested += (_, _) => Close();
+
+        // Data Merge ▸ Columns is a live token palette — rebuild it whenever a CSV loads/clears (#7).
+        BuildMergeColumnsMenu(vm);
+        vm.DataMerge.Columns.CollectionChanged += (_, _) => BuildMergeColumnsMenu(vm);
 
         // Restore persisted window geometry.
         var s = vm.Settings;
@@ -627,5 +644,68 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             FileTypeChoices = [NlblType],
         });
         return file?.TryGetLocalPath();
+    }
+
+    private static readonly FilePickerFileType CsvType = new("CSV data") { Patterns = ["*.csv"] };
+
+    public async Task<string?> OpenCsvAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose CSV data source",
+            AllowMultiple = false,
+            FileTypeFilter = [CsvType],
+        });
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
+    // ── Data-merge dialogs + token insertion (§7, GitHub #7) ──────────────────────────────────────
+
+    public Task<bool> ConfirmAsync(string title, string message, string confirmText) =>
+        new PromptDialog(title, message, confirmText, showCancel: true).ShowDialog<bool>(this);
+
+    public Task MessageAsync(string title, string message) =>
+        new PromptDialog(title, message, "OK", showCancel: false).ShowDialog<bool>(this);
+
+    public IMergeProgress BeginMergeProgress(string title, int total)
+    {
+        var dlg = new MergeProgressDialog(title, total);
+        dlg.Show(this); // modeless: the print loop runs while it shows and updates
+        return dlg;
+    }
+
+    /// <summary>Insert a data-merge token at the caret of the active (or last-active) text field.</summary>
+    private void InsertTokenAtCaret(string token)
+    {
+        var tb = FocusManager?.GetFocusedElement() as TextBox ?? _lastFocusedTextBox;
+        if (tb is null)
+        {
+            if (Vm is { } vm) vm.StatusMessage = "Click a text field first, then pick a column.";
+            return;
+        }
+
+        var text = tb.Text ?? "";
+        var start = Math.Clamp(Math.Min(tb.SelectionStart, tb.SelectionEnd), 0, text.Length);
+        var end = Math.Clamp(Math.Max(tb.SelectionStart, tb.SelectionEnd), 0, text.Length);
+        if (end > start) text = text.Remove(start, end - start);
+        else start = Math.Clamp(tb.CaretIndex, 0, text.Length);
+        tb.Text = text.Insert(start, token);
+        tb.CaretIndex = start + token.Length;
+        tb.Focus();
+    }
+
+    private void BuildMergeColumnsMenu(MainWindowViewModel vm)
+    {
+        var items = new List<MenuItem>();
+        foreach (var col in vm.DataMerge.Columns)
+        {
+            var token = col.Token; // capture per-iteration for the click handler
+            var item = new MenuItem { Header = $"{col.Label}    {token}" };
+            item.Click += (_, _) => InsertTokenAtCaret(token);
+            items.Add(item);
+        }
+        if (items.Count == 0)
+            items.Add(new MenuItem { Header = "(load a CSV data source first)", IsEnabled = false });
+        MiMergeColumns.ItemsSource = items;
     }
 }

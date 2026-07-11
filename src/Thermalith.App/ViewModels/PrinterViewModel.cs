@@ -58,6 +58,13 @@ public sealed partial class PrinterViewModel : ObservableObject
     /// <summary>The RFID of the currently-loaded roll (set on connect/refresh), or null. Used by the shell to resolve/prompt.</summary>
     public RfidInfo? LoadedRfid { get; private set; }
 
+    /// <summary>Labels left on the loaded roll (Total − Used from RFID), or null when the roll count is
+    /// unknown (no tag / non-RFID model). Drives the data-merge roll-capacity guard (GitHub #7).</summary>
+    public int? RemainingLabels =>
+        LoadedRfid is { TagPresent: true } r && r.TotalLabels > 0
+            ? r.TotalLabels - (r.UsedLabels < 0 ? 0 : r.UsedLabels)
+            : null;
+
     /// <summary>DPI of the connected printer, or null.</summary>
     public int? ConnectedDpi => _caps?.Dpi;
 
@@ -360,6 +367,53 @@ public sealed partial class PrinterViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>
+    /// Batch-print a data-merge run (GitHub #7): render + send one label per row, honouring the current
+    /// Copies setting, reporting rows-printed via <paramref name="progress"/>. Cancellation is checked
+    /// only <i>between</i> rows via <paramref name="cancelled"/>, so the in-flight label always finishes
+    /// feeding — a roll change may swap label size/type, so we never auto-continue past it. Returns the
+    /// number of rows printed.
+    /// </summary>
+    public async Task<int> PrintMergeAsync(
+        int rowCount,
+        Func<int, Niimbot.Net.Encoding.MonochromeBitmap> renderRow,
+        IProgress<int>? progress,
+        Func<bool> cancelled)
+    {
+        if (_client is null || !IsConnected) return 0;
+        IsBusy = true;
+        var printed = 0;
+        try
+        {
+            var copies = Math.Max(1, Copies);
+            for (var i = 0; i < rowCount; i++)
+            {
+                if (cancelled()) break; // stop before the next row; the previous one already finished
+                var mono = renderRow(i);
+                if (_caps is { } caps && mono.WidthPx > caps.PrintheadPixels)
+                    mono = CropCentered(mono, caps.PrintheadPixels);
+                var options = new PrintOptions
+                {
+                    Density = Density,
+                    Copies = copies,
+                    LabelType = SelectedLabelType ?? LabelType.WithGaps,
+                    HorizontalAlign = PrintAlignment.Center,
+                    OffsetXPx = OffsetX,
+                    OffsetYPx = OffsetY,
+                };
+                await _client.PrintAsync(mono, options); // no ct: let the current label finish feeding
+                printed++;
+                progress?.Report(printed);
+            }
+        }
+        finally
+        {
+            try { await RefreshStatusCoreAsync(); } catch { /* best-effort roll refresh */ }
+            IsBusy = false;
+        }
+        return printed;
     }
 
     /// <summary>Crop a 1bpp raster to a centred target width (drop the equal margins each side).</summary>
