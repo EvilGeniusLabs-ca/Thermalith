@@ -6,6 +6,10 @@ using Thermalith.Core.Model;
 
 namespace Thermalith.Core.Rendering;
 
+/// <summary>An element's actual drawn bounding rect in mm (GitHub #5) — for text it wraps the rendered
+/// glyphs (which can overflow the stored box), and it's the axis-aligned bounds of a rotated element.</summary>
+public readonly record struct RenderedRect(double XMm, double YMm, double WMm, double HMm);
+
 /// <summary>
 /// The render pipeline (build spec §6.3): turns a <see cref="ResolvedLabel"/> into the exact 1bpp
 /// raster <c>Niimbot.Net</c> prints, SkiaSharp-only (no Avalonia) so the headless server renders
@@ -196,6 +200,111 @@ public sealed class LabelRenderer
         var totalH = lineH * lineCount;
 
         return (Math.Max(1.0, maxW / pxPerMm), Math.Max(1.0, totalH / pxPerMm));
+    }
+
+    /// <summary>
+    /// The actual drawn bounds (mm) of every element (GitHub #5) — used by the editor's selection adorner
+    /// and alignment so the box tracks what's rendered, not the stored model box. For text (incl. serial /
+    /// datetime, which resolve to text) this wraps the rendered glyphs even when they overflow the stored
+    /// box; for a rotated element it's the axis-aligned bounds of the rotated content. Other element types
+    /// return their model box. Pure; no rasterization.
+    /// </summary>
+    public IReadOnlyDictionary<string, RenderedRect> MeasureRenderedBounds(ResolvedLabel label)
+    {
+        var pxPerMm = label.Canvas.Dpi / 25.4;
+        var map = new Dictionary<string, RenderedRect>(StringComparer.Ordinal);
+        foreach (var el in label.Elements)
+        {
+            var r = el is ResolvedText t
+                ? TextBoundsMm(t, pxPerMm)
+                : new RenderedRect(el.XMm, el.YMm, el.WMm, el.HMm);
+            map[el.Id] = RotateBounds(r, el);
+        }
+        return map;
+    }
+
+    /// <summary>The rendered-glyph bounds of a text element (mm), unioned with its stored box, using the
+    /// exact same layout (font/fit/wrap/justify) as <see cref="DrawText"/> so the box matches the paint.</summary>
+    private RenderedRect TextBoundsMm(ResolvedText t, double pxPerMm)
+    {
+        var boxX = t.XMm * pxPerMm;
+        var boxY = t.YMm * pxPerMm;
+        var boxW = t.WMm * pxPerMm;
+        var boxH = t.HMm * pxPerMm;
+        if (string.IsNullOrEmpty(t.Text))
+            return new RenderedRect(t.XMm, t.YMm, t.WMm, t.HMm);
+
+        var dpi = pxPerMm * 25.4;
+        var tf = _fonts.Resolve(t.Style.FontFamily, t.Style.Bold, t.Style.Italic);
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            Typeface = tf,
+            FakeBoldText = t.Style.Bold && !TypefaceIsBold(tf),
+            TextSkewX = t.Style.Italic && !tf.IsItalic ? -0.22f : 0f,
+            SubpixelText = false,
+        };
+        var letterSpacingPx = (float)(t.Style.LetterSpacing * dpi / 72.0);
+        var sizePt = FitFontSize(paint, t, (float)boxW, (float)boxH, letterSpacingPx, dpi);
+        paint.TextSize = (float)(sizePt * dpi / 72.0);
+
+        var lines = WrapLines(paint, t.Text, (float)boxW, letterSpacingPx, t.Wrap != "none");
+        var m = paint.FontMetrics;
+        var lineH = (m.Descent - m.Ascent) * (float)t.Style.LineSpacing;
+        var totalH = lineH * lines.Count;
+        var top = boxY + t.Justify.V switch
+        {
+            "middle" => (boxH - totalH) / 2,
+            "bottom" => boxH - totalH,
+            _ => 0.0,
+        };
+
+        // Union the drawn glyph extent with the stored box, so the adorner grows to include overflow but
+        // never shrinks below the element's own area.
+        double minX = boxX, maxX = boxX + boxW;
+        foreach (var line in lines)
+        {
+            var lineW = MeasureLine(paint, line, letterSpacingPx);
+            var x = boxX + t.Justify.H switch
+            {
+                "center" => (boxW - lineW) / 2,
+                "right" => boxW - lineW,
+                _ => 0.0,
+            };
+            minX = Math.Min(minX, x);
+            maxX = Math.Max(maxX, x + lineW);
+        }
+        var minY = Math.Min(boxY, top);
+        var maxY = Math.Max(boxY + boxH, top + totalH);
+
+        return new RenderedRect(minX / pxPerMm, minY / pxPerMm, (maxX - minX) / pxPerMm, (maxY - minY) / pxPerMm);
+    }
+
+    /// <summary>Axis-aligned bounds of a rect rotated by the element's rotation about the element's box
+    /// centre (matching <see cref="DrawElement"/>'s rotation pivot). Identity when unrotated.</summary>
+    private static RenderedRect RotateBounds(RenderedRect r, ResolvedElement el)
+    {
+        if (Math.Abs(el.RotationDeg) < 1e-9) return r;
+        var cx = el.XMm + el.WMm / 2;
+        var cy = el.YMm + el.HMm / 2;
+        var rad = el.RotationDeg * Math.PI / 180.0;
+        var cos = Math.Cos(rad);
+        var sin = Math.Sin(rad);
+        double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+        ReadOnlySpan<(double X, double Y)> corners =
+        [
+            (r.XMm, r.YMm), (r.XMm + r.WMm, r.YMm), (r.XMm, r.YMm + r.HMm), (r.XMm + r.WMm, r.YMm + r.HMm),
+        ];
+        foreach (var (px, py) in corners)
+        {
+            var dx = px - cx;
+            var dy = py - cy;
+            var rx = cx + dx * cos - dy * sin;
+            var ry = cy + dx * sin + dy * cos;
+            minX = Math.Min(minX, rx); maxX = Math.Max(maxX, rx);
+            minY = Math.Min(minY, ry); maxY = Math.Max(maxY, ry);
+        }
+        return new RenderedRect(minX, minY, maxX - minX, maxY - minY);
     }
 
     private static bool TypefaceIsBold(SKTypeface tf) => tf.FontWeight >= (int)SKFontStyleWeight.SemiBold;

@@ -30,6 +30,9 @@ public sealed partial class EditorViewModel : ObservableObject
     private SnapshotHistory _history;
     private Manifest _manifest = new() { Id = DocumentFactory.NewId(), Name = "Untitled" };
     private IReadOnlyDictionary<string, byte[]> _assets = new Dictionary<string, byte[]>();
+    // Per-element actual rendered bounds (mm), refreshed each render — the selection adorner + alignment
+    // read these so the box tracks what's drawn, not the stored model box (GitHub #5).
+    private IReadOnlyDictionary<string, RenderedRect> _renderedBounds = new Dictionary<string, RenderedRect>();
     private bool _gestureActive;
     private DateTimeOffset _lastRenderAt;
     private const double RenderCadenceMs = 40;
@@ -1130,7 +1133,11 @@ public sealed partial class EditorViewModel : ObservableObject
         SelectionRects.Clear();
         foreach (var id in _selectedIds)
             if (_live.Elements.FirstOrDefault(e => e.Id == id) is { } e)
-                SelectionRects.Add(new SelRect(e.X * s, e.Y * s, e.W * s, e.H * s, e.Locked));
+            {
+                // Dashed box = actual rendered bounds (hugs overflowing/serial/datetime text), GitHub #5.
+                var b = Bounds(e);
+                SelectionRects.Add(new SelRect(b.XMm * s, b.YMm * s, b.WMm * s, b.HMm * s, e.Locked));
+            }
 
         HasSelection = _selectedIds.Count > 0;
 
@@ -1169,27 +1176,33 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ── Align / distribute (Arrange across the selection, §6.2) ─────────────────────────────────
 
-    public void AlignLeft() => AlignEdit(s => { var v = s.Min(e => e.X); return e => e with { X = v }; });
-    public void AlignRight() => AlignEdit(s => { var v = s.Max(e => e.X + e.W); return e => e with { X = v - e.W }; });
-    public void AlignTop() => AlignEdit(s => { var v = s.Min(e => e.Y); return e => e with { Y = v }; });
-    public void AlignBottom() => AlignEdit(s => { var v = s.Max(e => e.Y + e.H); return e => e with { Y = v - e.H }; });
-    public void AlignCenterH() => AlignEdit(s => { var c = (s.Min(e => e.X) + s.Max(e => e.X + e.W)) / 2; return e => e with { X = c - e.W / 2 }; });
-    public void AlignMiddleV() => AlignEdit(s => { var c = (s.Min(e => e.Y) + s.Max(e => e.Y + e.H)) / 2; return e => e with { Y = c - e.H / 2 }; });
+    // Align/distribute operate on each element's ACTUAL rendered bounds (GitHub #5) so edges line up with
+    // what's drawn, not the stored box; the element is still moved by an X/Y delta (its rendered rect
+    // translates with it), so overflowing/serial/datetime text aligns correctly.
+    private RenderedRect Bounds(LabelElement e) =>
+        _renderedBounds.TryGetValue(e.Id, out var b) ? b : new RenderedRect(e.X, e.Y, e.W, e.H);
+
+    public void AlignLeft() => AlignEdit(s => { var v = s.Min(e => Bounds(e).XMm); return e => (v - Bounds(e).XMm, 0.0); });
+    public void AlignRight() => AlignEdit(s => { var v = s.Max(e => Bounds(e).XMm + Bounds(e).WMm); return e => (v - (Bounds(e).XMm + Bounds(e).WMm), 0.0); });
+    public void AlignTop() => AlignEdit(s => { var v = s.Min(e => Bounds(e).YMm); return e => (0.0, v - Bounds(e).YMm); });
+    public void AlignBottom() => AlignEdit(s => { var v = s.Max(e => Bounds(e).YMm + Bounds(e).HMm); return e => (0.0, v - (Bounds(e).YMm + Bounds(e).HMm)); });
+    public void AlignCenterH() => AlignEdit(s => { var c = (s.Min(e => Bounds(e).XMm) + s.Max(e => Bounds(e).XMm + Bounds(e).WMm)) / 2; return e => (c - (Bounds(e).XMm + Bounds(e).WMm / 2), 0.0); });
+    public void AlignMiddleV() => AlignEdit(s => { var c = (s.Min(e => Bounds(e).YMm) + s.Max(e => Bounds(e).YMm + Bounds(e).HMm)) / 2; return e => (0.0, c - (Bounds(e).YMm + Bounds(e).HMm / 2)); });
 
     public void DistributeH() => DistributeEdit(horizontal: true);
     public void DistributeV() => DistributeEdit(horizontal: false);
 
     // ── Center on the label (Form Alignment) ─────────────────────────────────────────────────────
-    // Centre the selection's bounding box on the label, moving every selected element by the same delta
-    // so their relative layout is kept. Whole-mm math; when the gap doesn't divide evenly the box biases
-    // left (H) / top (V) — Floor leaves the spare mm on the right/bottom.
+    // Centre the selection's (rendered) bounding box on the label, moving every selected element by the
+    // same delta so their relative layout is kept. Whole-mm math; when the gap doesn't divide evenly the
+    // box biases left (H) / top (V) — Floor leaves the spare mm on the right/bottom.
 
     public void CenterOnLabelH()
     {
         if (_selectedIds.Count == 0) return;
         var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
-        var left = sel.Min(e => e.X);
-        var bboxW = sel.Max(e => e.X + e.W) - left;
+        var left = sel.Min(e => Bounds(e).XMm);
+        var bboxW = sel.Max(e => Bounds(e).XMm + Bounds(e).WMm) - left;
         var dx = Math.Floor((_live.Canvas.WidthMm - bboxW) / 2.0) - left;
         var ids = new HashSet<string>(_selectedIds);
         CommitTransform(e => ids.Contains(e.Id) ? e with { X = e.X + dx } : e);
@@ -1199,39 +1212,44 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (_selectedIds.Count == 0) return;
         var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
-        var top = sel.Min(e => e.Y);
-        var bboxH = sel.Max(e => e.Y + e.H) - top;
+        var top = sel.Min(e => Bounds(e).YMm);
+        var bboxH = sel.Max(e => Bounds(e).YMm + Bounds(e).HMm) - top;
         var dy = Math.Floor((_live.Canvas.HeightMm - bboxH) / 2.0) - top;
         var ids = new HashSet<string>(_selectedIds);
         CommitTransform(e => ids.Contains(e.Id) ? e with { Y = e.Y + dy } : e);
     }
 
-    private void AlignEdit(Func<IReadOnlyList<LabelElement>, Func<LabelElement, LabelElement>> build)
+    private void AlignEdit(Func<IReadOnlyList<LabelElement>, Func<LabelElement, (double Dx, double Dy)>> build)
     {
         if (_selectedIds.Count < 2) return;
         var selected = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
-        var map = build(selected);
+        var delta = build(selected);
         var ids = new HashSet<string>(_selectedIds);
-        CommitTransform(e => ids.Contains(e.Id) ? map(e) : e);
+        CommitTransform(e =>
+        {
+            if (!ids.Contains(e.Id)) return e;
+            var (dx, dy) = delta(e);
+            return e with { X = e.X + dx, Y = e.Y + dy };
+        });
     }
 
     private void DistributeEdit(bool horizontal)
     {
         if (_selectedIds.Count < 3) return;
         var sorted = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id))
-            .OrderBy(e => horizontal ? e.X + e.W / 2 : e.Y + e.H / 2).ToList();
+            .OrderBy(Center).ToList();
         double firstC = Center(sorted[0]), lastC = Center(sorted[^1]);
         var step = (lastC - firstC) / (sorted.Count - 1);
         var updated = new Dictionary<string, LabelElement>();
         for (var i = 1; i < sorted.Count - 1; i++)
         {
             var e = sorted[i];
-            var c = firstC + i * step;
-            updated[e.Id] = horizontal ? e with { X = c - e.W / 2 } : e with { Y = c - e.H / 2 };
+            var d = firstC + i * step - Center(e); // move so the rendered centre lands on the target
+            updated[e.Id] = horizontal ? e with { X = e.X + d } : e with { Y = e.Y + d };
         }
         CommitTransform(e => updated.TryGetValue(e.Id, out var u) ? u : e);
 
-        double Center(LabelElement e) => horizontal ? e.X + e.W / 2 : e.Y + e.H / 2;
+        double Center(LabelElement e) { var b = Bounds(e); return horizontal ? b.XMm + b.WMm / 2 : b.YMm + b.HMm / 2; }
     }
 
     private void CommitTransform(Func<LabelElement, LabelElement> map)
@@ -1825,21 +1843,25 @@ public sealed partial class EditorViewModel : ObservableObject
             // The editor shows the upright design *view*; orientation is applied only at print/export
             // (RenderForPrint), where the view maps onto the fixed physical label (label-orientation, §A).
             var opts = new RenderOptions { ApplyOrientation = false };
+            // Resolve once so we can both render and measure the actual rendered bounds (GitHub #5) — the
+            // selection adorner/alignment track what's drawn, not the stored box.
+            var resolved = LabelResolver.Resolve(_live, ctx);
             int wpx, hpx;
             if (SmoothPreview)
             {
-                var gray = _renderer.RenderGray(_live, ctx, opts);
+                var gray = _renderer.RenderGray(resolved, opts);
                 Preview = PreviewImage.FromGray(gray);
                 wpx = gray.WidthPx;
                 hpx = gray.HeightPx;
             }
             else
             {
-                var mono = _renderer.Render(_live, ctx, opts);
+                var mono = _renderer.Render(resolved, opts);
                 Preview = PreviewImage.FromMonochrome(mono);
                 wpx = mono.WidthPx;
                 hpx = mono.HeightPx;
             }
+            _renderedBounds = _renderer.MeasureRenderedBounds(resolved);
             PreviewWidthPx = wpx;
             PreviewHeightPx = hpx;
             UpdateDisplaySize();
