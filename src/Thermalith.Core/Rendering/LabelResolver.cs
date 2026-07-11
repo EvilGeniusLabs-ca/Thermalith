@@ -10,6 +10,11 @@ public sealed record ResolveContext
     /// <summary>The supplied data row, token-name (or bound column) → value (§6.5).</summary>
     public IReadOnlyDictionary<string, object?>? Data { get; init; }
 
+    /// <summary>The supplied data row's values in column order — resolves ordinal tokens like <c>{3}</c>
+    /// (1-based). Carries every column including blank-header / duplicate-name ones that <see cref="Data"/>
+    /// can't key. Null for non-positional sources (e.g. the bundled <c>data.json</c>).</summary>
+    public IReadOnlyList<object?>? DataByOrdinal { get; init; }
+
     /// <summary>Zero-based row index across a batch — drives serial-number advance (§6.5).</summary>
     public int RowIndex { get; init; }
 
@@ -28,7 +33,7 @@ public static class LabelResolver
 {
     public static ResolvedLabel Resolve(LabelDocument doc, ResolveContext ctx)
     {
-        var tokens = new TokenResolver(ctx.Data, doc.Bindings, doc.Tokens);
+        var tokens = new TokenResolver(ctx.Data, doc.Bindings, doc.Tokens, ctx.DataByOrdinal);
         var resolved = new List<ResolvedElement>(doc.Elements.Count);
 
         foreach (var el in doc.Elements)
