@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
+             x:Class="Thermalith.App.Views.ClipPalette"
+             x:DataType="vm:ClipPaletteViewModel">
+
+    <TabControl ItemsSource="{Binding Tabs}" Padding="0">
+
+        <TabControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ClipFontTabViewModel">
+                <TextBlock Text="{Binding Header}" />
+            </DataTemplate>
+        </TabControl.ItemTemplate>
+
+        <TabControl.ContentTemplate>
+            <DataTemplate x:DataType="vm:ClipFontTabViewModel">
+                <DockPanel Margin="4">
+
+                    <!-- Inert in the gauge build: shows the intended per-tab search layout. -->
+                    <TextBox DockPanel.Dock="Top" Text="{Binding Filter}"
+                             Watermark="Search (coming soon)…" Margin="0,0,0,4" />
+
+                    <Grid>
+                        <ListBox ItemsSource="{Binding Rows}" IsVisible="{Binding !IsSearch}"
+                                 Background="Transparent" BorderThickness="0" Padding="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0" />
+                                    <Setter Property="MinHeight" Value="0" />
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ClipGlyphRow">
+                                    <ItemsControl ItemsSource="{Binding Cells}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="2" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ClipGlyphItemViewModel">
+                                                <Border Width="50" Height="50" Margin="1" CornerRadius="3"
+                                                        Background="White" ToolTip.Tip="{Binding Name}">
+                                                    <Image Source="{Binding Preview}" Width="40" Height="40"
+                                                           Stretch="Uniform" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <TextBlock IsVisible="{Binding IsSearch}"
+                                   Text="Cross-font search — coming next"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondary}" />
+                    </Grid>
+                </DockPanel>
+            </DataTemplate>
+        </TabControl.ContentTemplate>
+    </TabControl>
+</UserControl>

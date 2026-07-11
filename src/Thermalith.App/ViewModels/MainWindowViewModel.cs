@@ -55,6 +55,11 @@ public partial class MainWindowViewModel : ViewModelBase
         _ = Printer.AutoConnectAsync(_settings.LastPrinterPort, _settings.LastPrinterModel);
     }
 
+    /// <summary>The clip-art palette (GitHub #2), created lazily on first open so it never costs startup
+    /// (loading the embedded glyph index + font catalog happens the first time the flyout binds).</summary>
+    public ClipPaletteViewModel ClipPalette => _clipPalette ??= new ClipPaletteViewModel();
+    private ClipPaletteViewModel? _clipPalette;
+
     /// <summary>Persist the connected printer so the next startup can scan + reconnect to it.</summary>
     private void OnPrinterConnected(object? sender, EventArgs e)
     {
