@@ -65,12 +65,11 @@
                     <TabControl.ContentTemplate>
                         <DataTemplate x:DataType="vm:ClipFontTabViewModel">
                             <DockPanel Margin="0,4,0,0">
-                                <!-- Inert in the gauge build: shows the intended per-tab search layout. -->
                                 <TextBox DockPanel.Dock="Top" Text="{Binding Filter}"
-                                         Watermark="Search (coming soon)…" Margin="0,0,0,4" />
+                                         Watermark="{Binding Watermark}" Margin="0,0,0,4" />
 
                                 <Grid>
-                                    <ListBox ItemsSource="{Binding Rows}" IsVisible="{Binding !IsSearch}"
+                                    <ListBox ItemsSource="{Binding Rows}"
                                              Background="Transparent" BorderThickness="0" Padding="0"
                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                         <ListBox.ItemTemplate>
@@ -96,8 +95,8 @@
                                         </ListBox.ItemTemplate>
                                     </ListBox>
 
-                                    <TextBlock IsVisible="{Binding IsSearch}"
-                                               Text="Cross-font search — coming next"
+                                    <TextBlock IsVisible="{Binding ShowEmptyHint}"
+                                               Text="Type to search across all fonts"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Foreground="{DynamicResource TextSecondary}" />
                                 </Grid>

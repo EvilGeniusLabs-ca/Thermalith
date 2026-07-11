@@ -51,7 +51,7 @@ public sealed partial class ClipPaletteViewModel : ViewModelBase, IDisposable
         var index = ClipIndex.LoadEmbedded();
         _catalog = ClipFontCatalog.CreateEmbedded();
 
-        var tabs = new List<ClipFontTabViewModel> { ClipFontTabViewModel.SearchTab() };
+        var tabs = new List<ClipFontTabViewModel> { ClipFontTabViewModel.SearchTab(index, _catalog, Columns) };
         tabs.AddRange(index.Fonts.Select(f => new ClipFontTabViewModel(f, index, _catalog, Columns)));
         Tabs = tabs;
     }
@@ -79,48 +79,72 @@ public sealed partial class ClipPaletteViewModel : ViewModelBase, IDisposable
 /// lazily on first show; rows re-chunk to the current column count when the panel is resized.</summary>
 public sealed partial class ClipFontTabViewModel : ViewModelBase
 {
-    private readonly ClipIndex? _index;
-    private readonly ClipFontCatalog? _catalog;
-    private readonly string? _fontKey;
-    private IReadOnlyList<ClipGlyphItemViewModel>? _glyphs;
+    private const int SearchLimit = 600;
+
+    private readonly ClipIndex _index;
+    private readonly ClipFontCatalog _catalog;
+    private readonly string? _fontKey;   // null on the Search tab (searches across all fonts)
+    private readonly Dictionary<(string Font, int Cp), ClipGlyphItemViewModel> _itemCache = new();
     private int _columns = 1;
 
     public string Header { get; }
     public bool IsSearch { get; }
+    public string Watermark { get; }
 
-    // Inert in the gauge build — present so the layout can be judged; wired in the search slice.
+    // Live filter — per-font tabs scope to their font, the Search tab spans all fonts.
     [ObservableProperty] private string _filter = "";
 
-    private ClipFontTabViewModel(string header, bool isSearch)
+    private ClipFontTabViewModel(string header, bool isSearch, string? fontKey, ClipIndex index, ClipFontCatalog catalog, int columns)
     {
         Header = header;
         IsSearch = isSearch;
-    }
-
-    public static ClipFontTabViewModel SearchTab() => new("Search", isSearch: true);
-
-    public ClipFontTabViewModel(ClipFontInfo font, ClipIndex index, ClipFontCatalog catalog, int columns)
-    {
-        Header = font.Label;
+        _fontKey = fontKey;
         _index = index;
         _catalog = catalog;
-        _fontKey = font.Key;
         _columns = Math.Max(1, columns);
+        Watermark = isSearch ? "Search all fonts…" : $"Search {header}…";
     }
+
+    public static ClipFontTabViewModel SearchTab(ClipIndex index, ClipFontCatalog catalog, int columns) =>
+        new("Search", isSearch: true, fontKey: null, index, catalog, columns);
+
+    public ClipFontTabViewModel(ClipFontInfo font, ClipIndex index, ClipFontCatalog catalog, int columns)
+        : this(font.Label, isSearch: false, font.Key, index, catalog, columns) { }
+
+    /// <summary>Shown when the Search tab has no query yet — a hint to start typing.</summary>
+    public bool ShowEmptyHint => IsSearch && string.IsNullOrWhiteSpace(Filter);
 
     public void OnColumnsChanged(int columns)
     {
         _columns = Math.Max(1, columns);
-        if (_glyphs is not null) OnPropertyChanged(nameof(Rows)); // re-chunk only if this tab was shown
+        OnPropertyChanged(nameof(Rows));
+    }
+
+    partial void OnFilterChanged(string value)
+    {
+        OnPropertyChanged(nameof(Rows));
+        OnPropertyChanged(nameof(ShowEmptyHint));
     }
 
     public IReadOnlyList<ClipGlyphRow> Rows =>
-        BuildGlyphs().Chunk(Math.Max(1, _columns)).Select(c => new ClipGlyphRow(c)).ToList();
+        CurrentGlyphs().Select(Item).Chunk(Math.Max(1, _columns)).Select(c => new ClipGlyphRow(c)).ToList();
 
-    private IReadOnlyList<ClipGlyphItemViewModel> BuildGlyphs() =>
-        _glyphs ??= _fontKey is null || _index is null || _catalog is null
-            ? Array.Empty<ClipGlyphItemViewModel>()
-            : _index.ForFont(_fontKey).Select(g => new ClipGlyphItemViewModel(g, _catalog)).ToList();
+    // Empty query: browse the font (Search tab shows nothing until you type). Non-empty: scored search,
+    // scoped to this font or across all.
+    private IReadOnlyList<ClipGlyph> CurrentGlyphs()
+    {
+        if (string.IsNullOrWhiteSpace(Filter))
+            return _fontKey is null ? Array.Empty<ClipGlyph>() : _index.ForFont(_fontKey);
+        return _index.Search(Filter, _fontKey, SearchLimit);
+    }
+
+    private ClipGlyphItemViewModel Item(ClipGlyph g)
+    {
+        var key = (g.Font, g.Codepoint);
+        if (!_itemCache.TryGetValue(key, out var vm))
+            _itemCache[key] = vm = new ClipGlyphItemViewModel(g, _catalog);
+        return vm;
+    }
 }
 
 /// <summary>A fixed-width row of glyph cells — the ListBox virtualizes these.</summary>
