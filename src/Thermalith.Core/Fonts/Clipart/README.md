@@ -31,6 +31,30 @@ feature is wired. Embedding + `FontService` loading happens at implementation ti
 - Font Awesome Free: the **fonts** are OFL-1.1 (attribution appreciated); the SVG/JS icon files are
   CC-BY-4.0, but we bundle only the fonts.
 
+## Search metadata (`metadata/`)
+
+Glyphs inside the TTFs sit at Private Use Area codepoints with, at best, terse `post`-table names and
+**no synonyms** — not enough to search on. Each set's companion metadata file (in `metadata/`) is the real
+search index: it maps **name → tags / aliases / keywords**. The name→glyph(codepoint) binding comes from
+the font's own `cmap` at index-build time; these files add the searchable vocabulary. Emoji are the
+exception — they sit at real Unicode codepoints, so their keywords come from Unicode/CLDR data.
+
+At build we compile these into one slim unified index (`{font, name, codepoint, tags}`); the raw files
+here are the *source*, not shipped as-is.
+
+| Font | Metadata file | Provides | Entries |
+|---|---|---|---|
+| Material Design Icons | `mdi.meta.json` | name, codepoint, aliases, tags | 7,447 |
+| Font Awesome Free | `fontawesome.icons.json` | name, unicode, search terms, categories | 1,895 |
+| Lucide | `lucide.tags.json` | name → tags | 1,746 |
+| Tabler | `tabler.icons.json` | name, category, tags, styles | 5,093 |
+| Phosphor | `phosphor.tags.json` | name → tags (extracted from core `icons.ts`) | 1,530 |
+| Noto Emoji (both) | `emoji.emojibase-en.json` | label + keyword tags (search) | 1,949 |
+| Noto Emoji (both) | `emoji.unicode-emoji-json.json` | name + group/subgroup (category browse) | 1,914 |
+
+Metadata files inherit their upstream project licenses (already captured in `LICENSES/`); they are
+build-time source, not embedded in the binary.
+
 ## Sources
 
 - Material Design Icons — https://github.com/Templarian/MaterialDesign-Webfont
