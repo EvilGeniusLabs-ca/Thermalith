@@ -123,6 +123,13 @@ public sealed record ImageProps
     public bool FlipH { get; init; }                       // mirror left↔right
     public bool FlipV { get; init; }                       // flip top↔bottom
 
+    // Clip-art provenance (GitHub #2): set when this image was baked from a font glyph. The bitmap
+    // (AssetId) is the durable, portable floor; these fields let the app re-rasterize it crisp on
+    // resize / dpi change while the source font is still bundled. Null for a normal imported image.
+    public string? ClipFont { get; init; }                 // clip font catalog key (file stem)
+    public int? ClipCodepoint { get; init; }               // the glyph's Unicode codepoint
+    public int? ClipBakeDpi { get; init; }                 // dpi the current AssetId bitmap was baked at
+
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extensions { get; init; }
 }
 
