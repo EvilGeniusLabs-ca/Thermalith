@@ -33,13 +33,10 @@ Future / wishlist — things we want to do but aren't active. Move items here wh
     light mode, so this is polish, **not** a light-mode blocker. EvilGenius's colored flip/mirror PNGs are
     parked at `Assets/Icons/` (possible clip-art use). Note: `Material.Icons` bundles ~7400 paths
     (~couple MB, untrimmable) — fine for desktop; revisit if size bites.
-18. Distribution / packaging (Phase 6) — single-file + `EnableCompressionInSingleFile`, per-RID,
-    ReadyToRun choice, `.icns` into the macOS `.app`. No trimming (Avalonia is reflection-heavy).
+18. ~~Distribution / packaging (Phase 6)~~ — DONE: CI builds all platforms (single-file, per-RID). Item closed.
 19. ~~3 skipped Niimbot.Net tests~~ — no longer skipped (suite runs 0-skip). Item closed.
-21. **Implement EGL Donation from the NuGet** (Phase 6) — consume the external
-    `EvilGeniusLabs.DonationWare` MIT NuGet (its own repo)
-    in Help/About: render the provider affordance(s) + inject the launcher. The package's own build-out
-    and publish are tracked in that repo, not here. Off the critical path; wire in late.
+21. ~~**Implement EGL Donation from the NuGet** (Phase 6)~~ — DONE: donate icon on the main form links to
+    the website. Item closed.
 20. **App UI localization / multi-language (i18n)** — future (EvilGenius, 2026-06-08). Localize Thermalith's
     own UI (menus, dialogs, inspector labels, messages) into multiple languages — relevant to the global
     NIIMBOT audience. This is the *app chrome*, distinct from rendering CJK text *on the label* — and that
