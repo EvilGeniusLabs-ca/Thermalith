@@ -55,6 +55,7 @@ public sealed partial class DataMergeViewModel : ObservableObject
         if (path is null) return;
         try
         {
+            StopPreview(); // a fresh source resets any active preview
             var data = CsvDataSource.Load(path);
             _data = data;
             Columns.Clear();
@@ -72,11 +73,72 @@ public sealed partial class DataMergeViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasData))]
     private void Clear()
     {
+        StopPreview();
         _data = null;
         Columns.Clear();
         HasData = false;
         SourceInfo = "No data source loaded";
         _setStatus("Data source cleared.");
+    }
+
+    // ── Preview (GitHub #7.2): step through rows on the canvas ────────────────────────────────────
+
+    /// <summary>Whether the canvas is showing merge rows (bound to the Data Merge ▸ Preview toggle).</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(NextRowCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PrevRowCommand))]
+    private bool _isPreviewing;
+
+    /// <summary>1-based index of the previewed row.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(NextRowCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PrevRowCommand))]
+    private int _previewNumber = 1;
+
+    /// <summary>"Row 3 of 12" caption for the preview bar.</summary>
+    [ObservableProperty] private string _previewRowLabel = "";
+
+    partial void OnIsPreviewingChanged(bool value)
+    {
+        if (value)
+        {
+            if (_data is null || _data.RowCount == 0) { _isPreviewing = false; OnPropertyChanged(nameof(IsPreviewing)); _setStatus("Load a CSV before previewing."); return; }
+            PreviewNumber = 1;
+            ShowRow();
+        }
+        else
+        {
+            _editor.SetPreviewRow(null, 0);
+            PreviewRowLabel = "";
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanStepNext))]
+    private void NextRow() { PreviewNumber++; ShowRow(); }
+
+    [RelayCommand(CanExecute = nameof(CanStepPrev))]
+    private void PrevRow() { PreviewNumber--; ShowRow(); }
+
+    private bool CanStepNext() => IsPreviewing && _data is not null && PreviewNumber < _data.RowCount;
+    private bool CanStepPrev() => IsPreviewing && PreviewNumber > 1;
+
+    private void ShowRow()
+    {
+        if (_data is null || _data.RowCount == 0) return;
+        var i = Math.Clamp(PreviewNumber - 1, 0, _data.RowCount - 1);
+        _editor.SetPreviewRow(_data.Rows[i], i);
+        PreviewRowLabel = $"Row {i + 1} of {_data.RowCount}";
+        NextRowCommand.NotifyCanExecuteChanged();
+        PrevRowCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand]
+    private void ExitPreview() => StopPreview();
+
+    private void StopPreview()
+    {
+        if (!IsPreviewing) return;
+        IsPreviewing = false; // OnIsPreviewingChanged clears the canvas
     }
 
     // ── Print ──────────────────────────────────────────────────────────────────────────────────

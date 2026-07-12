@@ -33,6 +33,10 @@ public sealed partial class EditorViewModel : ObservableObject
     // Per-element actual rendered bounds (mm), refreshed each render — the selection adorner + alignment
     // read these so the box tracks what's drawn, not the stored model box (GitHub #5).
     private IReadOnlyDictionary<string, RenderedRect> _renderedBounds = new Dictionary<string, RenderedRect>();
+    // Merge-preview row: when set, the canvas resolves tokens against this row instead of showing
+    // placeholders, so the user previews real labels (GitHub #7.2).
+    private Thermalith.Core.Data.MergeRow? _previewRow;
+    private int _previewRowIndex;
     private bool _gestureActive;
     private DateTimeOffset _lastRenderAt;
     private const double RenderCadenceMs = 40;
@@ -121,6 +125,15 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>Render the current document to the 1bpp raster for printing (same path as the preview, §6.3).</summary>
     public Niimbot.Net.Encoding.MonochromeBitmap RenderForPrint() =>
         _renderer.Render(_live, new ResolveContext { Now = DateTimeOffset.Now, Assets = _assets, RowIndex = 0 });
+
+    /// <summary>Show a merge row on the editor canvas (GitHub #7.2), or clear it (null) to return to the
+    /// authoring view where tokens render as <c>{…}</c> placeholders. Re-renders immediately.</summary>
+    public void SetPreviewRow(Thermalith.Core.Data.MergeRow? row, int rowIndex)
+    {
+        _previewRow = row;
+        _previewRowIndex = rowIndex;
+        RenderNow();
+    }
 
     /// <summary>Render one merge row (GitHub #7): tokens resolve against the row's data, the serial/row
     /// index advances, everything else stays the current document. Same render path as <see cref="RenderForPrint()"/>.</summary>
@@ -1967,7 +1980,14 @@ public sealed partial class EditorViewModel : ObservableObject
         _lastRenderAt = DateTimeOffset.Now; // advance the cadence even on a render error, so we don't busy-loop
         try
         {
-            var ctx = new ResolveContext { Now = DateTimeOffset.Now, Assets = _assets, RowIndex = 0 };
+            var ctx = new ResolveContext
+            {
+                Now = DateTimeOffset.Now,
+                Assets = _assets,
+                RowIndex = _previewRow is not null ? _previewRowIndex : 0,
+                Data = _previewRow?.ByName,
+                DataByOrdinal = _previewRow?.ByOrdinal,
+            };
             // The editor shows the upright design *view*; orientation is applied only at print/export
             // (RenderForPrint), where the view maps onto the fixed physical label (label-orientation, §A).
             var opts = new RenderOptions { ApplyOrientation = false };

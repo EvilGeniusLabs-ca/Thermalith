@@ -92,6 +92,11 @@
                           ToolTip.Tip="Click a text field, then a column here to insert its token" />
                 <MenuItem Header="{Binding DataMerge.SourceInfo}" IsEnabled="False" />
                 <Separator />
+                <MenuItem Header="Pre_view Merge Data" ToggleType="CheckBox"
+                          IsChecked="{Binding DataMerge.IsPreviewing, Mode=TwoWay}"
+                          IsEnabled="{Binding DataMerge.HasData}"
+                          ToolTip.Tip="Show real data on the canvas and step through rows" />
+                <Separator />
                 <MenuItem Header="_Print Merge…" Command="{Binding DataMerge.PrintMergeCommand}" />
             </MenuItem>
             <MenuItem Header="_Arrange">
@@ -461,6 +466,25 @@
                                          InsetYMm="{Binding Editor.PrintableInsetYMm}"
                                          LabelWidthMm="{Binding Editor.CanvasWidthMm}"
                                          LabelHeightMm="{Binding Editor.CanvasHeightMm}" />
+
+                <!-- Data-merge preview bar (GitHub #7.2): step through rows shown on the canvas. -->
+                <Border Grid.Row="1" Grid.Column="1" IsVisible="{Binding DataMerge.IsPreviewing}"
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,16"
+                        Background="{DynamicResource SurfaceBar}" BorderBrush="{DynamicResource SurfaceSplitter}"
+                        BorderThickness="1" CornerRadius="6" Padding="6,4">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Command="{Binding DataMerge.PrevRowCommand}" Padding="4" ToolTip.Tip="Previous row">
+                            <mi:MaterialIcon Kind="ChevronLeft" />
+                        </Button>
+                        <TextBlock Text="{Binding DataMerge.PreviewRowLabel}" VerticalAlignment="Center"
+                                   MinWidth="90" TextAlignment="Center" />
+                        <Button Command="{Binding DataMerge.NextRowCommand}" Padding="4" ToolTip.Tip="Next row">
+                            <mi:MaterialIcon Kind="ChevronRight" />
+                        </Button>
+                        <Border Width="1" Background="{DynamicResource SurfaceSplitter}" Margin="2,0" />
+                        <Button Command="{Binding DataMerge.ExitPreviewCommand}" Content="Close" Padding="6,2" />
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <GridSplitter Grid.Column="3" Width="4" Background="{DynamicResource SurfaceSplitter}" />
