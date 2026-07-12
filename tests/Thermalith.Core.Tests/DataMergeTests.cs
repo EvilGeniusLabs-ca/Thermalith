@@ -133,6 +133,45 @@ public class DataMergeTests
         Assert.Equal("a", ds.Rows[0].ByOrdinal[0]);
     }
 
+    // ── Merge auto-size (GitHub #7.1): auto-size text grows to the resolved row value ────────────
+
+    private static Thermalith.Core.Model.LabelDocument MergeDoc(bool autoSize) => new()
+    {
+        Metadata = new Thermalith.Core.Model.LabelMetadata { Name = "m" },
+        Canvas = new Thermalith.Core.Model.Canvas { WidthMm = 80, HeightMm = 30, Dpi = 203 },
+        Elements =
+        [
+            new Thermalith.Core.Model.TextElement
+            {
+                Id = "t", X = 2, Y = 2, W = 6, H = 6,
+                Props = new Thermalith.Core.Model.TextProps { Content = "{\"v\"}", FontSizePt = 16, AutoSize = autoSize, Wrap = "none" },
+            },
+        ],
+    };
+
+    private static double RenderedWidth(Thermalith.Core.Model.LabelDocument doc, IReadOnlyDictionary<string, object?> data)
+    {
+        var renderer = new Thermalith.Core.Rendering.LabelRenderer();
+        var resolved = renderer.Resolve(doc, new Thermalith.Core.Rendering.ResolveContext { Data = data });
+        return ((Thermalith.Core.Rendering.ResolvedText)resolved.Elements[0]).WMm;
+    }
+
+    [Fact]
+    public void Auto_size_box_grows_to_the_resolved_merge_value()
+    {
+        var data = new Dictionary<string, object?> { ["v"] = "A very long merged value" };
+        var w = RenderedWidth(MergeDoc(autoSize: true), data);
+        Assert.True(w > 20.0, $"auto-size box should grow to the value, got {w:0.#}mm");
+    }
+
+    [Fact]
+    public void Fixed_box_keeps_its_authored_size_on_merge()
+    {
+        var data = new Dictionary<string, object?> { ["v"] = "A very long merged value" };
+        var w = RenderedWidth(MergeDoc(autoSize: false), data);
+        Assert.Equal(6.0, w, 3); // unchanged — a fixed box is the user's box
+    }
+
     [Fact]
     public void End_to_end_row_resolves_through_the_token_resolver()
     {

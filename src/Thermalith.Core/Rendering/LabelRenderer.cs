@@ -24,9 +24,9 @@ public sealed class LabelRenderer
 
     public LabelRenderer(FontService? fonts = null) => _fonts = fonts ?? new FontService();
 
-    /// <summary>Resolve then render in one call.</summary>
+    /// <summary>Resolve (with data-merge auto-size, #7) then render in one call.</summary>
     public MonochromeBitmap Render(LabelDocument doc, ResolveContext resolve, RenderOptions? options = null) =>
-        Render(LabelResolver.Resolve(doc, resolve), options);
+        Render(Resolve(doc, resolve), options);
 
     /// <summary>Render a fully-resolved label to the model-agnostic 1bpp hand-off raster (§6.3.5).</summary>
     public MonochromeBitmap Render(ResolvedLabel label, RenderOptions? options = null)
@@ -41,9 +41,9 @@ public sealed class LabelRenderer
         }
     }
 
-    /// <summary>Resolve then render the smooth grayscale preview in one call.</summary>
+    /// <summary>Resolve (with data-merge auto-size, #7) then render the smooth grayscale preview in one call.</summary>
     public GrayBitmap RenderGray(LabelDocument doc, ResolveContext resolve, RenderOptions? options = null) =>
-        RenderGray(LabelResolver.Resolve(doc, resolve), options);
+        RenderGray(Resolve(doc, resolve), options);
 
     /// <summary>Stage-3 smooth preview (§6.3.6): the 8-bit grayscale composite *before* the 1-bit
     /// threshold, oriented. Text/shape edges stay anti-aliased (smoother on-screen than the exact
@@ -172,27 +172,34 @@ public sealed class LabelRenderer
     /// <summary>Natural size (mm) of a text block at its fixed font size — widest line × line count, no
     /// word-wrap (explicit line breaks honoured). The editor uses this to auto-size a text box to its
     /// glyphs (§6.2). Rounded up by the caller so the box never clips the text.</summary>
-    public (double WidthMm, double HeightMm) MeasureTextMm(TextProps props, double dpi)
+    public (double WidthMm, double HeightMm) MeasureTextMm(TextProps props, double dpi) =>
+        MeasureTextMm(props.Content, props.FontFamily, props.FontSizePt ?? 9, props.Bold ?? false,
+            props.Italic ?? false, props.LetterSpacing, props.LineSpacing ?? 1.0, dpi);
+
+    /// <summary>Natural size (mm) of a text block at a fixed font — widest line × line count, no word-wrap
+    /// (explicit line breaks honoured). Rounded up so a box hugging it never clips.</summary>
+    public (double WidthMm, double HeightMm) MeasureTextMm(
+        string? text, string? family, double fontSizePt, bool bold, bool italic, double letterSpacing, double lineSpacing, double dpi)
     {
         var pxPerMm = dpi / 25.4;
-        var tf = _fonts.Resolve(props.FontFamily, props.Bold ?? false, props.Italic ?? false);
+        var tf = _fonts.Resolve(family, bold, italic);
         using var paint = new SKPaint
         {
             IsAntialias = true,
             Typeface = tf,
-            FakeBoldText = (props.Bold ?? false) && !TypefaceIsBold(tf),
-            TextSkewX = (props.Italic ?? false) && !tf.IsItalic ? -0.22f : 0f,
+            FakeBoldText = bold && !TypefaceIsBold(tf),
+            TextSkewX = italic && !tf.IsItalic ? -0.22f : 0f,
             SubpixelText = false,
-            TextSize = (float)((props.FontSizePt ?? 9) * dpi / 72.0),
+            TextSize = (float)(fontSizePt * dpi / 72.0),
         };
-        var letterSpacingPx = (float)(props.LetterSpacing * dpi / 72.0);
+        var letterSpacingPx = (float)(letterSpacing * dpi / 72.0);
 
-        var lines = (props.Content ?? "").Replace("\r\n", "\n").Split('\n');
+        var lines = (text ?? "").Replace("\r\n", "\n").Split('\n');
         var maxW = 0f;
         foreach (var line in lines) maxW = Math.Max(maxW, MeasureLine(paint, line, letterSpacingPx));
 
         var m = paint.FontMetrics;
-        var lineH = (m.Descent - m.Ascent) * (float)(props.LineSpacing ?? 1.0);
+        var lineH = (m.Descent - m.Ascent) * (float)lineSpacing;
         // Height ignores trailing blank lines: auto-size hugs the glyphs, so a stray trailing newline
         // (e.g. Enter pressed to finish typing in the in-place editor) must not double the box.
         var lineCount = lines.Length;
@@ -200,6 +207,28 @@ public sealed class LabelRenderer
         var totalH = lineH * lineCount;
 
         return (Math.Max(1.0, maxW / pxPerMm), Math.Max(1.0, totalH / pxPerMm));
+    }
+
+    /// <summary>Resolve a document and re-size every auto-size text box to its <i>resolved</i> text
+    /// (GitHub #7 — data-merge values grow the box, at the user's font size). All render entry points and
+    /// the editor go through this so the box tracks the row data.</summary>
+    public ResolvedLabel Resolve(LabelDocument doc, ResolveContext ctx) =>
+        ApplyAutoSize(LabelResolver.Resolve(doc, ctx));
+
+    /// <summary>Re-size auto-size text elements to hug their resolved text (keeping position). Pure.</summary>
+    public ResolvedLabel ApplyAutoSize(ResolvedLabel label)
+    {
+        List<ResolvedElement>? updated = null;
+        for (var i = 0; i < label.Elements.Count; i++)
+        {
+            if (label.Elements[i] is not ResolvedText { AutoSize: true } t) continue;
+            var (w, h) = MeasureTextMm(t.Text, t.Style.FontFamily, t.Style.FontSizePt, t.Style.Bold,
+                t.Style.Italic, t.Style.LetterSpacing, t.Style.LineSpacing, label.Canvas.Dpi);
+            if (Math.Abs(w - t.WMm) < 1e-6 && Math.Abs(h - t.HMm) < 1e-6) continue;
+            updated ??= [.. label.Elements];
+            updated[i] = t with { WMm = w, HMm = h };
+        }
+        return updated is null ? label : label with { Elements = updated };
     }
 
     /// <summary>

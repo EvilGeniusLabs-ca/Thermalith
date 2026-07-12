@@ -1971,9 +1971,9 @@ public sealed partial class EditorViewModel : ObservableObject
             // The editor shows the upright design *view*; orientation is applied only at print/export
             // (RenderForPrint), where the view maps onto the fixed physical label (label-orientation, §A).
             var opts = new RenderOptions { ApplyOrientation = false };
-            // Resolve once so we can both render and measure the actual rendered bounds (GitHub #5) — the
-            // selection adorner/alignment track what's drawn, not the stored box.
-            var resolved = LabelResolver.Resolve(_live, ctx);
+            // Resolve once (with data-merge auto-size, #7) so we can both render and measure the actual
+            // rendered bounds (#5) — the selection adorner/alignment track what's drawn, not the stored box.
+            var resolved = _renderer.Resolve(_live, ctx);
             int wpx, hpx;
             if (SmoothPreview)
             {

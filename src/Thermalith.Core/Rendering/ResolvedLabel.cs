@@ -42,6 +42,11 @@ public sealed record ResolvedText : ResolvedElement
     public string FontSizing { get; init; } = "fixed";
     public double? MinFontSizePt { get; init; }
     public double? MaxFontSizePt { get; init; }
+
+    /// <summary>The source Text element hugs its glyphs — the renderer re-sizes W/H to the *resolved* text
+    /// so a data-merge value grows the box, not just the authored token (GitHub #7). Serial/DateTime are
+    /// generated text but keep their authored box (false), so their print position is stable.</summary>
+    public bool AutoSize { get; init; }
 }
 
 public sealed record ResolvedBarcode : ResolvedElement
