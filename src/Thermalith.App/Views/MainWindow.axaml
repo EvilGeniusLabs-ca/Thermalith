@@ -376,7 +376,11 @@
                                 <DataTemplate x:DataType="vm:SelRect">
                                     <Rectangle Width="{Binding Width}" Height="{Binding Height}"
                                                Stroke="{Binding Locked, Converter={StaticResource LockStroke}}"
-                                               StrokeThickness="1.5" StrokeDashArray="3,2" />
+                                               StrokeThickness="1.5" StrokeDashArray="3,2">
+                                        <Rectangle.RenderTransform>
+                                            <RotateTransform Angle="{Binding Angle}" CenterX="{Binding CenterX}" CenterY="{Binding CenterY}" />
+                                        </Rectangle.RenderTransform>
+                                    </Rectangle>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

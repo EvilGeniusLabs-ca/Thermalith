@@ -13,5 +13,8 @@ public sealed record HandleSpec(double Left, double Top, double Size, Handle Kin
 public readonly record struct GeomMm(double X, double Y, double W, double H);
 
 /// <summary>A selection outline rectangle in display coordinates (bindable for multi-select adorners).
-/// <paramref name="Locked"/> drives the grey lock-indicator stroke.</summary>
-public sealed record SelRect(double Left, double Top, double Width, double Height, bool Locked = false);
+/// <paramref name="Locked"/> drives the grey lock-indicator stroke. <paramref name="Angle"/> (deg) rotates
+/// the box about (<paramref name="CenterX"/>, <paramref name="CenterY"/>) — relative to the box's own
+/// top-left — so the adorner follows a rotated element (GitHub #5).</summary>
+public sealed record SelRect(double Left, double Top, double Width, double Height, bool Locked = false,
+    double Angle = 0, double CenterX = 0, double CenterY = 0);

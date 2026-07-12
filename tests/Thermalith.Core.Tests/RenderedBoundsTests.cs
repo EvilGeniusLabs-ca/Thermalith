@@ -70,9 +70,9 @@ public class RenderedBoundsTests
     }
 
     [Fact]
-    public void Rotated_element_bounds_are_the_rotated_aabb()
+    public void MeasureRenderedBounds_returns_unrotated_content()
     {
-        // A 20×4 box rotated 90° about its centre → AABB is ~4 wide × ~20 tall.
+        // Rotation is applied by the caller (RotatedAabb), so the raw bounds are the un-rotated box.
         var doc = Doc(new ShapeElement
         {
             Id = "r", X = 10, Y = 10, W = 20, H = 4, Rotation = 90,
@@ -80,7 +80,18 @@ public class RenderedBoundsTests
         });
 
         var b = Bounds(doc, "r");
-        Assert.Equal(4.0, b.WMm, 1);
-        Assert.Equal(20.0, b.HMm, 1);
+        Assert.Equal(20.0, b.WMm, 3);
+        Assert.Equal(4.0, b.HMm, 3);
+    }
+
+    [Fact]
+    public void RotatedAabb_of_a_90deg_box_swaps_width_and_height()
+    {
+        // A 20×4 box rotated 90° about its centre (20,12) → AABB ~4 wide × ~20 tall, centred there.
+        var aabb = LabelRenderer.RotatedAabb(new RenderedRect(10, 10, 20, 4), 90, 20, 12);
+        Assert.Equal(4.0, aabb.WMm, 1);
+        Assert.Equal(20.0, aabb.HMm, 1);
+        Assert.Equal(18.0, aabb.XMm, 1); // 20 - 4/2
+        Assert.Equal(2.0, aabb.YMm, 1);  // 12 - 20/2
     }
 }

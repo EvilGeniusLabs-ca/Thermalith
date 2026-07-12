@@ -694,8 +694,19 @@ public sealed partial class EditorViewModel : ObservableObject
         else if (_dragGeoms.Count == 1)
         {
             var (id, g) = _dragGeoms.First();
-            var (x, y, w, h) = ResizeGeom(_dragHandle, g, dmx, dmy);
-            var (sx, sy, sw, sh) = SnapResize(_dragHandle, x, y, w, h);
+            var rot = _live.Elements.FirstOrDefault(e => e.Id == id)?.Rotation ?? 0;
+            double sx, sy, sw, sh;
+            if (Math.Abs(rot) > 1e-9)
+            {
+                // Resize in the element's rotated frame so the dragged handle tracks the pointer and the
+                // opposite anchor stays put (GitHub #5). No grid snap while rotated.
+                (sx, sy, sw, sh) = ResizeRotated(_dragHandle, g, rot, dmx, dmy);
+            }
+            else
+            {
+                var (x, y, w, h) = ResizeGeom(_dragHandle, g, dmx, dmy);
+                (sx, sy, sw, sh) = SnapResize(_dragHandle, x, y, w, h);
+            }
             // Resizing an auto-size text box takes manual control of its size → switch Auto-size off so the
             // drag sticks (and the box becomes a fixed, word-wrapping area), GitHub #5.
             ReplaceIn(list, id, e =>
@@ -778,6 +789,43 @@ public sealed partial class EditorViewModel : ObservableObject
         if (w < min) { if (left) x = g.X + g.W - min; w = min; }
         if (h < min) { if (top) y = g.Y + g.H - min; h = min; }
         return (x, y, w, h);
+    }
+
+    /// <summary>Resize a rotated element (GitHub #5): the dragged handle follows the pointer while the
+    /// opposite anchor stays fixed in display space. Works in the element's rotated frame about the box
+    /// centre, then returns the new un-rotated X/Y/W/H (which the renderer rotates back). Reduces to
+    /// <see cref="ResizeGeom"/> at 0°. No grid snapping while rotated.</summary>
+    private static (double X, double Y, double W, double H) ResizeRotated(Handle handle, GeomMm g, double angleDeg, double dmx, double dmy)
+    {
+        var left = handle is Handle.TopLeft or Handle.Left or Handle.BottomLeft;
+        var right = handle is Handle.TopRight or Handle.Right or Handle.BottomRight;
+        var top = handle is Handle.TopLeft or Handle.Top or Handle.TopRight;
+        var bottom = handle is Handle.BottomLeft or Handle.Bottom or Handle.BottomRight;
+
+        var rad = angleDeg * Math.PI / 180.0;
+        double cos = Math.Cos(rad), sin = Math.Sin(rad);
+        double cx = g.X + g.W / 2, cy = g.Y + g.H / 2;
+        (double X, double Y) Rot(double px, double py) { var dx = px - cx; var dy = py - cy; return (cx + dx * cos - dy * sin, cy + dx * sin + dy * cos); }
+        (double X, double Y) Unrot(double px, double py, double ox, double oy) { var dx = px - ox; var dy = py - oy; return (ox + dx * cos + dy * sin, oy - dx * sin + dy * cos); }
+
+        // Moving point and fixed anchor (opposite), in the element's un-rotated frame.
+        double mLx = left ? g.X : right ? g.X + g.W : cx;
+        double mLy = top ? g.Y : bottom ? g.Y + g.H : cy;
+        double aLx = left ? g.X + g.W : right ? g.X : cx;
+        double aLy = top ? g.Y + g.H : bottom ? g.Y : cy;
+
+        var m = Rot(mLx, mLy);
+        var a = Rot(aLx, aLy);
+        var mNew = (X: m.X + dmx, Y: m.Y + dmy);
+        var c = (X: (mNew.X + a.X) / 2, Y: (mNew.Y + a.Y) / 2); // new centre = midpoint of moved handle + fixed anchor
+
+        var mL = Unrot(mNew.X, mNew.Y, c.X, c.Y);
+        var aL = Unrot(a.X, a.Y, c.X, c.Y);
+
+        const double min = 1.0;
+        var w = (left || right) ? Math.Max(min, Math.Abs(mL.X - aL.X)) : g.W;
+        var h = (top || bottom) ? Math.Max(min, Math.Abs(mL.Y - aL.Y)) : g.H;
+        return (c.X - w / 2, c.Y - h / 2, w, h);
     }
 
     /// <summary>Rebuild a Line from two absolute endpoints: recompute the derived bbox (X/Y/W/H) and store
@@ -1152,9 +1200,18 @@ public sealed partial class EditorViewModel : ObservableObject
             {
                 // Dashed box tracks what's drawn (GitHub #5): serial/datetime + auto-size text hug their
                 // glyphs; a fixed/wrap text box keeps its authored area (the wrap region), grown to include
-                // any overflow; everything else is its model box.
+                // any overflow; everything else is its model box. Rotated elements carry the rotation so the
+                // view draws the box rotated about the element's centre.
                 var b = BoxFor(e);
-                SelectionRects.Add(new SelRect(b.XMm * s, b.YMm * s, b.WMm * s, b.HMm * s, e.Locked));
+                double left = b.XMm * s, top = b.YMm * s;
+                double angle = 0, ccx = 0, ccy = 0;
+                if (Math.Abs(e.Rotation) > 1e-9)
+                {
+                    angle = e.Rotation;
+                    ccx = (e.X + e.W / 2) * s - left; // rotate about the element box centre, relative to the box top-left
+                    ccy = (e.Y + e.H / 2) * s - top;
+                }
+                SelectionRects.Add(new SelRect(left, top, b.WMm * s, b.HMm * s, e.Locked, angle, ccx, ccy));
             }
 
         HasSelection = _selectedIds.Count > 0;
@@ -1175,14 +1232,39 @@ public sealed partial class EditorViewModel : ObservableObject
         }
         else if (_selectedIds.Count == 1 && !noHandles && SelectedEditor is { } ed)
         {
-            var r = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
-            SelectionBounds = r;
-            RebuildHandles(r);
+            SelectionBounds = new Rect(ed.X * s, ed.Y * s, ed.W * s, ed.H * s);
+            if (primary is { } p && Math.Abs(p.Rotation) > 1e-9)
+                RebuildHandlesRotated(ed.X, ed.Y, ed.W, ed.H, p.Rotation, s); // handles follow rotation (#5)
+            else
+                RebuildHandles(SelectionBounds);
         }
         else
         {
             SelectionHandles.Clear();
         }
+    }
+
+    /// <summary>The eight resize handles positioned around a rotated element's model box — each corner /
+    /// edge-midpoint rotated about the box centre so the handles hug the rendered control (GitHub #5).</summary>
+    private void RebuildHandlesRotated(double xMm, double yMm, double wMm, double hMm, double angleDeg, double s)
+    {
+        SelectionHandles.Clear();
+        const double hs = HandleSize, half = HandleSize / 2;
+        double cx = xMm + wMm / 2, cy = yMm + hMm / 2;
+        var rad = angleDeg * Math.PI / 180.0;
+        double cos = Math.Cos(rad), sin = Math.Sin(rad);
+        void Add(double px, double py, Handle k)
+        {
+            var dx = px - cx;
+            var dy = py - cy;
+            var rx = (cx + dx * cos - dy * sin) * s;
+            var ry = (cy + dx * sin + dy * cos) * s;
+            SelectionHandles.Add(new HandleSpec(rx - half, ry - half, hs, k));
+        }
+        double l = xMm, t = yMm, r = xMm + wMm, b = yMm + hMm, mx = xMm + wMm / 2, my = yMm + hMm / 2;
+        Add(l, t, Handle.TopLeft); Add(mx, t, Handle.Top); Add(r, t, Handle.TopRight);
+        Add(r, my, Handle.Right); Add(r, b, Handle.BottomRight); Add(mx, b, Handle.Bottom);
+        Add(l, b, Handle.BottomLeft); Add(l, my, Handle.Left);
     }
 
     /// <summary>Two handles at a Line's endpoints (display coords) — drag either to set that point's X,Y.</summary>
@@ -1200,18 +1282,23 @@ public sealed partial class EditorViewModel : ObservableObject
     // Align/distribute operate on each element's ACTUAL rendered bounds (GitHub #5) so edges line up with
     // what's drawn, not the stored box; the element is still moved by an X/Y delta (its rendered rect
     // translates with it), so overflowing/serial/datetime text aligns correctly.
-    private RenderedRect Bounds(LabelElement e) =>
+    /// <summary>The element's un-rotated content bounds (mm) from the last render.</summary>
+    private RenderedRect Content(LabelElement e) =>
         _renderedBounds.TryGetValue(e.Id, out var b) ? b : new RenderedRect(e.X, e.Y, e.W, e.H);
 
-    /// <summary>The rectangle to draw the selection box around (GitHub #5). Content-driven elements hug
-    /// their glyphs; a fixed/wrap text box keeps its authored area (grown to include any overflow); other
-    /// elements use their (rendered) box.</summary>
+    /// <summary>Axis-aligned rendered bounds including rotation — for align/distribute (GitHub #5).</summary>
+    private RenderedRect Bounds(LabelElement e) =>
+        LabelRenderer.RotatedAabb(Content(e), e.Rotation, e.X + e.W / 2, e.Y + e.H / 2);
+
+    /// <summary>The un-rotated rectangle to draw the selection box around (GitHub #5); the caller rotates it
+    /// with the element. Content-driven elements hug their glyphs; a fixed/wrap text box keeps its authored
+    /// area (grown to include any overflow); other elements use their (rendered) box.</summary>
     private RenderedRect BoxFor(LabelElement e) => e switch
     {
-        SerialElement or DateTimeElement => Bounds(e),
-        TextElement { Props.AutoSize: true } => Bounds(e),
-        TextElement => Union(Bounds(e), new RenderedRect(e.X, e.Y, e.W, e.H)),
-        _ => Bounds(e),
+        SerialElement or DateTimeElement => Content(e),
+        TextElement { Props.AutoSize: true } => Content(e),
+        TextElement => Union(Content(e), new RenderedRect(e.X, e.Y, e.W, e.H)),
+        _ => Content(e),
     };
 
     private static RenderedRect Union(RenderedRect a, RenderedRect b)

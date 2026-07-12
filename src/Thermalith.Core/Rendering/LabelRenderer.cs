@@ -214,12 +214,11 @@ public sealed class LabelRenderer
         var pxPerMm = label.Canvas.Dpi / 25.4;
         var map = new Dictionary<string, RenderedRect>(StringComparer.Ordinal);
         foreach (var el in label.Elements)
-        {
-            var r = el is ResolvedText t
+            // Un-rotated content bounds — the caller applies the element's rotation (as a rotated adorner,
+            // or an axis-aligned bounds via RotatedAabb for alignment).
+            map[el.Id] = el is ResolvedText t
                 ? TextBoundsMm(t, pxPerMm)
                 : new RenderedRect(el.XMm, el.YMm, el.WMm, el.HMm);
-            map[el.Id] = RotateBounds(r, el);
-        }
         return map;
     }
 
@@ -280,14 +279,13 @@ public sealed class LabelRenderer
         return new RenderedRect(minX / pxPerMm, top / pxPerMm, (maxX - minX) / pxPerMm, totalH / pxPerMm);
     }
 
-    /// <summary>Axis-aligned bounds of a rect rotated by the element's rotation about the element's box
-    /// centre (matching <see cref="DrawElement"/>'s rotation pivot). Identity when unrotated.</summary>
-    private static RenderedRect RotateBounds(RenderedRect r, ResolvedElement el)
+    /// <summary>Axis-aligned bounds (mm) of <paramref name="r"/> rotated by <paramref name="angleDeg"/>
+    /// about (<paramref name="cx"/>, <paramref name="cy"/>) — the element's box centre, matching
+    /// <see cref="DrawElement"/>'s pivot. Identity when unrotated. Used for alignment of rotated elements.</summary>
+    public static RenderedRect RotatedAabb(RenderedRect r, double angleDeg, double cx, double cy)
     {
-        if (Math.Abs(el.RotationDeg) < 1e-9) return r;
-        var cx = el.XMm + el.WMm / 2;
-        var cy = el.YMm + el.HMm / 2;
-        var rad = el.RotationDeg * Math.PI / 180.0;
+        if (Math.Abs(angleDeg) < 1e-9) return r;
+        var rad = angleDeg * Math.PI / 180.0;
         var cos = Math.Cos(rad);
         var sin = Math.Sin(rad);
         double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
