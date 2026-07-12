@@ -26,7 +26,7 @@ setting as **Orient°** in the label's Properties (see *[Creating a label](02-cr
 ## Undo and redo
 
 Every change can be undone. Use **Undo** / **Redo** on the toolbar, the **Edit** menu, or the standard
-keyboard shortcuts (see *[Keyboard shortcuts](08-about-and-shortcuts.md)*).
+keyboard shortcuts (see *[Keyboard shortcuts](09-about-and-shortcuts.md)*).
 
 ## Clipboard
 

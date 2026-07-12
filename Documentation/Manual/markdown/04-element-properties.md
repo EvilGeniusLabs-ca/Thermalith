@@ -34,6 +34,11 @@ All values update the canvas live as you change them.
 - **Drag** the body to move it; **drag a handle** to resize.
 - Hold and drag on an empty part of the canvas to **marquee-select** several elements at once.
 
+The dashed box hugs what the element actually draws — so it wraps a rotated element, and fits a serial
+number, date, or a long merged value even when the text is wider than the box you started with.
+**Align** and **Distribute** line things up by these visible edges. (A serial or date has no resize
+handles — its size follows the text; see **Auto-size** in *[Element types](05-element-types.md)*.)
+
 ## Visibility and locking
 
 Use the **eye** and **lock** toggles — on the Alignment row, in the Elements list, or from the

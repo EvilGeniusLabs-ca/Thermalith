@@ -18,9 +18,22 @@ Click an entry in the **Insert** palette to add that element to the label:
 - **Line** — a straight line.
 - **Image** — a picture from a file (converted to black-and-white for thermal printing).
 - **Table** — a grid of cells.
+- **Clip Art** — opens a palette of ready-made pictograms (see below).
 
 The new element appears on the canvas, selected and ready to position. Each element type and its own
 settings are covered in *[Element types](05-element-types.md)*.
+
+## Clip art
+
+**Clip Art** (at the bottom of the Insert palette) opens a palette of ready-made pictograms — general
+symbols and icons you can drop straight onto a label without drawing them yourself.
+
+- **Browse or search** the palette to find a symbol.
+- **Click** a symbol to place it on the label, centred and ready to move or resize.
+
+Clip art is **vector**, so it prints crisp and solid at any size on a thermal printer — there's no
+dithering or fuzziness. Once placed, a clip-art symbol behaves like any other element: move it, resize
+it, and arrange it with the rest of your design.
 
 ## The Elements list
 

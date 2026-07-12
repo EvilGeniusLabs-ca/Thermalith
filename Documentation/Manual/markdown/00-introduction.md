@@ -12,8 +12,9 @@ Thermalith runs on Windows, macOS, and Linux.
 
 - Set up a label to match your roll (size, shape, resolution).
 - Add and arrange text, barcodes, QR codes, serial numbers, dates and times, shapes, lines,
-  images, and tables.
+  images, tables, and ready-made clip-art symbols.
 - See an accurate, print-true preview as you work — what you see is what burns onto the label.
+- Print a batch of labels from a spreadsheet — one label per row — with data merge.
 - Connect a NIIMBOT printer, check its status, set print density, and print.
 
 ## A note on printers

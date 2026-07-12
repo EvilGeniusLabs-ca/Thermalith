@@ -7,12 +7,14 @@ selected. This chapter covers every type.
 
 ![Text properties](assets/properties_text.png)
 
-- **Content** — the text to print. Multi-line is supported.
+- **Content** — the text to print. Multi-line is supported. It can also contain `{tokens}` that are
+  filled in from a data source — see *[Data merge](08-data-merge.md)*.
 - **Font** — pick any font installed on your system. If a saved label uses a font you don't have,
   Thermalith substitutes a bundled fallback and flags it.
 - **Size (pt)** and the **B** / **I** / **U** buttons — point size, bold, italic, underline.
-- **Auto-size box to text** — when on, the box hugs the text and there are no resize handles. Turn it
-  off for a fixed-size box with word wrap.
+- **Auto-size box to text** — when on, the box hugs the text. Turn it off for a fixed-size box with word
+  wrap — or just **drag a resize handle**, which switches auto-size off and gives you a fixed box at that
+  size.
 - **Wrap** — how text wraps within a fixed box (*none* or *word*).
 - **Line spacing** — multiplier for the gap between lines (1.0 = single).
 

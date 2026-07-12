@@ -6,6 +6,31 @@ All notable changes to Thermalith are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-12
+
+### Added
+- **Data merge / variable data** — print a batch of labels from a CSV, one label per row. Bind any
+  text, barcode, or QR value to a column with a `{"Column name"}` or `{3}` (column-number) token; the
+  new **Data Merge** menu loads the file and its **Columns** entry inserts the right token for the field
+  you're editing. Auto-size text grows to fit each row's value. **Preview Merge Data** steps through the
+  rows on the canvas so you can see the real labels, and **Print Merge** prints them — it shows how many
+  labels the run needs, and on RFID rolls won't start more than the roll holds (it prints what fits and
+  lets you reprint the rest after a roll change). A progress bar lets you cancel part-way through.
+- **Insertable clip art** — a browsable, searchable palette of pictograms (from the bundled Material
+  Design Icons set) on the Insert palette. Click one to drop it on the label. Clip art is vector, so it
+  prints crisp at any size on a thermal printer.
+
+### Changed
+- The toolbar and inspector now use one consistent Material Design icon set throughout (alignment, the
+  Insert palette, eye/lock, and bold/italic/underline), replacing the older hand-drawn glyphs. The
+  eye and lock icons now change to show the current state.
+
+### Fixed
+- The selection box and alignment now match what's actually drawn. The dashed box hugs serial numbers,
+  dates, and overflowing text (instead of a fixed box that the text spilled out of), follows a rotated
+  element, and **Align** / **Distribute** line up the visible edges. Auto-size text now shows resize
+  handles — grab one to switch it to a fixed, word-wrapping box (no need to hunt for the checkbox).
+
 ## [1.0.2] - 2026-07-09
 
 ### Added
@@ -65,7 +90,8 @@ Initial public beta: the cross-platform desktop label designer (Windows, macOS, 
 WYSIWYG editor, text / barcode / QR / shape / line / image / table / serial / date-time elements, the
 `.nlbl` file format, and the verified B1 print path over USB and Bluetooth.
 
-[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v0.5.0-beta...v1.0.0
