@@ -15,8 +15,9 @@
     <!-- Single source of truth for the displayed/About version + artifact filenames. Keep in step with
          the git tag you push (release-plan). v1.0.0 = first public release (B1 + B4 verified on hardware);
          v1.0.1 = verified D11_H support (300 dpi side-fed) + its D110M-v4 print path;
-         v1.0.2 = opt-in connection-logging diagnostic (Help ▸ Connection Logging). -->
-    <Version>1.0.2</Version>
+         v1.0.2 = opt-in connection-logging diagnostic (Help ▸ Connection Logging);
+         v1.1.0 = data merge, clip-art palette, Material-icon UI, selection-box/auto-size fixes. -->
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
