@@ -1134,8 +1134,10 @@ public sealed partial class EditorViewModel : ObservableObject
         foreach (var id in _selectedIds)
             if (_live.Elements.FirstOrDefault(e => e.Id == id) is { } e)
             {
-                // Dashed box = actual rendered bounds (hugs overflowing/serial/datetime text), GitHub #5.
-                var b = Bounds(e);
+                // Dashed box tracks what's drawn (GitHub #5): serial/datetime + auto-size text hug their
+                // glyphs; a fixed/wrap text box keeps its authored area (the wrap region), grown to include
+                // any overflow; everything else is its model box.
+                var b = BoxFor(e);
                 SelectionRects.Add(new SelRect(b.XMm * s, b.YMm * s, b.WMm * s, b.HMm * s, e.Locked));
             }
 
@@ -1146,7 +1148,9 @@ public sealed partial class EditorViewModel : ObservableObject
         var primary = _selectedIds.Count == 1
             ? _live.Elements.FirstOrDefault(e => e.Id == _selectedIds.First())
             : null;
-        var noHandles = primary is { Locked: true } or TextElement { Props.AutoSize: true };
+        // Content-driven elements (auto-size text, serial, datetime) hug their glyphs → no resize handles;
+        // their size follows the data/font, not a draggable box (GitHub #5).
+        var noHandles = primary is { Locked: true } or TextElement { Props.AutoSize: true } or SerialElement or DateTimeElement;
         if (_selectedIds.Count == 1 && !noHandles && primary is LineElement ln)
         {
             SelectionBounds = new Rect(ln.X * s, ln.Y * s, ln.W * s, ln.H * s);
@@ -1181,6 +1185,26 @@ public sealed partial class EditorViewModel : ObservableObject
     // translates with it), so overflowing/serial/datetime text aligns correctly.
     private RenderedRect Bounds(LabelElement e) =>
         _renderedBounds.TryGetValue(e.Id, out var b) ? b : new RenderedRect(e.X, e.Y, e.W, e.H);
+
+    /// <summary>The rectangle to draw the selection box around (GitHub #5). Content-driven elements hug
+    /// their glyphs; a fixed/wrap text box keeps its authored area (grown to include any overflow); other
+    /// elements use their (rendered) box.</summary>
+    private RenderedRect BoxFor(LabelElement e) => e switch
+    {
+        SerialElement or DateTimeElement => Bounds(e),
+        TextElement { Props.AutoSize: true } => Bounds(e),
+        TextElement => Union(Bounds(e), new RenderedRect(e.X, e.Y, e.W, e.H)),
+        _ => Bounds(e),
+    };
+
+    private static RenderedRect Union(RenderedRect a, RenderedRect b)
+    {
+        var x = Math.Min(a.XMm, b.XMm);
+        var y = Math.Min(a.YMm, b.YMm);
+        var right = Math.Max(a.XMm + a.WMm, b.XMm + b.WMm);
+        var bottom = Math.Max(a.YMm + a.HMm, b.YMm + b.HMm);
+        return new RenderedRect(x, y, right - x, bottom - y);
+    }
 
     public void AlignLeft() => AlignEdit(s => { var v = s.Min(e => Bounds(e).XMm); return e => (v - Bounds(e).XMm, 0.0); });
     public void AlignRight() => AlignEdit(s => { var v = s.Max(e => Bounds(e).XMm + Bounds(e).WMm); return e => (v - (Bounds(e).XMm + Bounds(e).WMm), 0.0); });

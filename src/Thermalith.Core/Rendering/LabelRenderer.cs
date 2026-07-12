@@ -223,8 +223,10 @@ public sealed class LabelRenderer
         return map;
     }
 
-    /// <summary>The rendered-glyph bounds of a text element (mm), unioned with its stored box, using the
-    /// exact same layout (font/fit/wrap/justify) as <see cref="DrawText"/> so the box matches the paint.</summary>
+    /// <summary>The tight rendered-glyph bounds of a text element (mm) — the actual drawn extent, using the
+    /// exact same layout (font/fit/wrap/justify) as <see cref="DrawText"/> so the box matches the paint.
+    /// Falls back to the stored box only when there are no visible glyphs. Callers that want to keep a
+    /// larger authored box (e.g. a wrap area) union this with the model box themselves.</summary>
     private RenderedRect TextBoundsMm(ResolvedText t, double pxPerMm)
     {
         var boxX = t.XMm * pxPerMm;
@@ -259,9 +261,8 @@ public sealed class LabelRenderer
             _ => 0.0,
         };
 
-        // Union the drawn glyph extent with the stored box, so the adorner grows to include overflow but
-        // never shrinks below the element's own area.
-        double minX = boxX, maxX = boxX + boxW;
+        // Tight to the drawn glyphs (horizontally per justify, vertically the text block at `top`).
+        double minX = double.MaxValue, maxX = double.MinValue;
         foreach (var line in lines)
         {
             var lineW = MeasureLine(paint, line, letterSpacingPx);
@@ -274,10 +275,9 @@ public sealed class LabelRenderer
             minX = Math.Min(minX, x);
             maxX = Math.Max(maxX, x + lineW);
         }
-        var minY = Math.Min(boxY, top);
-        var maxY = Math.Max(boxY + boxH, top + totalH);
+        if (maxX <= minX) return new RenderedRect(t.XMm, t.YMm, t.WMm, t.HMm); // no visible glyphs
 
-        return new RenderedRect(minX / pxPerMm, minY / pxPerMm, (maxX - minX) / pxPerMm, (maxY - minY) / pxPerMm);
+        return new RenderedRect(minX / pxPerMm, top / pxPerMm, (maxX - minX) / pxPerMm, totalH / pxPerMm);
     }
 
     /// <summary>Axis-aligned bounds of a rect rotated by the element's rotation about the element's box

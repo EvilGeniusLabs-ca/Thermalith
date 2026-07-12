@@ -38,6 +38,22 @@ public class RenderedBoundsTests
     }
 
     [Fact]
+    public void Text_narrower_than_its_box_is_tight_to_the_glyphs()
+    {
+        // A short centred string in a wide box: bounds hug the glyphs, not the 60 mm box.
+        var doc = Doc(new TextElement
+        {
+            Id = "t", X = 5, Y = 5, W = 60, H = 8,
+            Justify = new Justify { H = "center" },
+            Props = new TextProps { Content = "Hi", FontSizePt = 10, AutoSize = false, Wrap = "none" },
+        });
+
+        var b = Bounds(doc, "t");
+        Assert.True(b.WMm < 20.0, $"expected tight width « 60mm box, got {b.WMm:0.##}");
+        Assert.True(b.XMm > 5.0, "centred text should start right of the box's left edge");
+    }
+
+    [Fact]
     public void Non_text_element_bounds_equal_its_model_box()
     {
         var doc = Doc(new ShapeElement
