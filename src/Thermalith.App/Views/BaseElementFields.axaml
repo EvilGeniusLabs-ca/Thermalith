@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ed="clr-namespace:Thermalith.App.ViewModels.Editors"
              xmlns:vm="clr-namespace:Thermalith.App.ViewModels"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Thermalith.App.Views.BaseElementFields"
              x:DataType="ed:ElementEditorViewModel">
 
@@ -49,17 +50,27 @@
 
         <!-- Horizontal align · vertical align · visibility/lock — all on one row. -->
         <StackPanel Orientation="Horizontal" Spacing="2">
-            <ToggleButton Classes="icon" ToolTip.Tip="Align left" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=left}"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></ToggleButton>
-            <ToggleButton Classes="icon" ToolTip.Tip="Align center" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=center}"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></ToggleButton>
-            <ToggleButton Classes="icon" ToolTip.Tip="Align right" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=right}"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></ToggleButton>
-            <ToggleButton Classes="icon" ToolTip.Tip="Justify" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=justify}"><Path Classes="icon" Data="{StaticResource IconAlignJustify}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align left" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=left}"><mi:MaterialIcon Kind="FormatAlignLeft" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align center" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=center}"><mi:MaterialIcon Kind="FormatAlignCenter" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align right" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=right}"><mi:MaterialIcon Kind="FormatAlignRight" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Justify" IsChecked="{Binding JustifyH, Converter={StaticResource Eq}, ConverterParameter=justify}"><mi:MaterialIcon Kind="FormatAlignJustify" /></ToggleButton>
             <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="3,3" />
-            <ToggleButton Classes="icon" ToolTip.Tip="Align top" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=top}"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></ToggleButton>
-            <ToggleButton Classes="icon" ToolTip.Tip="Align middle" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=middle}"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></ToggleButton>
-            <ToggleButton Classes="icon" ToolTip.Tip="Align bottom" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align top" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=top}"><mi:MaterialIcon Kind="AlignVerticalTop" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align middle" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=middle}"><mi:MaterialIcon Kind="AlignVerticalCenter" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Align bottom" IsChecked="{Binding JustifyV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><mi:MaterialIcon Kind="AlignVerticalBottom" /></ToggleButton>
             <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="3,3" />
-            <ToggleButton Classes="icon" ToolTip.Tip="Visible" IsChecked="{Binding Visible}"><Path Classes="icon" Data="{StaticResource IconEye}" /></ToggleButton>
-            <ToggleButton Classes="icon" ToolTip.Tip="Locked" IsChecked="{Binding Locked}"><Path Classes="icon" Data="{StaticResource IconLock}" /></ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Visible" IsChecked="{Binding Visible}">
+                <Panel>
+                    <mi:MaterialIcon Kind="Eye" IsVisible="{Binding Visible}" />
+                    <mi:MaterialIcon Kind="EyeOffOutline" IsVisible="{Binding !Visible}" />
+                </Panel>
+            </ToggleButton>
+            <ToggleButton Classes="icon" ToolTip.Tip="Locked" IsChecked="{Binding Locked}">
+                <Panel>
+                    <mi:MaterialIcon Kind="Lock" IsVisible="{Binding Locked}" />
+                    <mi:MaterialIcon Kind="LockOpenVariantOutline" IsVisible="{Binding !Locked}" />
+                </Panel>
+            </ToggleButton>
         </StackPanel>
 
         <!-- Distinct from the self-alignment row above: these centre the element ON THE LABEL. -->

@@ -218,28 +218,28 @@
                 <TextBlock DockPanel.Dock="Top" Text="Insert" Margin="8,6,8,2" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
                 <StackPanel DockPanel.Dock="Top" Margin="6,0,6,6">
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="text">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconText}" /><TextBlock Text="Text" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="FormatText" /><TextBlock Text="Text" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="barcode">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconBarcode}" /><TextBlock Text="Barcode" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Barcode" /><TextBlock Text="Barcode" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="qr">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconQr}" /><TextBlock Text="QR Code" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Qrcode" /><TextBlock Text="QR Code" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="serial">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconSerial}" /><TextBlock Text="Serial" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Counter" /><TextBlock Text="Serial" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="datetime">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconDate}" /><TextBlock Text="Date / Time" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="CalendarClock" /><TextBlock Text="Date / Time" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="shape">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconShape}" /><TextBlock Text="Shape" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="ShapeOutline" /><TextBlock Text="Shape" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="line">
                         <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="VectorLine" Width="15" Height="15" Foreground="{DynamicResource IconStroke}" /><TextBlock Text="Line" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="image">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconImage}" /><TextBlock Text="Image" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="ImageOutline" /><TextBlock Text="Image" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                     <Button Classes="insert" Name="ClipArtButton" Command="{Binding ToggleClipPaletteCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Sticker" Width="15" Height="15" Foreground="{DynamicResource IconStroke}" /><TextBlock Text="Clip Art" VerticalAlignment="Center" /></StackPanel>
@@ -249,7 +249,7 @@
                         <views:ClipPalette DataContext="{Binding ClipPalette}" />
                     </Popup>
                     <Button Classes="insert" Command="{Binding InsertCommand}" CommandParameter="table">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><Path Classes="icon" Data="{StaticResource IconTable}" /><TextBlock Text="Table" VerticalAlignment="Center" /></StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Table" /><TextBlock Text="Table" VerticalAlignment="Center" /></StackPanel>
                     </Button>
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Top" Text="Elements" Margin="8,2" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
@@ -264,10 +264,18 @@
                                 <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="2" Text="{Binding TypeLabel}" Foreground="{DynamicResource TextHint}" FontSize="11"
                                            VerticalAlignment="Center" Margin="0,0,4,0" />
-                                <ToggleButton Grid.Column="3" Classes="listicon" ToolTip.Tip="Visible"
-                                              IsChecked="{Binding Visible}"><Path Classes="icon" Data="{StaticResource IconEye}" /></ToggleButton>
-                                <ToggleButton Grid.Column="4" Classes="listicon" ToolTip.Tip="Locked"
-                                              IsChecked="{Binding Locked}"><Path Classes="icon" Data="{StaticResource IconLock}" /></ToggleButton>
+                                <ToggleButton Grid.Column="3" Classes="listicon" ToolTip.Tip="Visible" IsChecked="{Binding Visible}">
+                                    <Panel>
+                                        <mi:MaterialIcon Kind="Eye" IsVisible="{Binding Visible}" />
+                                        <mi:MaterialIcon Kind="EyeOffOutline" IsVisible="{Binding !Visible}" />
+                                    </Panel>
+                                </ToggleButton>
+                                <ToggleButton Grid.Column="4" Classes="listicon" ToolTip.Tip="Locked" IsChecked="{Binding Locked}">
+                                    <Panel>
+                                        <mi:MaterialIcon Kind="Lock" IsVisible="{Binding Locked}" />
+                                        <mi:MaterialIcon Kind="LockOpenVariantOutline" IsVisible="{Binding !Locked}" />
+                                    </Panel>
+                                </ToggleButton>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -519,18 +527,18 @@
                                 <ToggleButton Classes="icon" ToolTip.Tip="Black text" IsChecked="{Binding Editor.CellTextColor, Converter={StaticResource Eq}, ConverterParameter=black}"><Border Background="White" Padding="4,0"><TextBlock Text="A" Foreground="Black" /></Border></ToggleButton>
                                 <ToggleButton Classes="icon" ToolTip.Tip="White text" IsChecked="{Binding Editor.CellTextColor, Converter={StaticResource Eq}, ConverterParameter=white}"><Border Background="Black" Padding="4,0"><TextBlock Text="A" Foreground="White" /></Border></ToggleButton>
                                 <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="3,2" />
-                                <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Editor.CellBold}"><TextBlock Text="B" FontWeight="Bold" /></ToggleButton>
-                                <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Editor.CellItalic}"><TextBlock Text="I" FontStyle="Italic" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Editor.CellBold}"><mi:MaterialIcon Kind="FormatBold" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Editor.CellItalic}"><mi:MaterialIcon Kind="FormatItalic" /></ToggleButton>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Align" />
                             <StackPanel Orientation="Horizontal" Spacing="3">
-                                <ToggleButton Classes="icon" ToolTip.Tip="Left" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=left}"><Path Classes="icon" Data="{StaticResource IconAlignLeft}" /></ToggleButton>
-                                <ToggleButton Classes="icon" ToolTip.Tip="Center" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=center}"><Path Classes="icon" Data="{StaticResource IconAlignCenter}" /></ToggleButton>
-                                <ToggleButton Classes="icon" ToolTip.Tip="Right" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=right}"><Path Classes="icon" Data="{StaticResource IconAlignRight}" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Left" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=left}"><mi:MaterialIcon Kind="FormatAlignLeft" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Center" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=center}"><mi:MaterialIcon Kind="FormatAlignCenter" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Right" IsChecked="{Binding Editor.CellAlignH, Converter={StaticResource Eq}, ConverterParameter=right}"><mi:MaterialIcon Kind="FormatAlignRight" /></ToggleButton>
                                 <Rectangle Width="1" Fill="{DynamicResource DividerWeak}" Margin="3,2" />
-                                <ToggleButton Classes="icon" ToolTip.Tip="Top" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=top}"><Path Classes="icon" Data="{StaticResource IconAlignTop}" /></ToggleButton>
-                                <ToggleButton Classes="icon" ToolTip.Tip="Middle" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=middle}"><Path Classes="icon" Data="{StaticResource IconAlignMiddle}" /></ToggleButton>
-                                <ToggleButton Classes="icon" ToolTip.Tip="Bottom" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><Path Classes="icon" Data="{StaticResource IconAlignBottom}" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Top" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=top}"><mi:MaterialIcon Kind="AlignVerticalTop" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Middle" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=middle}"><mi:MaterialIcon Kind="AlignVerticalCenter" /></ToggleButton>
+                                <ToggleButton Classes="icon" ToolTip.Tip="Bottom" IsChecked="{Binding Editor.CellAlignV, Converter={StaticResource Eq}, ConverterParameter=bottom}"><mi:MaterialIcon Kind="AlignVerticalBottom" /></ToggleButton>
                             </StackPanel>
                             <TextBlock Classes="section" Text="Header" />
                             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -576,9 +584,9 @@
                                         <TextBlock Text="Size (pt)" />
                                         <NumericUpDown Grid.Column="1" Value="{Binding FontSizePt, Converter={StaticResource Nz}}" Minimum="1" Maximum="500" />
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right">
-                                            <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Bold}"><TextBlock Text="B" FontWeight="Bold" /></ToggleButton>
-                                            <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Italic}"><TextBlock Text="I" FontStyle="Italic" /></ToggleButton>
-                                            <ToggleButton Classes="icon" ToolTip.Tip="Underline" IsChecked="{Binding Underline}"><TextBlock Text="U" TextDecorations="Underline" /></ToggleButton>
+                                            <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Bold}"><mi:MaterialIcon Kind="FormatBold" /></ToggleButton>
+                                            <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Italic}"><mi:MaterialIcon Kind="FormatItalic" /></ToggleButton>
+                                            <ToggleButton Classes="icon" ToolTip.Tip="Underline" IsChecked="{Binding Underline}"><mi:MaterialIcon Kind="FormatUnderline" /></ToggleButton>
                                         </StackPanel>
                                     </Grid>
 
@@ -690,10 +698,10 @@
                                     <CheckBox IsChecked="{Binding Invert}" Content="Invert" Margin="0,4" ToolTip.Tip="Swap black and white in the output." />
                                     <TextBlock Text="Transform" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <Button Classes="icon" Command="{Binding RotateCcwCommand}" ToolTip.Tip="Rotate counter-clockwise 90°"><mi:MaterialIcon Kind="RotateLeft" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></Button>
-                                        <Button Classes="icon" Command="{Binding RotateCwCommand}" ToolTip.Tip="Rotate clockwise 90°"><mi:MaterialIcon Kind="RotateRight" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></Button>
-                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipH}" ToolTip.Tip="Mirror (flip horizontal)"><mi:MaterialIcon Kind="FlipHorizontal" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></ToggleButton>
-                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipV}" ToolTip.Tip="Flip (vertical)"><mi:MaterialIcon Kind="FlipVertical" Width="16" Height="16" Foreground="{DynamicResource IconStroke}" /></ToggleButton>
+                                        <Button Classes="icon" Command="{Binding RotateCcwCommand}" ToolTip.Tip="Rotate counter-clockwise 90°"><mi:MaterialIcon Kind="RotateLeft" /></Button>
+                                        <Button Classes="icon" Command="{Binding RotateCwCommand}" ToolTip.Tip="Rotate clockwise 90°"><mi:MaterialIcon Kind="RotateRight" /></Button>
+                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipH}" ToolTip.Tip="Mirror (flip horizontal)"><mi:MaterialIcon Kind="FlipHorizontal" /></ToggleButton>
+                                        <ToggleButton Classes="icon" IsChecked="{Binding FlipV}" ToolTip.Tip="Flip (vertical)"><mi:MaterialIcon Kind="FlipVertical" /></ToggleButton>
                                     </StackPanel>
                                 </StackPanel>
                             </DataTemplate>
