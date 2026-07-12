@@ -67,6 +67,7 @@ public sealed partial class EditorViewModel : ObservableObject
     private bool _syncingSelection;
     private Dictionary<string, GeomMm>? _dragGeoms;
     private DragMode _dragMode = DragMode.None;
+    private bool _autoSizeConverted; // a resize turned the selected auto-size text box into a fixed one (#5)
     private Handle _dragHandle;
     private bool _dragMoved;
     // Start endpoints (absolute mm) of a Line being dragged by one of its endpoint handles.
@@ -695,7 +696,17 @@ public sealed partial class EditorViewModel : ObservableObject
             var (id, g) = _dragGeoms.First();
             var (x, y, w, h) = ResizeGeom(_dragHandle, g, dmx, dmy);
             var (sx, sy, sw, sh) = SnapResize(_dragHandle, x, y, w, h);
-            ReplaceIn(list, id, e => e with { X = sx, Y = sy, W = sw, H = sh });
+            // Resizing an auto-size text box takes manual control of its size → switch Auto-size off so the
+            // drag sticks (and the box becomes a fixed, word-wrapping area), GitHub #5.
+            ReplaceIn(list, id, e =>
+            {
+                if (e is TextElement { Props.AutoSize: true } te)
+                {
+                    _autoSizeConverted = true; // rebuild the inspector at EndDrag so its checkbox updates
+                    return te with { X = sx, Y = sy, W = sw, H = sh, Props = te.Props with { AutoSize = false } };
+                }
+                return e with { X = sx, Y = sy, W = sw, H = sh };
+            });
         }
 
         _live = _live with { Elements = list };
@@ -709,6 +720,11 @@ public sealed partial class EditorViewModel : ObservableObject
     public void EndDrag()
     {
         if (_dragMoved) { _history.Commit(_live); RaiseState(); }
+        // A resize just flipped an auto-size text box to fixed → rebuild the inspector so its Auto-size
+        // checkbox reflects the change (GitHub #5).
+        if (_autoSizeConverted && SelectedEditor is { } ed && _live.Elements.FirstOrDefault(e => e.Id == ed.Id) is { } el)
+            SelectedEditor = ElementEditorViewModel.Create(el, OnElementEdited);
+        _autoSizeConverted = false;
         _dragMode = DragMode.None;
         _dragGeoms = null;
         _lineDrag = null;
@@ -1148,9 +1164,10 @@ public sealed partial class EditorViewModel : ObservableObject
         var primary = _selectedIds.Count == 1
             ? _live.Elements.FirstOrDefault(e => e.Id == _selectedIds.First())
             : null;
-        // Content-driven elements (auto-size text, serial, datetime) hug their glyphs → no resize handles;
-        // their size follows the data/font, not a draggable box (GitHub #5).
-        var noHandles = primary is { Locked: true } or TextElement { Props.AutoSize: true } or SerialElement or DateTimeElement;
+        // Serial/DateTime hug their glyphs (size follows the value/font) → no resize handles. Auto-size
+        // text DOES show handles: grabbing one converts it to a fixed box (handled in DragTo), which is the
+        // discoverable way to get a fixed, wrapping box (GitHub #5).
+        var noHandles = primary is { Locked: true } or SerialElement or DateTimeElement;
         if (_selectedIds.Count == 1 && !noHandles && primary is LineElement ln)
         {
             SelectionBounds = new Rect(ln.X * s, ln.Y * s, ln.W * s, ln.H * s);
