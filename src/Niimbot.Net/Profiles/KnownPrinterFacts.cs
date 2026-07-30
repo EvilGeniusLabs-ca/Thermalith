@@ -15,8 +15,9 @@ namespace Niimbot.Net.Profiles;
 public static class KnownPrinterFacts
 {
     /// <summary>Model ids confirmed on real hardware. B1 (4096) and B4 (6656) as of 2026-06-14; D11_H
-    /// (528) as of 2026-06-17 — the first verified D110-family / side-fed / 300-dpi unit.</summary>
-    public static readonly IReadOnlySet<int> VerifiedModelIds = new HashSet<int> { 4096, 6656, 528 };
+    /// (528) as of 2026-06-17 — the first verified D110-family / side-fed / 300-dpi unit; B3S_P (272)
+    /// as of 2026-07-30 — USB-C revision, fw 7.81, 203 dpi / 576-px head, B1 print task correct.</summary>
+    public static readonly IReadOnlySet<int> VerifiedModelIds = new HashSet<int> { 4096, 6656, 528, 272 };
 
     /// <summary>
     /// Model ids that use the <see cref="PrintTaskVersion.D110"/> print sequence (2-byte PrintStart /
