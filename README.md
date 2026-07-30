@@ -12,7 +12,7 @@ Thermalith is a free, FOSS alternative to the vendor's cloud-tethered desktop ap
 
 First public release (1.0.0).
 
-- **Printing works on real hardware.** The full design → render → print path is verified end-to-end on the NIIMBOT **B1** and **B4** (203 dpi). Other models resolve their geometry from a 79-printer capability catalogue (built from the vendor's device data); broadening verified driver coverage across the printer family is ongoing, with a D11 next on the test matrix.
+- **Printing works on real hardware.** The full design → render → print path is verified end-to-end on the NIIMBOT **B1**, **B4**, and **B3S_P** (203 dpi) and the **D11_H** (300 dpi, side-fed). Other models resolve their geometry from a 79-printer capability catalogue (built from the vendor's device data); broadening verified driver coverage across the printer family is ongoing.
 - **The editor is usable.** Text, barcode, QR, serial, date/time, shape, line, image, and table elements; on-canvas drag / resize / align / distribute / group, layers, undo/redo, rulers with grid snap, a printable-area guide, click-to-type editing, and light / dark / system themes.
 - The binaries are not code-signed yet (see the platform notes below); signing and notarization come in a later release.
 
