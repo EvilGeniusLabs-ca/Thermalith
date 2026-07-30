@@ -71,6 +71,8 @@ Derivations (verified against our B1 profile):
 
 What the B1 reports for an RFID-tagged roll: `uuid` (8 bytes, per *physical* roll), `barcode` (a
 ~9-digit NIIMBOT article/batch code), `serial` (per *physical* roll), paper type, and label counts.
+The **B3S_P reads identically** (confirmed 2026-07-30, starter roll 70×40: barcode `032624001`,
+no partName/boxId on the tag — partName presence varies by roll, not by reader).
 
 Findings:
 - The RFID barcode is **not** the part name and **not** the box id. Store both separately.
