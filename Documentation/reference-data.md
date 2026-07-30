@@ -99,25 +99,29 @@ Findings:
 
 ## Niimbot.Net broad-model support — hardware test matrix
 
-The Niimbot.Net v1 goal is "drive every catalogue printer". **B1 and B4 are hardware-verified** (B4 added
-2026-06-15); D11 is the next unit incoming. Profiles are **catalogue-derived**, so any listed model resolves
+The Niimbot.Net v1 goal is "drive every catalogue printer". **Hardware-verified: B1 + B4 (2026-06-15),
+D11_H (2026-06-17), B3S_P (2026-07-30).** Profiles are **catalogue-derived**, so any listed model resolves
 real geometry, dpi, and density from `printers.json`; the open part is per-engine **print-path** verification
 on hardware. Broadening coverage means exercising three axes — width, print-engine, and dpi:
 
-- **Width:** 12 / 48 / 104 mm · **Engine:** D110 + Left feed (D11) vs B1 + Top feed (B1, B4) ·
-  **dpi:** 203 (B1, B4) + 229 (D11) — beyond the all-203/8-dots-per-mm baseline.
+- **Width:** 12 / 48 / 72 / 104 mm · **Engine:** D110MV4 + Left feed (D11_H) vs B1 + Top feed (B1, B3S_P,
+  B4) · **dpi:** 203 (B1, B3S_P, B4) + 300 (D11_H) — beyond the all-203/8-dots-per-mm baseline.
 
 **Per-unit task:** read each printer's reported **model-id + dpi** and reconcile against the catalogue —
 same "confirm against hardware" discipline as the per-SKU roll key.
 
-- **Narrow end — D11 "upgraded" (~12 mm).** Maps to catalogue **D11_H / D11_Pro (229 dpi / 108 px,
-  ids 528/531)**. NIIMBOT markets it "300 dpi" but `devices.json` says **229** — CONFIRM the real reported
-  dpi against hardware (drives render dot-pitch). Covers the narrow form factor *and* the different engine
-  (`PrintTaskVersion.D110` + `PrintDirection.Left`) *and* the non-203 dpi path. The catalogue +
-  `KnownPrinterFacts` resolve D11 to the D110 engine + Left feed, but that mapping is best-known and
-  **unverified** — the D11 is what confirms the D110 print path on real hardware.
+- **Narrow end — D11_H (~12 mm) — VERIFIED 2026-06-17.** Catalogue id 528. The old 229 dpi / 108 px spec
+  was wrong (229 was back-computed from the bad 108); the real unit is **300 dpi / 142 px** and uses the
+  **D110MV4** print task (9-byte PrintStart, 13-byte SetPageSize carrying the copy count) with Left feed.
+  Covers the narrow form factor, the side-fed engine, and the non-203 dpi path. The plain D11/D11S (OldD11
+  task) and D110 (D110 task) print paths are still inferred, not hardware-checked.
 - **Middle — B1 (203 dpi / 384 px).** The verified reference unit, mid-width. (B1 Pro at 229 dpi exists,
-  skipped — the 300-dpi D11 already exercises the non-203 path.)
+  skipped — the 300-dpi D11_H already exercises the non-203 path.)
+- **3-inch — B3S_P (72 mm printable, 203 dpi / 576 px, id 272) — VERIFIED 2026-07-30.** Current-production
+  USB-C revision (native USB-CDC, VID 3513), fw 7.81; reported model-id/dpi/head match the catalogue
+  exactly, and the default **B1 print task** prints correctly. Note for #1: the reporter's ~7-year-old
+  micro-USB B3S (ids 256/260/262) is silent on both SPP and USB serial — that old-firmware case is NOT
+  covered by this unit and still needs his-hardware forensics.
 - **Wide end — B4 (4" / 104 mm) — VERIFIED 2026-06-15.** A full 98×148 mm shipping label prints correct and
   complete (after the tall-label run-length fix). A 4" label is just a 104 mm canvas the app already accepts;
   the requirement is that Niimbot.Net lets a developer drive the printer. The only additive "shipping-ish"
