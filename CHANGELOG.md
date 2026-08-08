@@ -6,6 +6,15 @@ All notable changes to Thermalith are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **Labels printed about a quarter too small on 300 dpi printers.** Thermalith read each printer's
+  resolution from the wrong field in NIIMBOT's device list, so every 300 dpi model was recorded as a
+  "229 dpi" printer that does not exist, with a print head narrower than the real one. Everything sent
+  to those printers came out at roughly 76% of its designed size. 22 of the 79 catalogued models were
+  affected, among them the **B21 Pro**, **B1 Pro**, **B2 Pro**, **B32**, **D11 Pro**, **C1**, **P1** and
+  the **M2 / M3 / EP** families. The 203 dpi printers - including the B1, B4 and B3S - were never
+  affected, and their settings are unchanged. Reported for the B21 Pro (#17).
+
 ## [1.1.0] - 2026-07-12
 
 ### Added
