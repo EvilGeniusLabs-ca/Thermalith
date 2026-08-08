@@ -58,6 +58,36 @@ public sealed partial class PrinterViewModel : ObservableObject
     /// <summary>The RFID of the currently-loaded roll (set on connect/refresh), or null. Used by the shell to resolve/prompt.</summary>
     public RfidInfo? LoadedRfid { get; private set; }
 
+    // ── Matched roll (GitHub #18) ─────────────────────────────────────────────────────────────
+    // A known barcode used to be applied in silence, so there was no way to see what the app had
+    // matched or to correct a definition that was saved wrong. The shell resolves the barcode and
+    // pushes the result here; the panel shows it and offers an edit.
+
+    /// <summary>Name of the learned-catalogue roll matched to the loaded tag, or null when the roll
+    /// is unknown, untagged, or no printer is connected.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasMatchedRoll))]
+    private string? _matchedRollName;
+
+    /// <summary>One-line details of the matched roll, e.g. "50 × 30 mm · Gap · 198 left".</summary>
+    [ObservableProperty] private string? _matchedRollDetail;
+
+    public bool HasMatchedRoll => !string.IsNullOrEmpty(MatchedRollName);
+
+    /// <summary>Raised when the user asks to review or correct the matched roll. The shell owns the
+    /// roll store and the dialog, so it handles this the same way it handles a first-time definition.</summary>
+    public event EventHandler? EditMatchedRollRequested;
+
+    [RelayCommand]
+    private void EditMatchedRoll() => EditMatchedRollRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>Show (or clear, with nulls) the roll the shell matched for the loaded tag.</summary>
+    public void SetMatchedRoll(string? name, string? detail)
+    {
+        MatchedRollName = name;
+        MatchedRollDetail = detail;
+    }
+
     /// <summary>Labels left on the loaded roll (Total − Used from RFID), or null when the roll count is
     /// unknown (no tag / non-RFID model). Drives the data-merge roll-capacity guard (GitHub #7).</summary>
     public int? RemainingLabels =>
@@ -305,6 +335,7 @@ public sealed partial class PrinterViewModel : ObservableObject
         if (!IsConnected || _caps is null)
         {
             LoadedRollText = "No printer";
+            SetMatchedRoll(null, null);   // nothing loaded — drop any stale match
             return;
         }
         var model = _caps.ModelName;

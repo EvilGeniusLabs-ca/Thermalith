@@ -752,6 +752,26 @@
                                         ToolTip.Tip="Re-read the roll after swapping labels" />
                             </StackPanel>
 
+                            <!-- Matched roll (GitHub #18): a known barcode is applied without a dialog, so
+                                 this is the only place the user can see what was matched and fix it. -->
+                            <Border IsVisible="{Binding HasMatchedRoll}" Margin="0,4,0,0" Padding="8,6"
+                                    CornerRadius="3" Background="{DynamicResource SurfaceBar}"
+                                    BorderThickness="1" BorderBrush="{DynamicResource DividerWeak}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="Matched roll" FontSize="10"
+                                                   Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding MatchedRollName}" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextStrong}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding MatchedRollDetail}"
+                                                   Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Edit" VerticalAlignment="Center"
+                                            Command="{Binding EditMatchedRollCommand}"
+                                            ToolTip.Tip="Review or correct this roll's saved definition" />
+                                </Grid>
+                            </Border>
+
                             <Separator />
                             <TextBlock Text="Print" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" />
                             <Grid ColumnDefinitions="90,*" Margin="0,2">

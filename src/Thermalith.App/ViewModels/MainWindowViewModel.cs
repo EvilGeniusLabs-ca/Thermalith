@@ -23,6 +23,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly LabelRollStore _rollStore = new();
     private AppSettings _settings;
 
+    /// <summary>The learned-catalogue roll currently applied, when it came from a barcode match.
+    /// Kept so the user can reopen and correct that saved definition (GitHub #18).</summary>
+    private RollDefinition? _matchedRoll;
+
     public MainWindowViewModel() : this(new SettingsService()) { }
 
     public MainWindowViewModel(SettingsService settingsService)
@@ -38,6 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Editor.PropertyChanged += OnEditorPropertyChanged;
         Printer.RollDetected += OnRollDetected;
         Printer.Connected += OnPrinterConnected;
+        Printer.EditMatchedRollRequested += OnEditMatchedRoll;
         // Keep the merge-print command's enablement current with the printer's connection/busy state.
         Printer.PropertyChanged += (_, e) =>
         {
@@ -216,13 +221,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ResolveRollAsync()
     {
-        if (Printer.LoadedRfid is not { TagPresent: true } r || string.IsNullOrEmpty(r.Barcode)) return;
+        if (Printer.LoadedRfid is not { TagPresent: true } r || string.IsNullOrEmpty(r.Barcode))
+        {
+            SetMatchedRoll(null);
+            return;
+        }
 
         var known = _rollStore.FindByBarcode(r.Barcode);
         if (known is not null)
         {
             var hasMargin = ApplyResolvedRoll(known);
             _rollStore.Remember(known); // refresh last-used
+            SetMatchedRoll(known);
             StatusMessage = $"Loaded roll: {known.Name} ({known.WidthMm:0.#}×{known.HeightMm:0.#} mm)"
                 + (hasMargin ? $" — printable width {Printer.ConnectedPrintableWidthMm:0.#} mm; the rest crops at print." : "");
             return;
@@ -243,7 +253,50 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _rollStore.Remember(defined);
         ApplyResolvedRoll(defined);
+        SetMatchedRoll(defined);   // it's a known roll from here on
         StatusMessage = $"Saved roll: {defined.Name}";
+    }
+
+    /// <summary>Publish (or clear) the matched-roll summary the printer panel shows. The label count
+    /// comes from the live RFID read, not the stored definition — the tag carries no size, and the
+    /// definition carries no count.</summary>
+    private void SetMatchedRoll(RollDefinition? roll)
+    {
+        _matchedRoll = roll;
+        if (roll is null)
+        {
+            Printer.SetMatchedRoll(null, null);
+            return;
+        }
+
+        var parts = new List<string> { $"{roll.WidthMm:0.#} × {roll.HeightMm:0.#} mm" };
+        if (!string.IsNullOrWhiteSpace(roll.PaperType))
+            parts.Add(char.ToUpperInvariant(roll.PaperType[0]) + roll.PaperType[1..]);
+        if (Printer.RemainingLabels is { } left) parts.Add($"{left} left");
+
+        Printer.SetMatchedRoll(roll.Name, string.Join(" · ", parts));
+    }
+
+    /// <summary>Reopen the matched roll's saved definition so the user can correct it — same dialog as
+    /// first-time characterisation, pre-filled. Saving re-applies it to the canvas (GitHub #18).</summary>
+    private async void OnEditMatchedRoll(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (_matchedRoll is null || Dialogs is null) return;
+
+            var edited = await Dialogs.DefineRollAsync(_matchedRoll, "Edit label roll");
+            if (edited is null) return; // cancelled — leave the stored definition alone
+
+            _rollStore.Remember(edited);
+            ApplyResolvedRoll(edited);
+            SetMatchedRoll(edited);
+            StatusMessage = $"Updated roll: {edited.Name}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Edit roll: " + ex.Message;
+        }
     }
 
     /// <summary>Apply a roll to the canvas, clamping width to the connected printer's printable area.

@@ -6,6 +6,13 @@ All notable changes to Thermalith are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **The printer panel now shows which roll it matched.** When the printer reads a roll tag Thermalith
+  already knows, it used to apply the saved size and paper type without saying so. It now shows the
+  roll's name, size, paper type and labels remaining, with an **Edit** button that reopens the saved
+  definition so you can correct it - useful when a roll was characterised wrongly the first time.
+  Unknown rolls still open the definition dialog as before. (#18)
+
 ### Fixed
 - **Labels printed about a quarter too small on 300 dpi printers.** Thermalith read each printer's
   resolution from the wrong field in NIIMBOT's device list, so every 300 dpi model was recorded as a
