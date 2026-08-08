@@ -28,14 +28,28 @@ Dropped: scraping NIIMBOT's cloud SKU catalogue / locating that endpoint — not
 
 `id`, `seriesId`, `seriesName`, `codes`, `name`, `printDirection`, `defaultWidth`,
 `defaultHeigth` (sic — their typo), `maxPrintWidth`, `maxPrintHeight`, `widthSetStart`,
-`widthSetEnd`, `solubilitySetStart/End/Default`, `paccuracy`, `paperType`, `rfidType`,
-`consumables[]`, `thumb` (always null), `compatibleWithApplications`, `isSupportWifi`,
+`widthSetEnd`, `solubilitySetStart/End/Default`, `paccuracy`, `paccuracyName`, `paperType`,
+`rfidType`, `consumables[]`, `thumb` (always null), `compatibleWithApplications`, `isSupportWifi`,
 `isSupportCalibration`.
 
-Derivations (verified against our B1 profile):
-- `paccuracy` = pixels per mm. dpi = round(paccuracy × 25.4). 8 → 203 dpi, 11.81 → 300 dpi.
-  (B32 reports 9 → ~229 dpi — unusual, verify if we rely on it.)
-- **printheadPx = `widthSetEnd` × `paccuracy`** (B1: 48 × 8 = 384 — matches our profile exactly).
+Derivations (corrected 2026-08-08 - see the dpi warning below):
+- **dpi = `paccuracyName`.** It is a *string* holding the real head resolution, and across all 79
+  devices it takes exactly two values: `"203"` (56 models) and `"300"` (23 models). There is no
+  third resolution.
+- **`paccuracy` is NOT pixels per mm** - it is an internal code, only ever `8` or `9`, paired
+  1:1 with `paccuracyName` (8 --> 203, 9 --> 300).
+- **Pixels per mm is a lookup off the dpi, not arithmetic:** 203 --> 8, 300 --> **11.81**. Use 11.81
+  literally (not 300/25.4 = 11.811); it is the constant NIIMBOT's own data and niimbluelib's
+  `tools/gen-printer-models.js` are built on, and it reproduces every published printhead width.
+- **printheadPx = ceil(`widthSetEnd` x ppmm)** - B1: 48 x 8 = 384; B21 Pro: ceil(50 x 11.81) = 591.
+  `ceil` matters: B32 is 851 not 850, C1 is 178 not 177.
+
+**The 229 dpi trap.** Treating `paccuracy` as px/mm and scaling by 25.4 makes every 300 dpi printer
+report a phantom **229 dpi** (9 x 25.4 = 228.6) with a printhead ~76% of its true width. Labels then
+print at ~76% of design size. **No NIIMBOT printer is 229 dpi.** This shipped in Thermalith 1.1.0 and
+hit 22 of 79 models; it was first seen on the D11_H (2026-06-17, fixed as a one-off) and reported
+against the B21 Pro as GitHub #17. Fixed at source in `PrinterCatalogImporter` on 2026-08-08 and
+guarded by tests. If a 229 ever reappears in the catalog, the importer has regressed.
 - `widthSetEnd` is the **printable** width (mm); `maxPrintWidth`/`defaultWidth` is the **stock**
   width. They differ: B1 stock = 50 mm, printable = 48 mm. This is the crux of the "50 mm canvas
   won't print on B1" issue — content must live within the printable 48 mm (≈ crop 8 px / side of a
@@ -112,13 +126,16 @@ on hardware. Broadening coverage means exercising three axes — width, print-en
 **Per-unit task:** read each printer's reported **model-id + dpi** and reconcile against the catalogue —
 same "confirm against hardware" discipline as the per-SKU roll key.
 
-- **Narrow end — D11_H (~12 mm) — VERIFIED 2026-06-17.** Catalogue id 528. The old 229 dpi / 108 px spec
+- **Narrow end - D11_H (~12 mm) - VERIFIED 2026-06-17.** Catalogue id 528. The old 229 dpi / 108 px spec
   was wrong (229 was back-computed from the bad 108); the real unit is **300 dpi / 142 px** and uses the
   **D110MV4** print task (9-byte PrintStart, 13-byte SetPageSize carrying the copy count) with Left feed.
   Covers the narrow form factor, the side-fed engine, and the non-203 dpi path. The plain D11/D11S (OldD11
-  task) and D110 (D110 task) print paths are still inferred, not hardware-checked.
-- **Middle — B1 (203 dpi / 384 px).** The verified reference unit, mid-width. (B1 Pro at 229 dpi exists,
-  skipped — the 300-dpi D11_H already exercises the non-203 path.)
+  task) and D110 (D110 task) print paths are still inferred, not hardware-checked. This unit turned out to
+  be the first sighting of the catalog-wide 229 dpi bug above; the corrected importer now derives its
+  300 / 142 from the general rule rather than a hand-patched entry.
+- **Middle - B1 (203 dpi / 384 px).** The verified reference unit, mid-width. (The B1 Pro is **300 dpi /
+  567 px** - it was listed here as "229 dpi" before the 2026-08-08 fix. Still skipped for hardware
+  testing; the D11_H already exercises the 300-dpi path.)
 - **3-inch — B3S_P (72 mm printable, 203 dpi / 576 px, id 272) — VERIFIED 2026-07-30.** Current-production
   USB-C revision (native USB-CDC, VID 3513), fw 7.81; reported model-id/dpi/head match the catalogue
   exactly, and the default **B1 print task** prints correctly. Note for #1: the reporter's ~7-year-old

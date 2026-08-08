@@ -32,6 +32,42 @@ public class PrinterCatalogTests
     }
 
     [Fact]
+    public void B21_Pro_resolves_at_300_dpi()
+    {
+        // GitHub #17: shipped as a phantom 229 dpi / 450px, so 50×30mm labels printed at ~76% size.
+        var b21Pro = PrinterCatalog.LoadEmbedded().FindByModelId(785);
+
+        Assert.NotNull(b21Pro);
+        Assert.Equal("B21_Pro", b21Pro!.Model);
+        Assert.Equal(300, b21Pro.Dpi);
+        Assert.Equal(591, b21Pro.PrintheadPx);        // ceil(50mm × 11.81px/mm)
+    }
+
+    [Fact]
+    public void No_printer_has_a_dpi_outside_the_two_real_values()
+    {
+        // NIIMBOT ships exactly two head resolutions. Anything else means the importer is deriving
+        // dpi arithmetically again instead of reading paccuracyName — see GitHub #17.
+        var offenders = PrinterCatalog.LoadEmbedded().Printers
+            .Where(p => p.Dpi is not (203 or 300))
+            .Select(p => $"{p.Model} = {p.Dpi}dpi")
+            .ToList();
+
+        Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void Printhead_pixels_agree_with_dpi_and_printable_width()
+    {
+        var offenders = PrinterCatalog.LoadEmbedded().Printers
+            .Where(p => p.PrintheadPx != (int)Math.Ceiling(p.PrintableWidthMm * (p.Dpi == 300 ? 11.81 : 8.0)))
+            .Select(p => $"{p.Model}: {p.PrintheadPx}px for {p.PrintableWidthMm}mm @ {p.Dpi}dpi")
+            .ToList();
+
+        Assert.Empty(offenders);
+    }
+
+    [Fact]
     public void Importer_round_trips_through_our_json()
     {
         var catalog = PrinterCatalog.LoadEmbedded();

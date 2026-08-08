@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "source": "https://oss-print.niimbot.com/public_resources/static_resources/devices.json",
-  "fetchedUtc": "2026-06-15T13:06:12.9613750\u002B00:00",
+  "fetchedUtc": "2026-08-08T20:18:12.6734025\u002B00:00",
   "printers": [
     {
       "model": "A1 Pro",
@@ -9,13 +9,13 @@
       "ids": [
         7424
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 25,
       "defaultHeightMm": 38,
       "stockWidthMm": 15,
       "maxHeightMm": 120,
       "printableWidthMm": 25,
-      "printheadPx": 225,
+      "printheadPx": 296,
       "widthMinMm": 3,
       "widthMaxMm": 25,
       "densityMin": 1,
@@ -89,13 +89,13 @@
       "ids": [
         2054
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 75,
       "maxHeightMm": 240,
       "printableWidthMm": 72,
-      "printheadPx": 648,
+      "printheadPx": 851,
       "widthMinMm": 20,
       "widthMaxMm": 72,
       "densityMin": 1,
@@ -197,13 +197,13 @@
       "ids": [
         4097
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 50,
       "maxHeightMm": 200,
       "printableWidthMm": 48,
-      "printheadPx": 432,
+      "printheadPx": 567,
       "widthMinMm": 20,
       "widthMaxMm": 48,
       "densityMin": 1,
@@ -391,13 +391,13 @@
       "ids": [
         6912
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 200,
       "maxHeightMm": 200,
       "printableWidthMm": 48,
-      "printheadPx": 432,
+      "printheadPx": 567,
       "widthMinMm": 20,
       "widthMaxMm": 48,
       "densityMin": 1,
@@ -584,13 +584,13 @@
       "ids": [
         785
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 50,
       "maxHeightMm": 200,
       "printableWidthMm": 50,
-      "printheadPx": 450,
+      "printheadPx": 591,
       "widthMinMm": 20,
       "widthMaxMm": 50,
       "densityMin": 1,
@@ -667,13 +667,13 @@
       "ids": [
         2049
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 75,
       "maxHeightMm": 240,
       "printableWidthMm": 72,
-      "printheadPx": 648,
+      "printheadPx": 851,
       "widthMinMm": 20,
       "widthMaxMm": 72,
       "densityMin": 1,
@@ -693,13 +693,13 @@
       "ids": [
         2050
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 75,
       "maxHeightMm": 240,
       "printableWidthMm": 72,
-      "printheadPx": 648,
+      "printheadPx": 851,
       "widthMinMm": 20,
       "widthMaxMm": 72,
       "densityMin": 1,
@@ -768,7 +768,7 @@
       ],
       "rfidType": 1,
       "printDirectionDeg": 0,
-      "verified": false
+      "verified": true
     },
     {
       "model": "B4",
@@ -803,13 +803,13 @@
       "ids": [
         6657
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 108,
       "maxHeightMm": 350,
       "printableWidthMm": 104,
-      "printheadPx": 936,
+      "printheadPx": 1229,
       "widthMinMm": 20,
       "widthMaxMm": 104,
       "densityMin": 1,
@@ -912,13 +912,13 @@
       "ids": [
         5120
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 12,
       "defaultHeightMm": 40,
       "stockWidthMm": 50,
       "maxHeightMm": 50,
       "printableWidthMm": 15,
-      "printheadPx": 135,
+      "printheadPx": 178,
       "widthMinMm": 12,
       "widthMaxMm": 15,
       "densityMin": 1,
@@ -1086,7 +1086,7 @@
       ],
       "rfidType": 1,
       "printDirectionDeg": 90,
-      "verified": false
+      "verified": true
     },
     {
       "model": "D11_Pro",
@@ -1094,13 +1094,13 @@
       "ids": [
         531
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 30,
       "defaultHeightMm": 12,
       "stockWidthMm": 15,
       "maxHeightMm": 200,
       "printableWidthMm": 12,
-      "printheadPx": 108,
+      "printheadPx": 142,
       "widthMinMm": 12,
       "widthMaxMm": 12,
       "densityMin": 1,
@@ -1192,13 +1192,13 @@
       "ids": [
         5121
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 12,
       "defaultHeightMm": 40,
       "stockWidthMm": 50,
       "maxHeightMm": 50,
       "printableWidthMm": 15,
-      "printheadPx": 135,
+      "printheadPx": 178,
       "widthMinMm": 12,
       "widthMaxMm": 15,
       "densityMin": 1,
@@ -1217,13 +1217,13 @@
       "ids": [
         4610
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 200,
       "maxHeightMm": 200,
       "printableWidthMm": 48,
-      "printheadPx": 432,
+      "printheadPx": 567,
       "widthMinMm": 20,
       "widthMaxMm": 48,
       "densityMin": 1,
@@ -1245,13 +1245,13 @@
       "ids": [
         6402
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 78,
       "maxHeightMm": 350,
       "printableWidthMm": 72,
-      "printheadPx": 648,
+      "printheadPx": 851,
       "widthMinMm": 20,
       "widthMaxMm": 72,
       "densityMin": 1,
@@ -1620,13 +1620,13 @@
       "ids": [
         4608
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 50,
       "maxHeightMm": 240,
       "printableWidthMm": 48,
-      "printheadPx": 432,
+      "printheadPx": 567,
       "widthMinMm": 20,
       "widthMaxMm": 48,
       "densityMin": 1,
@@ -1648,13 +1648,13 @@
       "ids": [
         6400
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 78,
       "maxHeightMm": 350,
       "printableWidthMm": 72,
-      "printheadPx": 648,
+      "printheadPx": 851,
       "widthMinMm": 20,
       "widthMaxMm": 72,
       "densityMin": 1,
@@ -1759,13 +1759,13 @@
       "ids": [
         1024
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 80,
       "maxHeightMm": 150,
       "printableWidthMm": 59,
-      "printheadPx": 531,
+      "printheadPx": 697,
       "widthMinMm": 20,
       "widthMaxMm": 59,
       "densityMin": 1,
@@ -1784,13 +1784,13 @@
       "ids": [
         1026
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 87,
       "maxHeightMm": 150,
       "printableWidthMm": 56,
-      "printheadPx": 504,
+      "printheadPx": 662,
       "widthMinMm": 20,
       "widthMaxMm": 56,
       "densityMin": 1,
@@ -1809,13 +1809,13 @@
       "ids": [
         1025
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 87,
       "maxHeightMm": 150,
       "printableWidthMm": 56,
-      "printheadPx": 504,
+      "printheadPx": 662,
       "widthMinMm": 20,
       "widthMaxMm": 56,
       "densityMin": 1,
@@ -2028,13 +2028,13 @@
       "ids": [
         51718
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 50,
       "maxHeightMm": 200,
       "printableWidthMm": 48,
-      "printheadPx": 432,
+      "printheadPx": 567,
       "widthMinMm": 20,
       "widthMaxMm": 48,
       "densityMin": 6,
@@ -2056,13 +2056,13 @@
       "ids": [
         2053
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 75,
       "maxHeightMm": 120,
       "printableWidthMm": 72,
-      "printheadPx": 648,
+      "printheadPx": 851,
       "widthMinMm": 20,
       "widthMaxMm": 72,
       "densityMin": 1,
@@ -2081,13 +2081,13 @@
       "ids": [
         4609
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 50,
       "maxHeightMm": 240,
       "printableWidthMm": 50,
-      "printheadPx": 450,
+      "printheadPx": 591,
       "widthMinMm": 20,
       "widthMaxMm": 50,
       "densityMin": 1,
@@ -2108,13 +2108,13 @@
       "ids": [
         2051
       ],
-      "dpi": 229,
+      "dpi": 300,
       "defaultWidthMm": 50,
       "defaultHeightMm": 30,
       "stockWidthMm": 75,
       "maxHeightMm": 240,
       "printableWidthMm": 72,
-      "printheadPx": 648,
+      "printheadPx": 851,
       "widthMinMm": 20,
       "widthMaxMm": 72,
       "densityMin": 1,

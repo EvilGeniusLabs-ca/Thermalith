@@ -12,7 +12,7 @@ B1 print path is verified on real hardware. Currently mid **usability/cleanup pa
   catalog. No UI.
 - `src/Thermalith.App` — the Avalonia desktop editor.
 - `src/Thermalith.Server` — API/MCP scaffold (Phase 5, stub — not R1).
-- `tests/` — Niimbot.Net / Thermalith.Core / Thermalith.Server (**78 tests**).
+- `tests/` — Niimbot.Net / Thermalith.Core / Thermalith.Server (**136 tests**).
 - `tools/print-harness` — console probe/print tool for hardware.
 - `EvilGeniusLabs.DonationWare` is NOT here — it was extracted to its own repo at
   `d:\Projects\EvilGeniusLabs.DonationWare` (MIT NuGet). Thermalith only consumes it.
@@ -41,7 +41,7 @@ gitignored here, **never mirrored to public GitHub**):
 - **The app is often running** (Richard tests live) → file-copy lock errors `MSB3021`/`MSB3027`
   ("being used by another process") are EXPECTED and harmless. Real failures are compile errors:
   `dotnet build … 2>&1 | grep -iE "error (CS|AVLN|XAMLIL|XFC)"` must print nothing.
-- Tests: `dotnet test` — 78 pass, 0 skip. Render tests are SkiaSharp snapshots (Verify); baselines were
+- Tests: `dotnet test` — 136 pass, 0 skip. Render tests are SkiaSharp snapshots (Verify); baselines were
   generated on Windows.
 - No GUI from the agent side → "launch smoke" = `timeout 7 dotnet run … --no-build` and grep stderr for
   exceptions. **Visual correctness is Richard's hands-on check**, not the agent's.
