@@ -5,10 +5,11 @@
     <PackageId>Niimbot.Net</PackageId>
     <!-- Versioned independently of the app (this is a standalone NuGet — bump on the library's own
          semver cadence, not on app releases). 1.1.0 adds the D110M-v4 print task over the implicit 1.0.0;
-         1.2.0 adds the NiimbotTrace diagnostic hook.
+         1.2.0 adds the NiimbotTrace diagnostic hook; 1.3.0 fixes the dpi derivation (minor, not patch —
+         Dpi/PrintheadPx values change for 22 catalogue models).
          Keep <Version> + <PackageReleaseNotes> + Documentation/releases/niimbot.net/v<Version>.md in step. -->
-    <Version>1.2.0</Version>
-    <PackageReleaseNotes>1.2.0 — adds NiimbotTrace, an opt-in, dependency-free diagnostic sink that traces port enumeration, serial open/read/write, the probe, and command send/timeout for connection troubleshooting. Off by default (no sink = near-zero overhead); additive and backward-compatible. Full notes: Documentation/releases/niimbot.net/v1.2.0.md.</PackageReleaseNotes>
+    <Version>1.3.0</Version>
+    <PackageReleaseNotes>1.3.0 — fixes printer resolution: the importer read NIIMBOT's `paccuracy` code (8/9) as pixels-per-mm and scaled it by 25.4, inventing a 229 dpi that no NIIMBOT printer has, with a printhead ~76% of its true width. dpi now comes from `paccuracyName` (203 or 300) and printheadPx = ceil(widthSetEnd × ppmm). The bundled printers.json baseline is regenerated: 22 of 79 entries have corrected Dpi/PrintheadPx (B21 Pro, B1 Pro, B32, D11 Pro, P1, M2/M3/EP families and others); all 203 dpi models are unchanged. No API change. Full notes: Documentation/releases/niimbot.net/v1.3.0.md.</PackageReleaseNotes>
     <Description>C# protocol and transport library for NIIMBOT thermal label printers. Independent of any UI or label engine.</Description>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>

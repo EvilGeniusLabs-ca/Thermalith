@@ -6,6 +6,8 @@ All notable changes to Thermalith are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-08
+
 ### Added
 - **macOS: the menus are now in the system menu bar at the top of the screen**, where a Mac app's
   menus belong, instead of inside the window. Windows and Linux are unchanged. (#9)
@@ -113,7 +115,8 @@ Initial public beta: the cross-platform desktop label designer (Windows, macOS, 
 WYSIWYG editor, text / barcode / QR / shape / line / image / table / serial / date-time elements, the
 `.nlbl` file format, and the verified B1 print path over USB and Bluetooth.
 
-[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.0...v1.0.1

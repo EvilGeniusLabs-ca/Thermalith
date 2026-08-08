@@ -17,10 +17,8 @@
          v1.0.1 = verified D11_H support (300 dpi side-fed) + its D110M-v4 print path;
          v1.0.2 = opt-in connection-logging diagnostic (Help ▸ Connection Logging);
          v1.1.0 = data merge, clip-art palette, Material-icon UI, selection-box/auto-size fixes;
-         v1.2.0 = 300 dpi print-size fix, matched-roll panel, rotation seed, macOS native menu bar.
-         Currently on the -beta.1 interim build so the macOS menu bar (#9) can be tested on the M4
-         mini; drop the suffix when tagging the real v1.2.0. -->
-    <Version>1.2.0-beta.2</Version>
+         v1.2.0 = 300 dpi print-size fix, matched-roll panel, rotation seed, macOS native menu bar. -->
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
