@@ -160,12 +160,16 @@ public sealed partial class EditorViewModel : ObservableObject
 
     /// <summary>New empty document at a specific canvas size + target printhead width (clean, not dirty) —
     /// used at startup to seed the last applied roll/printer.</summary>
-    public void NewDocument(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm, double? safeMarginMm = null) =>
-        LoadInternal(DocumentFactory.New(widthMm, heightMm, dpi, shape, printheadWidthMm, safeMarginMm), new Manifest { Id = DocumentFactory.NewId(), Name = "Untitled" }, null, new Dictionary<string, byte[]>());
+    public void NewDocument(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm,
+        double? safeMarginMm = null, int orientationDeg = 0) =>
+        LoadInternal(DocumentFactory.New(widthMm, heightMm, dpi, shape, printheadWidthMm, safeMarginMm, orientationDeg),
+            new Manifest { Id = DocumentFactory.NewId(), Name = "Untitled" }, null, new Dictionary<string, byte[]>());
 
-    /// <summary>Current canvas geometry + target printhead width + safe margin (for persisting the last applied size).</summary>
-    public (double WidthMm, double HeightMm, int Dpi, string Shape, double? PrintheadWidthMm, double? SafeMarginMm) CurrentCanvas() =>
-        (_live.Canvas.WidthMm, _live.Canvas.HeightMm, _live.Canvas.Dpi, _live.Canvas.Shape, _live.Canvas.PrintheadWidthMm, _live.Canvas.SafeAreaInsetMm);
+    /// <summary>Current canvas geometry + target printhead width + safe margin + orientation (for
+    /// persisting the last applied size). Width/height are the rotated <i>view</i> dims, so orientation
+    /// has to be restored alongside them or the seed comes back the wrong way round (GitHub #6).</summary>
+    public (double WidthMm, double HeightMm, int Dpi, string Shape, double? PrintheadWidthMm, double? SafeMarginMm, int OrientationDeg) CurrentCanvas() =>
+        (_live.Canvas.WidthMm, _live.Canvas.HeightMm, _live.Canvas.Dpi, _live.Canvas.Shape, _live.Canvas.PrintheadWidthMm, _live.Canvas.SafeAreaInsetMm, OrientationDeg);
 
     public void LoadPackage(LabelPackage package, string path) =>
         LoadInternal(package.Document, package.Manifest, path, package.Assets);

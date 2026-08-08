@@ -55,7 +55,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (_settings.LastCanvasWidthMm is > 0 && _settings.LastCanvasHeightMm is > 0)
             Editor.NewDocument(_settings.LastCanvasWidthMm.Value, _settings.LastCanvasHeightMm.Value,
                 _settings.LastCanvasDpi ?? 203, _settings.LastCanvasShape ?? "rectangle", _settings.LastPrintheadWidthMm,
-                _settings.LastSafeMarginMm);
+                _settings.LastSafeMarginMm, _settings.LastCanvasOrientationDeg ?? 0);
 
         UpdateTitle();
 
@@ -78,7 +78,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// the document, and close the palette (#2).</summary>
     private void InsertClip(Thermalith.Core.Fonts.ClipGlyph glyph)
     {
-        var (wMm, hMm, dpi, _, _, _) = Editor.CurrentCanvas();
+        var (wMm, hMm, dpi, _, _, _, _) = Editor.CurrentCanvas();
         var baked = ClipPalette.BakeCentered(glyph, wMm, hMm, dpi);
         if (baked is null) return;
         Editor.AddClip(baked.Value.Element, baked.Value.AssetId, baked.Value.Png);
@@ -111,11 +111,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// (seeds the next new label). Called on roll-apply, on Save, and on app close.</summary>
     public void RememberCanvas()
     {
-        var (w, h, dpi, shape, head, margin) = Editor.CurrentCanvas();
+        var (w, h, dpi, shape, head, margin, orientation) = Editor.CurrentCanvas();
         _settings = _settings with
         {
             LastCanvasWidthMm = w, LastCanvasHeightMm = h, LastCanvasDpi = dpi, LastCanvasShape = shape,
-            LastPrintheadWidthMm = head, LastSafeMarginMm = margin,
+            LastPrintheadWidthMm = head, LastSafeMarginMm = margin, LastCanvasOrientationDeg = orientation,
         };
         _settingsService.Save(_settings);
     }

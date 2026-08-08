@@ -20,9 +20,15 @@ public static class DocumentFactory
 
     /// <summary>A new empty document at a specific canvas size + target printhead width + safe margin
     /// (the last applied roll / remembered defaults).</summary>
-    public static LabelDocument New(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm, double? safeMarginMm = null) => New() with
+    public static LabelDocument New(double widthMm, double heightMm, int dpi, string shape, double? printheadWidthMm,
+        double? safeMarginMm = null, int orientationDeg = 0) => New() with
     {
-        Canvas = new Canvas { WidthMm = widthMm, HeightMm = heightMm, Dpi = dpi, Shape = shape, PrintheadWidthMm = printheadWidthMm, SafeAreaInsetMm = safeMarginMm },
+        Canvas = new Canvas
+        {
+            WidthMm = widthMm, HeightMm = heightMm, Dpi = dpi, Shape = shape,
+            PrintheadWidthMm = printheadWidthMm, SafeAreaInsetMm = safeMarginMm,
+            OrientationDeg = orientationDeg,
+        },
     };
 
     /// <summary>A stable, collision-resistant element id (§6.1: ids survive undo/copy/binding).</summary>

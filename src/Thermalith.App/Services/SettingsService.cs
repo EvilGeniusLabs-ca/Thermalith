@@ -30,6 +30,12 @@ public sealed record AppSettings
     public double? LastPrintheadWidthMm { get; init; }
     public double? LastSafeMarginMm { get; init; }
 
+    /// <summary>Whole-label rotation of the last applied canvas: 0 | 90 | 180 | 270. Saved with the
+    /// size above so a restart restores the orientation the user was working in — a saved `.nlbl`
+    /// always carried it, but the remembered seed used to drop it and re-open un-rotated (GitHub #6).
+    /// The width/height stored here are the rotated *view* dimensions, so the two go together.</summary>
+    public int? LastCanvasOrientationDeg { get; init; }
+
     // Last connected printer — startup background-scans and reconnects if found. Port is a hint (ports
     // re-enumerate); model is the real match.
     public string? LastPrinterPort { get; init; }

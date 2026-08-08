@@ -14,6 +14,9 @@ All notable changes to Thermalith are recorded here. The format follows
   Unknown rolls still open the definition dialog as before. (#18)
 
 ### Fixed
+- **A rotated label no longer comes back un-rotated after a restart.** The app remembers your last
+  canvas so a new label starts at the right size, but it was dropping the rotation, so a sideways
+  label reopened the wrong way round. Saved `.nlbl` files were never affected. (#6)
 - **Labels printed about a quarter too small on 300 dpi printers.** Thermalith read each printer's
   resolution from the wrong field in NIIMBOT's device list, so every 300 dpi model was recorded as a
   "229 dpi" printer that does not exist, with a print head narrower than the real one. Everything sent
