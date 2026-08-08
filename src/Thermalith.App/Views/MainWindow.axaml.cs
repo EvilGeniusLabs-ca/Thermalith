@@ -519,6 +519,36 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
             var bound = guardText ? new TextAwareCommand(command, this) : command;
             KeyBindings.Add(new KeyBinding { Gesture = gesture, Command = bound });
             item.InputGesture = gesture;
+            // The macOS native menu shows the same accelerator (GitHub #9). It's display only —
+            // the KeyBinding above is what actually fires, on every platform.
+            if (FindNativeItem(item.Header as string) is { } native) native.Gesture = gesture;
+        }
+    }
+
+    // ── macOS native menu bar (GitHub #9) ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Find a <see cref="NativeMenuItem"/> in the window's native menu by its header. The native menu
+    /// is a XAML mirror of the in-window one, but <c>x:Name</c> isn't usable on <c>NativeMenuItem</c>
+    /// (it has no Name property and isn't a Visual, so the namescope can't register it) — header
+    /// lookup is the way to reach a specific entry. Headers are matched with the in-window mnemonic
+    /// underscores stripped, since the native mirror drops them.
+    /// </summary>
+    private NativeMenuItem? FindNativeItem(string? header)
+    {
+        if (string.IsNullOrEmpty(header)) return null;
+        return Find(NativeMenu.GetMenu(this), header.Replace("_", ""));
+
+        static NativeMenuItem? Find(NativeMenu? menu, string header)
+        {
+            if (menu is null) return null;
+            foreach (var entry in menu.Items)
+            {
+                if (entry is not NativeMenuItem item) continue;
+                if (string.Equals(item.Header, header, StringComparison.Ordinal)) return item;
+                if (Find(item.Menu, header) is { } nested) return nested;
+            }
+            return null;
         }
     }
 
@@ -551,6 +581,13 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         foreach (var path in vm.RecentFiles)
             items.Add(new MenuItem { Header = path, Command = vm.OpenRecentCommand, CommandParameter = path });
         MiRecent.ItemsSource = items;
+
+        // The native mirror can't share these — NativeMenuItem is a different type (GitHub #9).
+        if (FindNativeItem("Open Recent") is not { } native) return;
+        native.Menu ??= new NativeMenu();
+        native.Menu.Items.Clear();
+        foreach (var path in vm.RecentFiles)
+            native.Menu.Items.Add(new NativeMenuItem(path) { Command = vm.OpenRecentCommand, CommandParameter = path });
     }
 
     // ── IFilePicker (platform dialogs) ───────────────────────────────────────────────────────
@@ -707,5 +744,19 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
         if (items.Count == 0)
             items.Add(new MenuItem { Header = "(load a CSV data source first)", IsEnabled = false });
         MiMergeColumns.ItemsSource = items;
+
+        // Native mirror (GitHub #9). Same click handler, so token insertion behaves identically.
+        if (FindNativeItem("Columns") is not { } native) return;
+        native.Menu ??= new NativeMenu();
+        native.Menu.Items.Clear();
+        foreach (var col in vm.DataMerge.Columns)
+        {
+            var token = col.Token;
+            var item = new NativeMenuItem($"{col.Label}    {token}");
+            item.Click += (_, _) => InsertTokenAtCaret(token);
+            native.Menu.Items.Add(item);
+        }
+        if (native.Menu.Items.Count == 0)
+            native.Menu.Items.Add(new NativeMenuItem("(load a CSV data source first)") { IsEnabled = false });
     }
 }

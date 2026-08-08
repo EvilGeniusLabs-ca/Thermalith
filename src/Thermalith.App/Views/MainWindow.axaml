@@ -25,10 +25,185 @@
         </Style>
     </Window.Styles>
 
+    <!-- macOS top-of-screen menu bar (GitHub #9). A deliberate mirror of the in-window Menu below
+         rather than a replacement: only one of the two is ever shown (see the IsVisible switches on
+         NativeMenuBar / Menu), so Windows and Linux keep the exact menu they had. Mnemonics are
+         dropped here because macOS doesn't use them; accelerators come from the Window's KeyBindings
+         (wired in WireKeymap), so shortcuts work either way and Gesture here is display only. -->
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="File">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="New" Command="{Binding NewCommand}" />
+                        <NativeMenuItem Header="Open…" Command="{Binding OpenCommand}" />
+                        <NativeMenuItem Header="Open Recent" IsEnabled="{Binding HasRecentFiles}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Save" Command="{Binding SaveCommand}" />
+                        <NativeMenuItem Header="Save As…" Command="{Binding SaveAsCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Quit" Command="{Binding QuitCommand}" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="Edit">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Undo" Command="{Binding UndoCommand}" />
+                        <NativeMenuItem Header="Redo" Command="{Binding RedoCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Cut" Command="{Binding CutCommand}" />
+                        <NativeMenuItem Header="Copy" Command="{Binding CopyCommand}" />
+                        <NativeMenuItem Header="Paste" Command="{Binding PasteCommand}" />
+                        <NativeMenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Delete" Command="{Binding DeleteCommand}" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="View">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Zoom In" Command="{Binding ZoomInCommand}" />
+                        <NativeMenuItem Header="Zoom Out" Command="{Binding ZoomOutCommand}" />
+                        <NativeMenuItem Header="Zoom to Fit" Command="{Binding ZoomFitCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Show Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.ShowGrid, Mode=TwoWay}" />
+                        <NativeMenuItem Header="Snap to Grid" ToggleType="CheckBox" IsChecked="{Binding Editor.SnapEnabled, Mode=TwoWay}" />
+                        <NativeMenuItem Header="Show Printable Area" ToggleType="CheckBox" IsChecked="{Binding Editor.ShowSafeArea, Mode=TwoWay}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Smooth Preview" ToggleType="CheckBox" IsChecked="{Binding Editor.SmoothPreview, Mode=TwoWay}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Theme">
+                            <NativeMenuItem.Menu>
+                                <NativeMenu>
+                                    <NativeMenuItem Header="System (follow OS)" ToggleType="Radio"
+                                                    Command="{Binding SetThemeCommand}" CommandParameter="Default"
+                                                    IsChecked="{Binding Theme, Converter={StaticResource Eq}, ConverterParameter=Default, Mode=OneWay}" />
+                                    <NativeMenuItem Header="Light" ToggleType="Radio"
+                                                    Command="{Binding SetThemeCommand}" CommandParameter="Light"
+                                                    IsChecked="{Binding Theme, Converter={StaticResource Eq}, ConverterParameter=Light, Mode=OneWay}" />
+                                    <NativeMenuItem Header="Dark" ToggleType="Radio"
+                                                    Command="{Binding SetThemeCommand}" CommandParameter="Dark"
+                                                    IsChecked="{Binding Theme, Converter={StaticResource Eq}, ConverterParameter=Dark, Mode=OneWay}" />
+                                </NativeMenu>
+                            </NativeMenuItem.Menu>
+                        </NativeMenuItem>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="Insert">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Text" Command="{Binding InsertCommand}" CommandParameter="text" />
+                        <NativeMenuItem Header="Barcode" Command="{Binding InsertCommand}" CommandParameter="barcode" />
+                        <NativeMenuItem Header="QR Code" Command="{Binding InsertCommand}" CommandParameter="qr" />
+                        <NativeMenuItem Header="Serial" Command="{Binding InsertCommand}" CommandParameter="serial" />
+                        <NativeMenuItem Header="Date / Time" Command="{Binding InsertCommand}" CommandParameter="datetime" />
+                        <NativeMenuItem Header="Shape" Command="{Binding InsertCommand}" CommandParameter="shape" />
+                        <NativeMenuItem Header="Image" Command="{Binding InsertCommand}" CommandParameter="image" />
+                        <NativeMenuItem Header="Table" Command="{Binding InsertCommand}" CommandParameter="table" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="Data Merge">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Select Data File…" Command="{Binding DataMerge.SelectFileCommand}" />
+                        <NativeMenuItem Header="Clear Data Source" Command="{Binding DataMerge.ClearCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Columns" IsEnabled="{Binding DataMerge.HasData}" />
+                        <NativeMenuItem Header="{Binding DataMerge.SourceInfo}" IsEnabled="False" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Preview Merge Data" ToggleType="CheckBox"
+                                        IsChecked="{Binding DataMerge.IsPreviewing, Mode=TwoWay}"
+                                        IsEnabled="{Binding DataMerge.HasData}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Print Merge…" Command="{Binding DataMerge.PrintMergeCommand}" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="Arrange">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Group" Command="{Binding GroupCommand}" />
+                        <NativeMenuItem Header="Ungroup" Command="{Binding UngroupCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Bring to Front" Command="{Binding BringToFrontCommand}" />
+                        <NativeMenuItem Header="Bring Forward" Command="{Binding BringForwardCommand}" />
+                        <NativeMenuItem Header="Send Backward" Command="{Binding SendBackwardCommand}" />
+                        <NativeMenuItem Header="Send to Back" Command="{Binding SendToBackCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Align">
+                            <NativeMenuItem.Menu>
+                                <NativeMenu>
+                                    <NativeMenuItem Header="Left" Command="{Binding AlignLeftCommand}" />
+                                    <NativeMenuItem Header="Center" Command="{Binding AlignCenterHCommand}" />
+                                    <NativeMenuItem Header="Right" Command="{Binding AlignRightCommand}" />
+                                    <NativeMenuItemSeparator />
+                                    <NativeMenuItem Header="Top" Command="{Binding AlignTopCommand}" />
+                                    <NativeMenuItem Header="Middle" Command="{Binding AlignMiddleVCommand}" />
+                                    <NativeMenuItem Header="Bottom" Command="{Binding AlignBottomCommand}" />
+                                </NativeMenu>
+                            </NativeMenuItem.Menu>
+                        </NativeMenuItem>
+                        <NativeMenuItem Header="Distribute">
+                            <NativeMenuItem.Menu>
+                                <NativeMenu>
+                                    <NativeMenuItem Header="Horizontally" Command="{Binding DistributeHCommand}" />
+                                    <NativeMenuItem Header="Vertically" Command="{Binding DistributeVCommand}" />
+                                </NativeMenu>
+                            </NativeMenuItem.Menu>
+                        </NativeMenuItem>
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Center on Label">
+                            <NativeMenuItem.Menu>
+                                <NativeMenu>
+                                    <NativeMenuItem Header="Horizontally" Command="{Binding CenterOnLabelHCommand}" />
+                                    <NativeMenuItem Header="Vertically" Command="{Binding CenterOnLabelVCommand}" />
+                                </NativeMenu>
+                            </NativeMenuItem.Menu>
+                        </NativeMenuItem>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="Printer">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Refresh Ports" Command="{Binding Printer.RefreshPortsCommand}" />
+                        <NativeMenuItem Header="Connect" Command="{Binding Printer.ConnectCommand}" />
+                        <NativeMenuItem Header="Disconnect" Command="{Binding Printer.DisconnectCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Refresh Status" Command="{Binding Printer.RefreshStatusCommand}" />
+                        <NativeMenuItem Header="Change Labels" Command="{Binding Printer.ChangeLabelsCommand}" />
+                        <NativeMenuItem Header="Print" Command="{Binding Printer.PrintCommand}" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="Help">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <!-- Kept even though macOS conventionally hoists About/Quit into the application
+                             menu: a duplicate entry is harmless, a missing one strands the user. -->
+                        <NativeMenuItem Header="About Thermalith" Command="{Binding AboutCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Connection Logging" ToggleType="CheckBox"
+                                        IsChecked="{Binding ConnectionLogging, Mode=TwoWay}" />
+                        <NativeMenuItem Header="Open Log Folder…" Command="{Binding OpenLogFolderCommand}" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
+
     <DockPanel>
 
+        <!-- Exports the NativeMenu above to the system menu bar. Renders nothing itself; on
+             Windows/Linux it stays collapsed and the in-window Menu below is used instead. -->
+        <NativeMenuBar DockPanel.Dock="Top" IsVisible="{OnPlatform false, macOS=true}" />
+
         <!-- Menu (§7.1) -->
-        <Menu DockPanel.Dock="Top">
+        <Menu DockPanel.Dock="Top" IsVisible="{OnPlatform true, macOS=false}">
             <MenuItem Header="_File">
                 <MenuItem Name="MiNew" Header="_New" Command="{Binding NewCommand}" />
                 <MenuItem Name="MiOpen" Header="_Open…" Command="{Binding OpenCommand}" />

@@ -7,6 +7,8 @@ All notable changes to Thermalith are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- **macOS: the menus are now in the system menu bar at the top of the screen**, where a Mac app's
+  menus belong, instead of inside the window. Windows and Linux are unchanged. (#9)
 - **The printer panel now shows which roll it matched.** When the printer reads a roll tag Thermalith
   already knows, it used to apply the saved size and paper type without saying so. It now shows the
   roll's name, size, paper type and labels remaining, with an **Edit** button that reopens the saved
