@@ -20,7 +20,7 @@
          v1.2.0 = 300 dpi print-size fix, matched-roll panel, rotation seed, macOS native menu bar.
          Currently on the -beta.1 interim build so the macOS menu bar (#9) can be tested on the M4
          mini; drop the suffix when tagging the real v1.2.0. -->
-    <Version>1.2.0-beta.1</Version>
+    <Version>1.2.0-beta.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
