@@ -9,6 +9,7 @@ All notable changes to Thermalith are recorded here. The format follows
 ### Added
 - **macOS: the menus are now in the system menu bar at the top of the screen**, where a Mac app's
   menus belong, instead of inside the window. Windows and Linux are unchanged. (#9)
+- **Clip art is now on the Insert menu**, not only on the Insert palette down the side of the window.
 - **The printer panel now shows which roll it matched.** When the printer reads a roll tag Thermalith
   already knows, it used to apply the saved size and paper type without saying so. It now shows the
   roll's name, size, paper type and labels remaining, with an **Edit** button that reopens the saved
@@ -16,6 +17,7 @@ All notable changes to Thermalith are recorded here. The format follows
   Unknown rolls still open the definition dialog as before. (#18)
 
 ### Fixed
+- **macOS: the application menu says "Thermalith"** instead of "Avalonia Application".
 - **A rotated label no longer comes back un-rotated after a restart.** The app remembers your last
   canvas so a new label starts at the right size, but it was dropping the rotation, so a sideways
   label reopened the wrong way round. Saved `.nlbl` files were never affected. (#6)

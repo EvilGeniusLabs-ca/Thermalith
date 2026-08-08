@@ -102,6 +102,7 @@
                         <NativeMenuItem Header="Date / Time" Command="{Binding InsertCommand}" CommandParameter="datetime" />
                         <NativeMenuItem Header="Shape" Command="{Binding InsertCommand}" CommandParameter="shape" />
                         <NativeMenuItem Header="Image" Command="{Binding InsertCommand}" CommandParameter="image" />
+                        <NativeMenuItem Header="Clip Art…" Command="{Binding ToggleClipPaletteCommand}" />
                         <NativeMenuItem Header="Table" Command="{Binding InsertCommand}" CommandParameter="table" />
                     </NativeMenu>
                 </NativeMenuItem.Menu>
@@ -257,6 +258,8 @@
                 <MenuItem Header="_Date / Time" Command="{Binding InsertCommand}" CommandParameter="datetime" />
                 <MenuItem Header="S_hape" Command="{Binding InsertCommand}" CommandParameter="shape" />
                 <MenuItem Header="_Image" Command="{Binding InsertCommand}" CommandParameter="image" />
+                <MenuItem Header="Clip _Art…" Command="{Binding ToggleClipPaletteCommand}"
+                          ToolTip.Tip="Open the clip-art palette" />
                 <MenuItem Header="Ta_ble" Command="{Binding InsertCommand}" CommandParameter="table" />
             </MenuItem>
             <MenuItem Header="_Data Merge">

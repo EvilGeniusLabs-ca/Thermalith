@@ -3,6 +3,7 @@
              xmlns:conv="clr-namespace:Thermalith.App.Converters"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Thermalith.App.App"
+             Name="Thermalith"
              RequestedThemeVariant="Default">
 
     <Application.Resources>
