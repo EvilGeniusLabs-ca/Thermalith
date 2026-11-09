@@ -46,13 +46,21 @@ public static class PrinterProfiles
         Verified = false,
     };
 
-    /// <summary>Resolve a profile from a reported device model id, or a generic fallback that keeps the id.</summary>
-    public static PrinterProfile FromModelId(int modelId)
+    /// <summary>
+    /// Resolve a profile from a reported device model id, or a generic fallback that keeps the id.
+    /// <paramref name="protocolVersion"/> (as reported on connect; null = unknown) feeds the print-task
+    /// choice - see <see cref="KnownPrinterFacts.ResolvePrintTask"/>.
+    /// </summary>
+    public static PrinterProfile FromModelId(int modelId, int? protocolVersion = null)
     {
         var entry = _catalog.FindByModelId(modelId);
         return entry is null
-            ? Unknown with { ModelIds = [modelId] }
-            : FromEntry(entry);
+            ? Unknown with
+            {
+                ModelIds = [modelId],
+                PrintTaskVersion = KnownPrinterFacts.ResolvePrintTask([modelId], protocolVersion),
+            }
+            : FromEntry(entry, protocolVersion);
     }
 
     /// <summary>Resolve a profile for a known <see cref="PrinterModel"/>, or <see cref="Unknown"/>.</summary>
@@ -64,7 +72,7 @@ public static class PrinterProfiles
     }
 
     /// <summary>Project a catalogue entry into a print-capable profile.</summary>
-    private static PrinterProfile FromEntry(PrinterEntry e) => new()
+    private static PrinterProfile FromEntry(PrinterEntry e, int? protocolVersion = null) => new()
     {
         Model = ParseModel(e.Model),
         ModelName = e.Model,
@@ -72,9 +80,7 @@ public static class PrinterProfiles
         Dpi = e.Dpi,
         PrintheadPixels = e.PrintheadPx,
         PrintDirection = e.PrintDirectionDeg is 90 or 270 ? PrintDirection.Left : PrintDirection.Top,
-        PrintTaskVersion = KnownPrinterFacts.UsesD110MV4PrintTask(e.Ids) ? PrintTaskVersion.D110MV4
-            : KnownPrinterFacts.UsesD110PrintTask(e.Ids) ? PrintTaskVersion.D110
-            : PrintTaskVersion.B1,
+        PrintTaskVersion = KnownPrinterFacts.ResolvePrintTask(e.Ids, protocolVersion),
         DensityMin = e.DensityMin,
         DensityMax = e.DensityMax,
         DensityDefault = e.DensityDefault,

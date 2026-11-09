@@ -88,7 +88,7 @@ public sealed class NiimbotClient : IAsyncDisposable
         NiimbotTrace.Log("client", $"protocol version {_protocolVersion}");
 
         var modelId = await ReadModelIdAsync(ct).ConfigureAwait(false);
-        var profile = PrinterProfiles.FromModelId(modelId);
+        var profile = PrinterProfiles.FromModelId(modelId, _protocolVersion);
         NiimbotTrace.Log("client", $"model id {modelId} → {profile.ModelName} " +
             $"(engine {profile.PrintTaskVersion}, feed {profile.PrintDirection})");
         Profile = profile;
