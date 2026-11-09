@@ -1340,8 +1340,9 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ── Center on the label (Form Alignment) ─────────────────────────────────────────────────────
     // Centre the selection's (rendered) bounding box on the label, moving every selected element by the
-    // same delta so their relative layout is kept. Whole-mm math; when the gap doesn't divide evenly the
-    // box biases left (H) / top (V) — Floor leaves the spare mm on the right/bottom.
+    // same delta so their relative layout is kept. Rounded to 0.1 mm, the same precision as positioning
+    // (decimal-mm since 2026-06-10). The old whole-mm Floor put a box up to 1 mm off centre, which shows
+    // on small labels: a 10.6 mm line box on a 12 mm cable label landed flush against the top edge.
 
     public void CenterOnLabelH()
     {
@@ -1349,7 +1350,7 @@ public sealed partial class EditorViewModel : ObservableObject
         var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
         var left = sel.Min(e => Bounds(e).XMm);
         var bboxW = sel.Max(e => Bounds(e).XMm + Bounds(e).WMm) - left;
-        var dx = Math.Floor((_live.Canvas.WidthMm - bboxW) / 2.0) - left;
+        var dx = Math.Round((_live.Canvas.WidthMm - bboxW) / 2.0 - left, 1);
         var ids = new HashSet<string>(_selectedIds);
         CommitTransform(e => ids.Contains(e.Id) ? e with { X = e.X + dx } : e);
     }
@@ -1360,7 +1361,7 @@ public sealed partial class EditorViewModel : ObservableObject
         var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
         var top = sel.Min(e => Bounds(e).YMm);
         var bboxH = sel.Max(e => Bounds(e).YMm + Bounds(e).HMm) - top;
-        var dy = Math.Floor((_live.Canvas.HeightMm - bboxH) / 2.0) - top;
+        var dy = Math.Round((_live.Canvas.HeightMm - bboxH) / 2.0 - top, 1);
         var ids = new HashSet<string>(_selectedIds);
         CommitTransform(e => ids.Contains(e.Id) ? e with { Y = e.Y + dy } : e);
     }
