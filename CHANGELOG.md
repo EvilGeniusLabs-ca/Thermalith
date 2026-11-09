@@ -6,6 +6,24 @@ All notable changes to Thermalith are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-09
+
+### Added
+- **Inverted text.** A fourth style button next to Bold, Italic and Underline fills the text box black and prints the text white. (#22)
+- **Printer errors in plain language.** A failed print says what went wrong, e.g. "error code 0x14 (couldn't write to the label roll's RFID tag - the roll may be third-party, refilled, or used up)". Thermalith now knows niimbluelib's full list of printer error codes. (#29)
+
+### Changed
+- **Each printer model gets the print sequence niimbluelib uses for it**, with niimbluelib's protocol-version rule for models it doesn't list. The K3, B21 Pro, C1 and EP1C move to the newer sequence; the B21S-C2B to the D110 sequence; the D101 and D110_M to the B1 sequence (D110_M on protocol 4 to the newer one). The B1, B4, B3S and D11_H are unchanged. (#21)
+- **Third-party and used-up rolls print.** RFID tag errors (0x14, 0x1D, 0x22) no longer stop a print; if the printer itself stops, the error says so. (#29)
+- **Positions and sizes are 0.1 mm throughout.** Center H/V, auto-size text, scaling and new elements no longer round to whole millimetres. Auto-size boxes in existing files tighten by up to 0.9 mm when opened.
+- Driver: `Niimbot.Net` 1.4.0.
+
+### Fixed
+- **The B1 Pro no longer hangs after printing.** It used the wrong print sequence and the job waited for a feed signal the B1 Pro never sends. Diagnosed by thujones. (#21)
+- **Linux: emoji print instead of showing as squares**, using the bundled monochrome Noto Emoji font. Reported and fixed by BadgerCode. (#24, #25)
+- **Linux: file dialogs no longer crash** when the desktop's file-dialog service refuses. Thermalith falls back to its own dialog; `THERMALITH_NO_PORTAL=1` forces it. (#19)
+- **Center V on small labels** left the selection against the top edge instead of centred.
+
 ## [1.2.0] - 2026-08-08
 
 ### Added
@@ -115,7 +133,8 @@ Initial public beta: the cross-platform desktop label designer (Windows, macOS, 
 WYSIWYG editor, text / barcode / QR / shape / line / image / table / serial / date-time elements, the
 `.nlbl` file format, and the verified B1 print path over USB and Bluetooth.
 
-[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/EvilGeniusLabs-ca/Thermalith/compare/v1.0.1...v1.0.2
