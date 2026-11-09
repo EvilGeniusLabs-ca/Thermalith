@@ -26,8 +26,8 @@ public sealed class FontService : IDisposable
         // Load default font
         _bundledFont = LoadEmbeddedFont("Thermalith.Core.Fonts.Roboto-Regular.ttf");
 
-        // Load monochrome emoji font
-        _emojiFont = LoadEmbeddedFont("Thermalith.Core.Fonts.NotoEmoji-VariableFont_wght.ttf");
+        // Load monochrome emoji font (the same Noto Emoji the clip-art palette ships; one copy serves both)
+        _emojiFont = LoadEmbeddedFont("Thermalith.Core.Fonts.Clipart.NotoEmoji-VF.ttf");
     }
 
     private SKTypeface LoadEmbeddedFont(string name)
