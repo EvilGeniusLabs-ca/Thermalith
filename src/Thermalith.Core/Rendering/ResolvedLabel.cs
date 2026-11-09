@@ -47,6 +47,9 @@ public sealed record ResolvedText : ResolvedElement
     /// so a data-merge value grows the box, not just the authored token (GitHub #7). Serial/DateTime are
     /// generated text but keep their authored box (false), so their print position is stable.</summary>
     public bool AutoSize { get; init; }
+
+    /// <summary>White text on the element box filled solid black (GitHub #22).</summary>
+    public bool Invert { get; init; }
 }
 
 public sealed record ResolvedBarcode : ResolvedElement

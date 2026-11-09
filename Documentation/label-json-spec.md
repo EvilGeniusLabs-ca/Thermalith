@@ -180,6 +180,7 @@ Static captions are `text` with no `{token}` in `content` — there is no separa
 | `fontSizing` | enum | `fixed` | `fixed` (use `fontSizePt`) · `shrink` (start at `fontSizePt`, reduce to fit `w`×`h` — never grows) · `fill` (font scales with the box: largest size that fits `w`×`h`). |
 | `minFontSizePt` | number | — | Floor for `shrink`/`fill`; below it the renderer stops and the validator flags overflow. |
 | `maxFontSizePt` | number | — | Cap for `fill`, so an oversized box doesn't produce absurd type. |
+| `invert` | bool | false | White text on the element box filled solid black. Omitted when false. |
 
 ### 11.3 `barcode` (`props`)
 

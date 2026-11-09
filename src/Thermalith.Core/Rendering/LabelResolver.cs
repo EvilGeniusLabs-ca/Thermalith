@@ -61,6 +61,7 @@ public static class LabelResolver
                 MinFontSizePt = t.Props.MinFontSizePt,
                 MaxFontSizePt = t.Props.MaxFontSizePt,
                 AutoSize = t.Props.AutoSize,
+                Invert = t.Props.Invert ?? false,
             }, el, justify),
 
             BarcodeElement b => Geo(new ResolvedBarcode

@@ -362,6 +362,7 @@ public sealed partial class EditorViewModel : ObservableObject
                 "LetterSpacing" => t with { Props = t.Props with { LetterSpacing = s.Props.LetterSpacing } },
                 "Wrap" => t with { Props = t.Props with { Wrap = s.Props.Wrap } },
                 "AutoSize" => t with { Props = t.Props with { AutoSize = s.Props.AutoSize } },
+                "Invert" => t with { Props = t.Props with { Invert = s.Props.Invert } },
                 _ => target,
             },
             (BarcodeElement t, BarcodeElement s) => prop switch

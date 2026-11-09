@@ -22,9 +22,11 @@ public sealed partial class TextEditorViewModel : ElementEditorViewModel
     [ObservableProperty] private double _letterSpacing;
     [ObservableProperty] private string _wrap;
     [ObservableProperty] private bool _autoSize;
+    [ObservableProperty] private bool _invert;
 
     public TextEditorViewModel(TextElement el, Action<string?> onChanged) : base(el, onChanged)
     {
+        _invert = el.Props.Invert ?? false;
         _content = el.Props.Content;
         _fontFamily = el.Props.FontFamily;
         _fontSizePt = el.Props.FontSizePt;
@@ -56,6 +58,7 @@ public sealed partial class TextEditorViewModel : ElementEditorViewModel
             Bold = Bold, Italic = Italic, Underline = Underline,
             LineSpacing = LineSpacing, LetterSpacing = LetterSpacing,
             Wrap = Wrap, AutoSize = AutoSize,
+            Invert = Invert ? true : null, // null keeps files without inverted text unchanged
             // FontSizing left at the model default ("fixed"); Min/Max dropped — the editor is fixed-size
             // only, so the pt size is honoured literally (text grows + bleeds past its box / the label).
         },
