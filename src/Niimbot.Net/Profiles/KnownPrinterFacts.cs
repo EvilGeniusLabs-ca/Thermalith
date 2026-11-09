@@ -40,12 +40,15 @@ public static class KnownPrinterFacts
     /// <summary>
     /// Model ids that use the <see cref="PrintTaskVersion.D110MV4"/> print sequence (9-byte PrintStart,
     /// 13-byte SetPageSize with the copy count embedded, no PrintClear/PageStart/SetPrintQuantity). The
-    /// D11_H is hardware-confirmed (id 528); D110_M v4, B1_PRO, B21_PRO share it per niimbluelib but are
-    /// unverified here. Checked before <see cref="D110PrintTaskModelIds"/>.
+    /// D11_H is hardware-confirmed (id 528) and the B1_PRO by a user (id 4097, GitHub #21); D110_M v4
+    /// and B21_PRO share it per niimbluelib but are unverified here. Checked before
+    /// <see cref="D110PrintTaskModelIds"/>. Not keyed on protocol version: the K3 (v5) and M2-H (v4)
+    /// print correctly on the B1 task.
     /// </summary>
     public static readonly IReadOnlySet<int> D110MV4PrintTaskModelIds = new HashSet<int>
     {
-        528, // D11_H — hardware-confirmed
+        528,  // D11_H - hardware-confirmed
+        4097, // B1_PRO - confirmed on a user's printer (GitHub #21); on the B1 task it hung after each print
     };
 
     public static bool IsVerified(IEnumerable<int> modelIds) => modelIds.Any(VerifiedModelIds.Contains);

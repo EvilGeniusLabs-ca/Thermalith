@@ -86,6 +86,40 @@ public class ClientTests
     }
 
     [Fact]
+    public async Task B1_Pro_uses_the_D110MV4_task_and_finishes_when_feed_stops_short()
+    {
+        // GitHub #21: the B1 Pro (4097) printed the page but held feed progress below 100, and the
+        // old print+feed check polled forever, so the job never ended.
+        var printer = new FakeB1Printer { ModelId = 4097, FeedProgress = 60 };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        Assert.Equal(PrintTaskVersion.D110MV4, client.Profile!.PrintTaskVersion);
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token);
+
+        Assert.Equal(RequestCommandId.PrintEnd, (RequestCommandId)transport.WrittenPackets.Last().Command);
+    }
+
+    [Fact]
+    public async Task B1_still_waits_for_feed_to_finish()
+    {
+        // The full print+feed check stays for the B1 task: feed stuck below 100 keeps it polling.
+        var printer = new FakeB1Printer { FeedProgress = 60 };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token));
+    }
+
+    [Fact]
     public async Task PrintAsync_rejects_a_bitmap_wider_than_the_printhead()
     {
         var (client, _, _) = NewB1();

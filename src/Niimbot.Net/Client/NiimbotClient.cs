@@ -215,7 +215,7 @@ public sealed class NiimbotClient : IAsyncDisposable
 
         await SendAsync(PacketGenerator.PageEnd(), options.PageTimeout, ct).ConfigureAwait(false);
 
-        await WaitForPrintFinishedAsync(totalPages, options.StatusPollInterval, progress, ct).ConfigureAwait(false);
+        await WaitForPrintFinishedAsync(profile, totalPages, options.StatusPollInterval, progress, ct).ConfigureAwait(false);
 
         // D110M-v4 sends a one-way heartbeat just before ending the job.
         if (profile.PrintTaskVersion == PrintTaskVersion.D110MV4)
@@ -320,15 +320,21 @@ public sealed class NiimbotClient : IAsyncDisposable
         };
 
     private async Task WaitForPrintFinishedAsync(
-        int totalPages, TimeSpan pollInterval, IProgress<PrintProgress>? progress, CancellationToken ct)
+        PrinterProfile profile, int totalPages, TimeSpan pollInterval, IProgress<PrintProgress>? progress, CancellationToken ct)
     {
+        // D110M-v4 printers can report the last page printed while feed progress stays below 100
+        // (B1 Pro, GitHub #21), so waiting on feed never ends. niimbluelib's D110MV4PrintTask finishes
+        // on the page count; we also require print progress 100. The other tasks keep the full check.
+        var ignoreFeed = profile.PrintTaskVersion == PrintTaskVersion.D110MV4;
+
         while (true)
         {
             ct.ThrowIfCancellationRequested();
             var status = await GetPrintStatusAsync(ct).ConfigureAwait(false);
             progress?.Report(new PrintProgress(status.Page, totalPages, status.PagePrintProgress, status.PageFeedProgress));
 
-            if (status.Page >= totalPages && status.PagePrintProgress >= 100 && status.PageFeedProgress >= 100)
+            if (status.Page >= totalPages && status.PagePrintProgress >= 100 &&
+                (ignoreFeed || status.PageFeedProgress >= 100))
                 return;
 
             await Task.Delay(pollInterval, ct).ConfigureAwait(false);

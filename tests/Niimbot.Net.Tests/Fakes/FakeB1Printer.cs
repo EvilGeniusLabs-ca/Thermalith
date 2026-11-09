@@ -13,6 +13,10 @@ public sealed class FakeB1Printer
     /// <summary>The model id the fake reports (real B1 = 4096 / 0x1000).</summary>
     public int ModelId { get; init; } = 4096;
 
+    /// <summary>Feed progress the fake reports in PrintStatus (100 = finished). The B1 Pro was seen
+    /// stopping short of 100 after the page printed (GitHub #21).</summary>
+    public byte FeedProgress { get; init; } = 100;
+
     /// <summary>Captured row/empty-row packets streamed during a print.</summary>
     public List<NiimbotPacket> ReceivedRows { get; } = [];
 
@@ -44,8 +48,8 @@ public sealed class FakeB1Printer
             case RequestCommandId.PageEnd:
                 return [Resp(ResponseCommandId.In_PageEnd, 1)];
             case RequestCommandId.PrintStatus:
-                // page=1, pagePrint=100, pageFeed=100 → finished.
-                return [Resp(ResponseCommandId.In_PrintStatus, 0x00, 0x01, 100, 100)];
+                // page=1, pagePrint=100, pageFeed=FeedProgress (100 by default = finished).
+                return [Resp(ResponseCommandId.In_PrintStatus, 0x00, 0x01, 100, FeedProgress)];
             case RequestCommandId.PrintEnd:
                 return [Resp(ResponseCommandId.In_PrintEnd, 1)];
             case RequestCommandId.PrintBitmapRow:
