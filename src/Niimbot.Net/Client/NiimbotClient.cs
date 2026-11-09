@@ -359,7 +359,7 @@ public sealed class NiimbotClient : IAsyncDisposable
             r.Skip(2);
             var error = r.ReadU8();
             if (error != 0)
-                throw new PrintException($"Printer reported error code 0x{error:X2} during print.", (PrinterErrorCode)error);
+                throw new PrintException($"Printer reported {PrinterErrorCodeText.Format(error)} during print.", (PrinterErrorCode)error);
         }
 
         return new PrintStatus(page, pagePrint, pageFeed);
@@ -654,7 +654,7 @@ public sealed class NiimbotClient : IAsyncDisposable
             else if (cmd == ResponseCommandId.In_PrintError)
                 Tcs.TrySetException(new PrintException(
                     packet.Data.Length > 0
-                        ? $"Printer reported error code 0x{packet.Data[0]:X2}."
+                        ? $"Printer reported {PrinterErrorCodeText.Format(packet.Data[0])}."
                         : "Printer reported a print error.",
                     packet.Data.Length > 0 ? (PrinterErrorCode)packet.Data[0] : null));
             else
