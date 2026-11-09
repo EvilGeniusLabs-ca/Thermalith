@@ -32,6 +32,8 @@ internal static class Program
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            // Linux: skip the desktop portal's file dialog if it failed before (GitHub #19).
+            .With(new X11PlatformOptions { UseDBusFilePicker = FilePickerFallback.UsePortal })
             .WithInterFont()
             .LogToTrace();
 
