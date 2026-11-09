@@ -10,12 +10,14 @@
 
   <ItemGroup>
     <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
     <PackageReference Include="ZXing.Net" />
     <PackageReference Include="QRCoder" />
     <PackageReference Include="CsvHelper" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Fonts\NotoEmoji-VariableFont_wght.ttf" />
     <EmbeddedResource Include="Fonts\Roboto-Regular.ttf" />
     <EmbeddedResource Include="Catalog\label-stock.json" />
     <!-- Clip-art palette (GitHub #2): the glyph fonts + the compiled search index ship embedded.

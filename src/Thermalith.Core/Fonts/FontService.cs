@@ -14,17 +14,29 @@ public sealed class FontService : IDisposable
     /// <summary>The family name of the bundled fallback font. Authoring with this name is always deterministic.</summary>
     public const string BundledFamily = "Roboto";
 
-    private readonly SKTypeface _bundled;
+    private readonly SKTypeface _bundledFont;
+    private readonly SKTypeface? _emojiFont;
     private readonly Dictionary<(string Family, bool Bold, bool Italic), SKTypeface> _cache = new();
     private readonly Dictionary<int, SKTypeface?> _glyphFallback = new();
 
     public FontService()
     {
         var asm = typeof(FontService).Assembly;
-        const string name = "Thermalith.Core.Fonts.Roboto-Regular.ttf";
+
+        // Load default font
+        _bundledFont = LoadEmbeddedFont("Thermalith.Core.Fonts.Roboto-Regular.ttf");
+
+        // Load monochrome emoji font
+        _emojiFont = LoadEmbeddedFont("Thermalith.Core.Fonts.NotoEmoji-VariableFont_wght.ttf");
+    }
+
+    private SKTypeface LoadEmbeddedFont(string name)
+    {
+        var asm = typeof(FontService).Assembly;
+
         using var stream = asm.GetManifestResourceStream(name)
             ?? throw new InvalidOperationException($"Embedded font resource '{name}' not found.");
-        _bundled = SKTypeface.FromStream(stream)
+        return SKTypeface.FromStream(stream)
             ?? throw new InvalidOperationException("Bundled fallback font failed to load.");
     }
 
@@ -43,6 +55,13 @@ public sealed class FontService : IDisposable
     public SKTypeface? FallbackForCodepoint(int codepoint)
     {
         if (_glyphFallback.TryGetValue(codepoint, out var hit)) return hit;
+
+        if (_emojiFont != null && _emojiFont.ContainsGlyph(codepoint))
+        {
+            _glyphFallback[codepoint] = _emojiFont;
+            return _emojiFont;
+        }
+
         var tf = SKFontManager.Default.MatchCharacter(codepoint);
         _glyphFallback[codepoint] = tf;
         return tf;
@@ -68,7 +87,7 @@ public sealed class FontService : IDisposable
 
         // Bundled family (or unspecified) → the embedded font directly.
         if (string.IsNullOrWhiteSpace(family) || string.Equals(family, BundledFamily, StringComparison.OrdinalIgnoreCase))
-            return _bundled;
+            return _bundledFont;
 
         // Requested family installed on this host → use it.
         var matched = SKFontManager.Default.MatchFamily(family, style);
@@ -77,18 +96,18 @@ public sealed class FontService : IDisposable
         matched?.Dispose();
 
         // Not installed → bundled fallback (validator warns about the substitution).
-        return _bundled;
+        return _bundledFont;
     }
 
     public void Dispose()
     {
-        _bundled.Dispose();
+        _bundledFont.Dispose();
         foreach (var tf in _cache.Values)
-            if (!ReferenceEquals(tf, _bundled))
+            if (!ReferenceEquals(tf, _bundledFont))
                 tf.Dispose();
         _cache.Clear();
         foreach (var tf in _glyphFallback.Values)
-            if (tf is not null && !ReferenceEquals(tf, _bundled))
+            if (tf is not null && !ReferenceEquals(tf, _bundledFont))
                 tf.Dispose();
         _glyphFallback.Clear();
     }
