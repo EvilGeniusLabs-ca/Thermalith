@@ -166,6 +166,15 @@ public static class PrinterErrorCodeText
         _ => null,
     };
 
+    /// <summary>
+    /// RFID-tag codes that don't stop us printing: the printer couldn't write (or can't write) the
+    /// label roll's tag, which happens with third-party, refilled or used-up rolls. A genuine roll
+    /// never reports these, and stopping the job protects nothing, so the client logs them and
+    /// carries on (GitHub discussion #23). If the printer itself stops, the job still fails.
+    /// </summary>
+    public static bool IsNonFatal(byte code) => (PrinterErrorCode)code is
+        PrinterErrorCode.WriteRfidFail or PrinterErrorCode.RfidTagNotWritten or PrinterErrorCode.NotSupportWrittenRfid;
+
     /// <summary>"error code 0x14 (couldn't write ...)" or just "error code 0x14" when unknown.</summary>
     public static string Format(byte code) =>
         Describe(code) is { } text ? $"error code 0x{code:X2} ({text})" : $"error code 0x{code:X2}";

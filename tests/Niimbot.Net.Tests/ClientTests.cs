@@ -105,6 +105,54 @@ public class ClientTests
     }
 
     [Fact]
+    public async Task Rfid_write_failure_does_not_stop_the_print()
+    {
+        // Discussion #23: a non-genuine roll makes the printer report 0x14 (WriteRfidFail). If the
+        // printer carries on, so do we.
+        var printer = new FakeB1Printer { PrintErrorOnPageSize = 0x14 };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token);
+
+        Assert.Equal(RequestCommandId.PrintEnd, (RequestCommandId)transport.WrittenPackets.Last().Command);
+    }
+
+    [Fact]
+    public async Task Rfid_write_failure_is_reported_when_the_printer_stops()
+    {
+        // If the printer stops after 0x14 instead, the user gets that code as the reason, not a timeout.
+        var printer = new FakeB1Printer { PrintErrorOnPageSize = 0x14, StopAfterPrintError = true };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var ex = await Assert.ThrowsAsync<PrintException>(
+            () => client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token));
+        Assert.Equal(PrinterErrorCode.WriteRfidFail, ex.Code);
+    }
+
+    [Fact]
+    public async Task Other_printer_errors_still_stop_the_print()
+    {
+        var printer = new FakeB1Printer { PrintErrorOnPageSize = 0x01 }; // cover open
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var ex = await Assert.ThrowsAsync<PrintException>(
+            () => client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token));
+        Assert.Equal(PrinterErrorCode.CoverOpen, ex.Code);
+    }
+
+    [Fact]
     public async Task B1_still_waits_for_feed_to_finish()
     {
         // The full print+feed check stays for the B1 task: feed stuck below 100 keeps it polling.

@@ -28,6 +28,12 @@ public sealed class NiimbotClient : IAsyncDisposable
     private readonly object _pendingLock = new();
 
     private PendingRequest? _pending;
+    private volatile int _softErrorRaw = -1;   // last non-fatal RFID code this print job, -1 = none
+    private byte? _softError
+    {
+        get => _softErrorRaw < 0 ? null : (byte)_softErrorRaw;
+        set => _softErrorRaw = value ?? -1;
+    }
     private Task? _readPump;
     private CancellationTokenSource? _pumpCts;
     private int _protocolVersion;
@@ -163,6 +169,7 @@ public sealed class NiimbotClient : IAsyncDisposable
             throw new InvalidOperationException("Connect before printing.");
 
         options ??= new PrintOptions();
+        _softError = null;
         var density = options.Density ?? profile.DensityDefault;
         var totalPages = Math.Max(1, options.Copies);
 
@@ -327,6 +334,12 @@ public sealed class NiimbotClient : IAsyncDisposable
         // on the page count; we also require print progress 100. The other tasks keep the full check.
         var ignoreFeed = profile.PrintTaskVersion == PrintTaskVersion.D110MV4;
 
+        // After a non-fatal RFID code the printer is expected to keep going. If it doesn't - progress
+        // frozen this long - report the code as the reason instead of polling forever.
+        var stallLimit = TimeSpan.FromSeconds(15);
+        (int, int, int)? last = null;
+        var lastChange = DateTime.UtcNow;
+
         while (true)
         {
             ct.ThrowIfCancellationRequested();
@@ -337,8 +350,27 @@ public sealed class NiimbotClient : IAsyncDisposable
                 (ignoreFeed || status.PageFeedProgress >= 100))
                 return;
 
+            var now = (status.Page, status.PagePrintProgress, status.PageFeedProgress);
+            if (now != last)
+            {
+                last = now;
+                lastChange = DateTime.UtcNow;
+            }
+            else if (_softError is { } code && DateTime.UtcNow - lastChange > stallLimit)
+            {
+                throw new PrintException(
+                    $"The printer stopped after reporting {PrinterErrorCodeText.Format(code)}.", (PrinterErrorCode)code);
+            }
+
             await Task.Delay(pollInterval, ct).ConfigureAwait(false);
         }
+    }
+
+    /// <summary>Records a non-fatal RFID code (see <see cref="PrinterErrorCodeText.IsNonFatal"/>) and carries on.</summary>
+    private void NoteSoftError(byte code, string where)
+    {
+        _softError = code;
+        NiimbotTrace.Log("print", $"ignoring {PrinterErrorCodeText.Format(code)} ({where}) - continuing");
     }
 
     private async Task<PrintStatus> GetPrintStatusAsync(CancellationToken ct)
@@ -358,7 +390,9 @@ public sealed class NiimbotClient : IAsyncDisposable
         {
             r.Skip(2);
             var error = r.ReadU8();
-            if (error != 0)
+            if (error != 0 && PrinterErrorCodeText.IsNonFatal(error))
+                NoteSoftError(error, "print status");
+            else if (error != 0)
                 throw new PrintException($"Printer reported {PrinterErrorCodeText.Format(error)} during print.", (PrinterErrorCode)error);
         }
 
@@ -556,6 +590,11 @@ public sealed class NiimbotClient : IAsyncDisposable
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
                 NiimbotTrace.Log("cmd", $"✗ timeout {(RequestCommandId)packet.Command} after {timeout.TotalMilliseconds:0} ms");
+                // A non-fatal RFID code arrived instead of the reply and nothing followed: the printer
+                // stopped after all, so that code is the real reason.
+                if (pending.SoftError is { } code)
+                    throw new PrintException(
+                        $"The printer stopped after reporting {PrinterErrorCodeText.Format(code)}.", (PrinterErrorCode)code);
                 throw new NiimbotTimeoutException(
                     $"No response to {(RequestCommandId)packet.Command} within {timeout.TotalMilliseconds:0} ms.");
             }
@@ -622,6 +661,17 @@ public sealed class NiimbotClient : IAsyncDisposable
         lock (_pendingLock)
             pending = _pending;
 
+        // Non-fatal RFID code: log it, remember it, and keep waiting for the real reply.
+        if ((ResponseCommandId)packet.Command == ResponseCommandId.In_PrintError &&
+            packet.Data.Length > 0 && PrinterErrorCodeText.IsNonFatal(packet.Data[0]))
+        {
+            NoteSoftError(packet.Data[0], "print error packet");
+            if (pending is not null)
+                pending.SoftError = packet.Data[0];
+            PacketReceived?.Invoke(this, packet);
+            return;
+        }
+
         if (pending is not null && pending.Matches(packet))
         {
             lock (_pendingLock)
@@ -637,6 +687,9 @@ public sealed class NiimbotClient : IAsyncDisposable
     {
         public TaskCompletionSource<NiimbotPacket> Tcs { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <summary>A non-fatal RFID code that arrived while this request was waiting, if any.</summary>
+        public byte? SoftError { get; set; }
 
         public bool Matches(NiimbotPacket packet)
         {

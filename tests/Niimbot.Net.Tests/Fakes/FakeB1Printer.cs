@@ -17,6 +17,13 @@ public sealed class FakeB1Printer
     /// stopping short of 100 after the page printed (GitHub #21).</summary>
     public byte FeedProgress { get; init; } = 100;
 
+    /// <summary>When set, SetPageSize is answered with an In_PrintError carrying this code first
+    /// (an RFID-write failure on a non-genuine roll is 0x14, discussion #23).</summary>
+    public byte? PrintErrorOnPageSize { get; init; }
+
+    /// <summary>With <see cref="PrintErrorOnPageSize"/>: true = the printer stops (no real reply follows).</summary>
+    public bool StopAfterPrintError { get; init; }
+
     /// <summary>Captured row/empty-row packets streamed during a print.</summary>
     public List<NiimbotPacket> ReceivedRows { get; } = [];
 
@@ -44,6 +51,10 @@ public sealed class FakeB1Printer
             case RequestCommandId.PageStart:
                 return [Resp(ResponseCommandId.In_PageStart, 1)];
             case RequestCommandId.SetPageSize:
+                if (PrintErrorOnPageSize is { } code)
+                    return StopAfterPrintError
+                        ? [Resp(ResponseCommandId.In_PrintError, code)]
+                        : [Resp(ResponseCommandId.In_PrintError, code), Resp(ResponseCommandId.In_SetPageSize, 1)];
                 return [Resp(ResponseCommandId.In_SetPageSize, 1)];
             case RequestCommandId.PageEnd:
                 return [Resp(ResponseCommandId.In_PageEnd, 1)];
