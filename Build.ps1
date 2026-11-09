@@ -115,7 +115,10 @@ foreach ($project in $Projects) {
             # Build in a temp dir then move in, so the tarball never includes itself.
             $tgz = "$base.tar.gz"
             $tmp = New-Item -ItemType Directory -Force -Path (Join-Path ([System.IO.Path]::GetTempPath()) ([System.Guid]::NewGuid().ToString()))
-            tar --exclude='*.pdb' -czf (Join-Path $tmp $tgz) -C $outDir .
+            # On Windows use the system bsdtar explicitly: launched from Git Bash, a bare `tar` resolves to
+            # GNU tar, which reads "C:\..." as a remote host and fails.
+            $tarExe = if ($IsWindows -or $env:OS -eq 'Windows_NT') { Join-Path $env:SystemRoot 'System32\tar.exe' } else { 'tar' }
+            & $tarExe --exclude='*.pdb' -czf (Join-Path $tmp $tgz) -C $outDir .
             Move-Item (Join-Path $tmp $tgz) (Join-Path $outDir $tgz) -Force
             Remove-Item $tmp -Recurse -Force
             Write-Host "    packaged $(Join-Path $outDir $tgz)" -ForegroundColor DarkGray
