@@ -17,8 +17,10 @@
          v1.0.1 = verified D11_H support (300 dpi side-fed) + its D110M-v4 print path;
          v1.0.2 = opt-in connection-logging diagnostic (Help ▸ Connection Logging);
          v1.1.0 = data merge, clip-art palette, Material-icon UI, selection-box/auto-size fixes;
-         v1.2.0 = 300 dpi print-size fix, matched-roll panel, rotation seed, macOS native menu bar. -->
-    <Version>1.2.0</Version>
+         v1.2.0 = 300 dpi print-size fix, matched-roll panel, rotation seed, macOS native menu bar;
+         v1.3.0 = inverted text, B1 Pro hang fix, Linux file-dialog + emoji fixes, RFID tag errors no
+                  longer stop a print, print task per model from niimbluelib, 0.1 mm centring/auto-size. -->
+    <Version>1.3.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
