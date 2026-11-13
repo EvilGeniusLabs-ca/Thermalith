@@ -649,51 +649,72 @@ public partial class MainWindow : Window, IFilePicker, IDialogService
     private static readonly FilePickerFileType ImageType =
         new("Images") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp"] };
 
-    public async Task<string?> OpenImageAsync()
+    public Task<string?> OpenImageAsync() => PickOpenAsync(new FilePickerOpenOptions
     {
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Choose image",
-            AllowMultiple = false,
-            FileTypeFilter = [ImageType],
-        });
-        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
-    }
+        Title = "Choose image",
+        AllowMultiple = false,
+        FileTypeFilter = [ImageType],
+    });
 
-    public async Task<string?> OpenLabelAsync()
+    public Task<string?> OpenLabelAsync() => PickOpenAsync(new FilePickerOpenOptions
     {
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Open label",
-            AllowMultiple = false,
-            FileTypeFilter = [NlblType],
-        });
-        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
-    }
+        Title = "Open label",
+        AllowMultiple = false,
+        FileTypeFilter = [NlblType],
+    });
 
     public async Task<string?> SaveLabelAsync(string? suggestedName)
     {
-        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        try
         {
-            Title = "Save label",
-            SuggestedFileName = (suggestedName ?? "label") + ".nlbl",
-            DefaultExtension = "nlbl",
-            FileTypeChoices = [NlblType],
-        });
-        return file?.TryGetLocalPath();
+            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save label",
+                SuggestedFileName = (suggestedName ?? "label") + ".nlbl",
+                DefaultExtension = "nlbl",
+                FileTypeChoices = [NlblType],
+            });
+            return file?.TryGetLocalPath();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await FileDialogFailedAsync(ex);
+            return null;
+        }
     }
 
     private static readonly FilePickerFileType CsvType = new("CSV data") { Patterns = ["*.csv"] };
 
-    public async Task<string?> OpenCsvAsync()
+    public Task<string?> OpenCsvAsync() => PickOpenAsync(new FilePickerOpenOptions
     {
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        Title = "Choose CSV data source",
+        AllowMultiple = false,
+        FileTypeFilter = [CsvType],
+    });
+
+    // Every open-file dialog goes through here so a failing desktop file dialog (GitHub #19: the
+    // Linux portal refusing the request) can't take the app down. See FilePickerFallback.
+    private async Task<string?> PickOpenAsync(FilePickerOpenOptions options)
+    {
+        try
         {
-            Title = "Choose CSV data source",
-            AllowMultiple = false,
-            FileTypeFilter = [CsvType],
-        });
-        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+            var files = await StorageProvider.OpenFilePickerAsync(options);
+            return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await FileDialogFailedAsync(ex);
+            return null;
+        }
+    }
+
+    private async Task FileDialogFailedAsync(Exception ex)
+    {
+        FilePickerFallback.DisablePortal(ex);
+        await MessageAsync("File dialog unavailable",
+            "Your desktop's file dialog service refused to open (" + ex.Message + ").\n\n" +
+            "Thermalith will use its own file dialog from the next start. " +
+            "Restart Thermalith to open or save files.");
     }
 
     // ── Data-merge dialogs + token insertion (§7, GitHub #7) ──────────────────────────────────────

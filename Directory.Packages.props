@@ -1,44 +1,54 @@
 <Project>
+
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
+
   <ItemGroup Label="Avalonia">
     <PackageVersion Include="Avalonia" Version="11.3.13" />
     <PackageVersion Include="Avalonia.Desktop" Version="11.3.13" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.13" />
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.13" />
     <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.13" />
-    <PackageVersion Include="Linux.Bluetooth" Version="5.67.1" />
-    <PackageVersion Include="Tmds.DBus" Version="0.95.1" />
   </ItemGroup>
+
   <ItemGroup Label="MVVM">
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
   </ItemGroup>
+
   <ItemGroup Label="Icons">
     <!-- Material Design Icons (Pictogrammers) as Avalonia geometry — the project icon set. -->
     <PackageVersion Include="Material.Icons.Avalonia" Version="2.3.1" />
   </ItemGroup>
+
   <ItemGroup Label="Logging">
     <PackageVersion Include="Serilog" Version="4.3.0" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.2" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
   </ItemGroup>
+
   <ItemGroup Label="Testing">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
+
   <!-- Core render stack (referenced by Thermalith.Core as of Phase 2). -->
   <ItemGroup Label="Rendering / barcodes">
     <PackageVersion Include="SkiaSharp" Version="2.88.9" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="2.88.9" />
     <PackageVersion Include="ZXing.Net" Version="0.16.10" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
   </ItemGroup>
+  
   <ItemGroup Label="Protocol IO">
     <PackageVersion Include="System.IO.Ports" Version="9.0.6" />
+    <PackageVersion Include="Linux.Bluetooth" Version="5.67.1" />
+    <PackageVersion Include="Tmds.DBus" Version="0.95.1" />
   </ItemGroup>
+
   <ItemGroup Label="Planned: data binding">
     <PackageVersion Include="Dapper" Version="2.1.66" />
     <PackageVersion Include="Npgsql" Version="9.0.3" />
@@ -48,9 +58,11 @@
     <PackageVersion Include="CsvHelper" Version="33.0.1" />
     <PackageVersion Include="ClosedXML" Version="0.104.2" />
   </ItemGroup>
+
   <ItemGroup Label="Snapshot tests">
     <PackageVersion Include="Verify.Xunit" Version="28.11.0" />
   </ItemGroup>
+
   <!-- Transitive security pins (forced via CentralPackageTransitivePinningEnabled). -->
   <ItemGroup Label="Security pins">
     <!-- Avalonia.X11 pulls 0.21.2; CVE-2026-39959 / GHSA-xrw6-gwf8-vvr9 is patched in 0.21.3 (same minor, API-safe). -->

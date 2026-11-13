@@ -13,6 +13,17 @@ public sealed class FakeB1Printer
     /// <summary>The model id the fake reports (real B1 = 4096 / 0x1000).</summary>
     public int ModelId { get; init; } = 4096;
 
+    /// <summary>Feed progress the fake reports in PrintStatus (100 = finished). The B1 Pro was seen
+    /// stopping short of 100 after the page printed (GitHub #21).</summary>
+    public byte FeedProgress { get; init; } = 100;
+
+    /// <summary>When set, SetPageSize is answered with an In_PrintError carrying this code first
+    /// (an RFID-write failure on a non-genuine roll is 0x14, discussion #23).</summary>
+    public byte? PrintErrorOnPageSize { get; init; }
+
+    /// <summary>With <see cref="PrintErrorOnPageSize"/>: true = the printer stops (no real reply follows).</summary>
+    public bool StopAfterPrintError { get; init; }
+
     /// <summary>Captured row/empty-row packets streamed during a print.</summary>
     public List<NiimbotPacket> ReceivedRows { get; } = [];
 
@@ -40,12 +51,16 @@ public sealed class FakeB1Printer
             case RequestCommandId.PageStart:
                 return [Resp(ResponseCommandId.In_PageStart, 1)];
             case RequestCommandId.SetPageSize:
+                if (PrintErrorOnPageSize is { } code)
+                    return StopAfterPrintError
+                        ? [Resp(ResponseCommandId.In_PrintError, code)]
+                        : [Resp(ResponseCommandId.In_PrintError, code), Resp(ResponseCommandId.In_SetPageSize, 1)];
                 return [Resp(ResponseCommandId.In_SetPageSize, 1)];
             case RequestCommandId.PageEnd:
                 return [Resp(ResponseCommandId.In_PageEnd, 1)];
             case RequestCommandId.PrintStatus:
-                // page=1, pagePrint=100, pageFeed=100 → finished.
-                return [Resp(ResponseCommandId.In_PrintStatus, 0x00, 0x01, 100, 100)];
+                // page=1, pagePrint=100, pageFeed=FeedProgress (100 by default = finished).
+                return [Resp(ResponseCommandId.In_PrintStatus, 0x00, 0x01, 100, FeedProgress)];
             case RequestCommandId.PrintEnd:
                 return [Resp(ResponseCommandId.In_PrintEnd, 1)];
             case RequestCommandId.PrintBitmapRow:

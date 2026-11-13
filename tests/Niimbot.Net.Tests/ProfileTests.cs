@@ -65,6 +65,33 @@ public class ProfileTests
         }
     }
 
+    // Print task follows niimbluelib's model-to-task table (GitHub #21).
+
+    [Theory]
+    [InlineData(4608, 4, PrintTaskVersion.B1)]       // M2_H: listed on B1 even at protocol 4
+    [InlineData(4864, 5, PrintTaskVersion.D110MV4)]  // K3: unlisted, protocol 5 -> fallback
+    [InlineData(4097, 4, PrintTaskVersion.D110MV4)]  // B1_PRO
+    [InlineData(785, null, PrintTaskVersion.D110MV4)] // B21_PRO
+    [InlineData(2320, 4, PrintTaskVersion.D110MV4)]  // D110_M v4
+    [InlineData(2320, 3, PrintTaskVersion.B1)]       // D110_M older
+    [InlineData(776, null, PrintTaskVersion.D110)]   // B21S_C2B
+    [InlineData(2560, null, PrintTaskVersion.B1)]    // D101
+    [InlineData(0xDEAD, 4, PrintTaskVersion.D110MV4)] // unknown id, protocol 4+
+    [InlineData(0xDEAD, 3, PrintTaskVersion.B1)]     // unknown id, older protocol
+    public void Print_task_follows_niimbluelib(int modelId, int? protocol, PrintTaskVersion expected) =>
+        Assert.Equal(expected, PrinterProfiles.FromModelId(modelId, protocol).PrintTaskVersion);
+
+    [Theory]
+    [InlineData(4096, PrintTaskVersion.B1)]      // B1
+    [InlineData(6656, PrintTaskVersion.B1)]      // B4
+    [InlineData(272, PrintTaskVersion.B1)]       // B3S_P
+    [InlineData(528, PrintTaskVersion.D110MV4)]  // D11_H
+    public void Hardware_verified_printers_keep_their_task_at_any_protocol(int modelId, PrintTaskVersion expected)
+    {
+        foreach (var protocol in new int?[] { null, 3, 4, 5 })
+            Assert.Equal(expected, PrinterProfiles.FromModelId(modelId, protocol).PrintTaskVersion);
+    }
+
     [Fact]
     public void Only_b1_and_b4_are_marked_verified()
     {

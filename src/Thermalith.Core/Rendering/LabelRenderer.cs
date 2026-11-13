@@ -121,10 +121,18 @@ public sealed class LabelRenderer
         var boxH = ctx.Px(t.HMm);
         var dpi = ctx.PxPerMm * 25.4;
 
+        // Inverted (GitHub #22): fill the element box solid black, then draw the text white.
+        var ink = t.Invert ? SKColors.White : SKColors.Black;
+        if (t.Invert)
+        {
+            using var fill = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Fill, IsAntialias = false };
+            ctx.Canvas.DrawRect(ctx.Px(t.XMm), ctx.Px(t.YMm), boxW, boxH, fill);
+        }
+
         var tf = _fonts.Resolve(t.Style.FontFamily, t.Style.Bold, t.Style.Italic); // FontService owns the typeface lifetime
         using var paint = new SKPaint
         {
-            Color = SKColors.Black,
+            Color = ink,
             IsAntialias = true,           // text: AA on → threshold (§6.3.3)
             Typeface = tf,
             FakeBoldText = t.Style.Bold && !TypefaceIsBold(tf),
@@ -162,7 +170,7 @@ public sealed class LabelRenderer
             DrawLineText(ctx.Canvas, lines[i], x, baseline, paint, letterSpacingPx);
             if (t.Style.Underline)
             {
-                using var ul = new SKPaint { Color = SKColors.Black, IsAntialias = true, StrokeWidth = Math.Max(1, paint.TextSize / 14f) };
+                using var ul = new SKPaint { Color = ink, IsAntialias = true, StrokeWidth = Math.Max(1, paint.TextSize / 14f) };
                 var uy = baseline - metrics.Descent / 2;
                 ctx.Canvas.DrawLine(x, uy, x + lineW, uy, ul);
             }

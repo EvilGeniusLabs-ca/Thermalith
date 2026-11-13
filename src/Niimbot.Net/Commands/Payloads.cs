@@ -75,6 +75,7 @@ public enum ConnectResult : byte
 /// <summary>
 /// <c>In_PrintError</c> (0xDB) / print-status error flag codes. Surfaced via
 /// <see cref="Niimbot.Net.PrintException"/> so callers can map a failed print to a cause.
+/// Mirrors niimbluelib's <c>PrinterErrorCode</c> (src/packets/enumerations.ts, imported 2026-11-09).
 /// </summary>
 public enum PrinterErrorCode : byte
 {
@@ -94,5 +95,87 @@ public enum PrinterErrorCode : byte
     WrongRibbon = 0x0E,
     UsedRibbon = 0x0F,
     WrongPaper = 0x10,
+    SetPaperFail = 0x11,
+    SetPrintModeFail = 0x12,
+    SetPrintDensityFail = 0x13,
+    WriteRfidFail = 0x14,
+    SetMarginFail = 0x15,
+    CommunicationException = 0x16,
     Disconnect = 0x17,
+    CanvasParameterError = 0x18,
+    RotationParameterException = 0x19,
+    JsonParameterException = 0x1A,
+    B3sAbnormalPaperOutput = 0x1B,
+    ECheckPaper = 0x1C,
+    RfidTagNotWritten = 0x1D,
+    SetPrintDensityNoSupport = 0x1E,
+    SetPrintModeNoSupport = 0x1F,
+    SetPrintLabelMaterialError = 0x20,
+    SetPrintLabelMaterialNoSupport = 0x21,
+    NotSupportWrittenRfid = 0x22,
+    IllegalPage = 0x32,
+    IllegalRibbonPage = 0x33,
+    ReceiveDataTimeout = 0x34,
+    NonDedicatedRibbon = 0x35,
+}
+
+/// <summary>Plain-language descriptions of <see cref="PrinterErrorCode"/> for user-facing messages.</summary>
+public static class PrinterErrorCodeText
+{
+    /// <summary>A short plain-language description, or null for a code we don't know.</summary>
+    public static string? Describe(byte code) => (PrinterErrorCode)code switch
+    {
+        PrinterErrorCode.CoverOpen => "the cover is open",
+        PrinterErrorCode.LackPaper => "no labels loaded",
+        PrinterErrorCode.LowBattery => "battery too low",
+        PrinterErrorCode.BatteryException => "battery fault",
+        PrinterErrorCode.UserCancel => "cancelled on the printer",
+        PrinterErrorCode.DataError => "the printer rejected the print data",
+        PrinterErrorCode.Overheat => "the print head is too hot - let it cool",
+        PrinterErrorCode.PaperOutException => "label feed problem",
+        PrinterErrorCode.PrinterBusy => "the printer is busy",
+        PrinterErrorCode.NoPrinterHead => "print head not detected",
+        PrinterErrorCode.TemperatureLow => "the printer is too cold",
+        PrinterErrorCode.PrinterHeadLoose => "the print head is loose",
+        PrinterErrorCode.NoRibbon => "no ribbon loaded",
+        PrinterErrorCode.WrongRibbon => "wrong ribbon",
+        PrinterErrorCode.UsedRibbon => "the ribbon is used up",
+        PrinterErrorCode.WrongPaper => "wrong label type for this printer",
+        PrinterErrorCode.SetPaperFail => "couldn't set the label type",
+        PrinterErrorCode.SetPrintModeFail => "couldn't set the print mode",
+        PrinterErrorCode.SetPrintDensityFail => "couldn't set the print density",
+        PrinterErrorCode.WriteRfidFail => "couldn't write to the label roll's RFID tag - the roll may be third-party, refilled, or used up",
+        PrinterErrorCode.SetMarginFail => "couldn't set the margins",
+        PrinterErrorCode.CommunicationException => "communication error",
+        PrinterErrorCode.Disconnect => "the printer disconnected",
+        PrinterErrorCode.CanvasParameterError => "the label size was rejected",
+        PrinterErrorCode.RotationParameterException => "the rotation setting was rejected",
+        PrinterErrorCode.JsonParameterException => "the printer rejected a setting",
+        PrinterErrorCode.B3sAbnormalPaperOutput => "abnormal label output",
+        PrinterErrorCode.ECheckPaper => "check the labels",
+        PrinterErrorCode.RfidTagNotWritten => "the label roll's RFID tag was not written",
+        PrinterErrorCode.SetPrintDensityNoSupport => "this printer doesn't support that density",
+        PrinterErrorCode.SetPrintModeNoSupport => "this printer doesn't support that print mode",
+        PrinterErrorCode.SetPrintLabelMaterialError => "couldn't set the label material",
+        PrinterErrorCode.SetPrintLabelMaterialNoSupport => "this printer doesn't support that label material",
+        PrinterErrorCode.NotSupportWrittenRfid => "this printer can't write RFID tags",
+        PrinterErrorCode.IllegalPage => "the page was rejected",
+        PrinterErrorCode.IllegalRibbonPage => "the ribbon page was rejected",
+        PrinterErrorCode.ReceiveDataTimeout => "the printer timed out waiting for data",
+        PrinterErrorCode.NonDedicatedRibbon => "non-genuine ribbon",
+        _ => null,
+    };
+
+    /// <summary>
+    /// RFID-tag codes that don't stop us printing: the printer couldn't write (or can't write) the
+    /// label roll's tag, which happens with third-party, refilled or used-up rolls. A genuine roll
+    /// never reports these, and stopping the job protects nothing, so the client logs them and
+    /// carries on (GitHub discussion #23). If the printer itself stops, the job still fails.
+    /// </summary>
+    public static bool IsNonFatal(byte code) => (PrinterErrorCode)code is
+        PrinterErrorCode.WriteRfidFail or PrinterErrorCode.RfidTagNotWritten or PrinterErrorCode.NotSupportWrittenRfid;
+
+    /// <summary>"error code 0x14 (couldn't write ...)" or just "error code 0x14" when unknown.</summary>
+    public static string Format(byte code) =>
+        Describe(code) is { } text ? $"error code 0x{code:X2} ({text})" : $"error code 0x{code:X2}";
 }

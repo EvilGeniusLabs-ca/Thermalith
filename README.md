@@ -177,6 +177,16 @@ instead:
 
 Windows, macOS, and Linux. USB-serial printers first; Bluetooth (BLE) later, behind the same transport interface.
 
+## Acknowledgements
+
+Thermalith's printer driver leans heavily on the NIIMBOT community's protocol work:
+
+- **[niimbluelib](https://github.com/MultiMote/niimbluelib)** by MultiMote: the reference implementation `Niimbot.Net` tracks. The packet formats, print sequences, which model uses which sequence, and the printer error codes all follow it.
+- **[NIIMBOT Community Wiki](https://printers.niim.blue/)**: protocol and connection notes.
+- **[niimblue-node](https://github.com/MultiMote/niimblue-node)**, **[NiimPrintX](https://github.com/labbots/NiimPrintX)** and **[niimprint](https://github.com/AndBondStyle/niimprint)**: other open implementations used as reference.
+
+Thanks also to everyone who has reported issues, sent logs and contributed fixes.
+
 ## License
 
 The Thermalith application and libraries are **GPL-3.0-or-later** — free to use, modify, and redistribute.

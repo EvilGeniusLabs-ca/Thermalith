@@ -765,6 +765,7 @@
                                             <ToggleButton Classes="icon" ToolTip.Tip="Bold" IsChecked="{Binding Bold}"><mi:MaterialIcon Kind="FormatBold" /></ToggleButton>
                                             <ToggleButton Classes="icon" ToolTip.Tip="Italic" IsChecked="{Binding Italic}"><mi:MaterialIcon Kind="FormatItalic" /></ToggleButton>
                                             <ToggleButton Classes="icon" ToolTip.Tip="Underline" IsChecked="{Binding Underline}"><mi:MaterialIcon Kind="FormatUnderline" /></ToggleButton>
+                                            <ToggleButton Classes="icon" ToolTip.Tip="Invert: white text on a solid black box. The black fills the text box, so turn off Auto-size and enlarge the box for a margin around the text." IsChecked="{Binding Invert}"><mi:MaterialIcon Kind="InvertColors" /></ToggleButton>
                                         </StackPanel>
                                     </Grid>
 

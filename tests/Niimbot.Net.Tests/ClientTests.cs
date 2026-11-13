@@ -86,6 +86,88 @@ public class ClientTests
     }
 
     [Fact]
+    public async Task B1_Pro_uses_the_D110MV4_task_and_finishes_when_feed_stops_short()
+    {
+        // GitHub #21: the B1 Pro (4097) printed the page but held feed progress below 100, and the
+        // old print+feed check polled forever, so the job never ended.
+        var printer = new FakeB1Printer { ModelId = 4097, FeedProgress = 60 };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        Assert.Equal(PrintTaskVersion.D110MV4, client.Profile!.PrintTaskVersion);
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token);
+
+        Assert.Equal(RequestCommandId.PrintEnd, (RequestCommandId)transport.WrittenPackets.Last().Command);
+    }
+
+    [Fact]
+    public async Task Rfid_write_failure_does_not_stop_the_print()
+    {
+        // Discussion #23: a non-genuine roll makes the printer report 0x14 (WriteRfidFail). If the
+        // printer carries on, so do we.
+        var printer = new FakeB1Printer { PrintErrorOnPageSize = 0x14 };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token);
+
+        Assert.Equal(RequestCommandId.PrintEnd, (RequestCommandId)transport.WrittenPackets.Last().Command);
+    }
+
+    [Fact]
+    public async Task Rfid_write_failure_is_reported_when_the_printer_stops()
+    {
+        // If the printer stops after 0x14 instead, the user gets that code as the reason, not a timeout.
+        var printer = new FakeB1Printer { PrintErrorOnPageSize = 0x14, StopAfterPrintError = true };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var ex = await Assert.ThrowsAsync<PrintException>(
+            () => client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token));
+        Assert.Equal(PrinterErrorCode.WriteRfidFail, ex.Code);
+    }
+
+    [Fact]
+    public async Task Other_printer_errors_still_stop_the_print()
+    {
+        var printer = new FakeB1Printer { PrintErrorOnPageSize = 0x01 }; // cover open
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var ex = await Assert.ThrowsAsync<PrintException>(
+            () => client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token));
+        Assert.Equal(PrinterErrorCode.CoverOpen, ex.Code);
+    }
+
+    [Fact]
+    public async Task B1_still_waits_for_feed_to_finish()
+    {
+        // The full print+feed check stays for the B1 task: feed stuck below 100 keeps it polling.
+        var printer = new FakeB1Printer { FeedProgress = 60 };
+        var transport = new FakeTransport { Responder = printer.Respond };
+        await using var client = new NiimbotClient(transport);
+        await client.ConnectAsync();
+
+        var bitmap = new MonochromeBitmap(16, 4, new byte[2 * 4]);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => client.PrintAsync(bitmap, new PrintOptions { Copies = 1 }, ct: cts.Token));
+    }
+
+    [Fact]
     public async Task PrintAsync_rejects_a_bitmap_wider_than_the_printhead()
     {
         var (client, _, _) = NewB1();

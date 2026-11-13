@@ -113,6 +113,61 @@ public class RenderTests
         Assert.Equal(portrait.HeightPx, rotated.WidthPx);
     }
 
+    [Fact]
+    public void Inverted_text_fills_its_box_black_with_white_glyphs()
+    {
+        // GitHub #22: a 20x8 mm box at (2,2) with white "IIII" on black.
+        static LabelDocument Doc(bool invert) => new()
+        {
+            Metadata = new LabelMetadata { Name = "invert" },
+            Canvas = new Canvas { WidthMm = 24, HeightMm = 12, Dpi = 203 },
+            Elements =
+            [
+                new TextElement { Id = "t", X = 2, Y = 2, W = 20, H = 8, Justify = new Justify { H = "center", V = "middle" },
+                    Props = new TextProps { Content = "IIII", FontFamily = FontService.BundledFamily, FontSizePt = 14, Bold = true, Invert = invert } },
+            ],
+        };
+
+        using var fonts = new FontService();
+        var renderer = new LabelRenderer(fonts);
+        var plain = renderer.Render(Doc(false), new ResolveContext());
+        var inverted = renderer.Render(Doc(true), new ResolveContext());
+
+        static bool Black(MonochromeBitmapView b, double xMm, double yMm) => b.IsBlack((int)(xMm * 203 / 25.4), (int)(yMm * 203 / 25.4));
+        var p = new MonochromeBitmapView(plain);
+        var i = new MonochromeBitmapView(inverted);
+
+        // Box corner: white normally, black when inverted. Outside the box stays white either way.
+        Assert.False(Black(p, 2.5, 2.5));
+        Assert.True(Black(i, 2.5, 2.5));
+        Assert.False(Black(i, 1, 1));
+
+        // More ink inside the box when inverted, with white glyphs showing through.
+        Assert.True(i.CountBlack(2, 2, 22, 10) > p.CountBlack(2, 2, 22, 10));
+        Assert.True(i.CountWhite(2.5, 2.5, 21.5, 9.5) > 0); // white glyphs inside the black box
+    }
+
+    /// <summary>Pixel reads on a packed 1bpp render (MSB-first rows, 1 = black), in px or mm.</summary>
+    private sealed class MonochromeBitmapView(Niimbot.Net.Encoding.MonochromeBitmap bmp)
+    {
+        private const double PxPerMm = 203 / 25.4;
+        private readonly int _stride = (bmp.WidthPx + 7) / 8;
+
+        public bool IsBlack(int x, int y) => (bmp.Packed[y * _stride + (x >> 3)] & (0x80 >> (x & 7))) != 0;
+
+        public int CountBlack(double x0Mm, double y0Mm, double x1Mm, double y1Mm) => Count(x0Mm, y0Mm, x1Mm, y1Mm, true);
+        public int CountWhite(double x0Mm, double y0Mm, double x1Mm, double y1Mm) => Count(x0Mm, y0Mm, x1Mm, y1Mm, false);
+
+        private int Count(double x0Mm, double y0Mm, double x1Mm, double y1Mm, bool black)
+        {
+            var n = 0;
+            for (var y = (int)(y0Mm * PxPerMm); y < Math.Min(bmp.HeightPx, (int)(y1Mm * PxPerMm)); y++)
+                for (var x = (int)(x0Mm * PxPerMm); x < Math.Min(bmp.WidthPx, (int)(x1Mm * PxPerMm)); x++)
+                    if (IsBlack(x, y) == black) n++;
+            return n;
+        }
+    }
+
     // An asymmetric source (black top-left quadrant only) so each orthogonal transform is observable.
     private static byte[] AsymPng(int w = 8, int h = 8)
     {

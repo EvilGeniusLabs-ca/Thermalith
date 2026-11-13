@@ -212,7 +212,7 @@ public sealed partial class EditorViewModel : ObservableObject
             if (e is TextElement t && t.Props.AutoSize)
             {
                 var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, dpi);
-                double w = Math.Ceiling(wmm), h = Math.Ceiling(hmm);
+                double w = CeilTenth(wmm), h = CeilTenth(hmm);
                 if (Math.Abs(w - t.W) > 1e-6 || Math.Abs(h - t.H) > 1e-6) { changed = true; return t with { W = w, H = h }; }
             }
             return e;
@@ -274,7 +274,7 @@ public sealed partial class EditorViewModel : ObservableObject
         if (updated is TextElement t && t.Props.AutoSize) // box hugs the text: keep W/H = measured glyphs
         {
             var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
-            double w = Math.Ceiling(wmm), h = Math.Ceiling(hmm);
+            double w = CeilTenth(wmm), h = CeilTenth(hmm);
             updated = t with { W = w, H = h };
             SelectedEditor.SetGeometrySilently(t.X, t.Y, w, h); // reflect measured size in the inspector
         }
@@ -329,7 +329,7 @@ public sealed partial class EditorViewModel : ObservableObject
         if (el is TextElement t && t.Props.AutoSize)
         {
             var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
-            return t with { W = Math.Ceiling(wmm), H = Math.Ceiling(hmm) };
+            return t with { W = CeilTenth(wmm), H = CeilTenth(hmm) };
         }
         return el;
     }
@@ -362,6 +362,7 @@ public sealed partial class EditorViewModel : ObservableObject
                 "LetterSpacing" => t with { Props = t.Props with { LetterSpacing = s.Props.LetterSpacing } },
                 "Wrap" => t with { Props = t.Props with { Wrap = s.Props.Wrap } },
                 "AutoSize" => t with { Props = t.Props with { AutoSize = s.Props.AutoSize } },
+                "Invert" => t with { Props = t.Props with { Invert = s.Props.Invert } },
                 _ => target,
             },
             (BarcodeElement t, BarcodeElement s) => prop switch
@@ -586,7 +587,7 @@ public sealed partial class EditorViewModel : ObservableObject
         if (el is TextElement t && t.Props.AutoSize) // start an auto-size text already hugging its glyphs
         {
             var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
-            el = t with { W = Math.Ceiling(wmm), H = Math.Ceiling(hmm) };
+            el = t with { W = CeilTenth(wmm), H = CeilTenth(hmm) };
         }
         _live = _live with { Elements = _live.Elements.Append(el).ToList() };
         _history.Commit(_live);
@@ -776,9 +777,9 @@ public sealed partial class EditorViewModel : ObservableObject
                         Sc(le.X + le.Props.X1Mm, cx), Sc(le.Y + le.Props.Y1Mm, cy),
                         Sc(le.X + le.Props.X2Mm, cx), Sc(le.Y + le.Props.Y2Mm, cy));
                 }
-                var nw = Math.Max(1, Math.Round(e.W * factor));
-                var nh = Math.Max(1, Math.Round(e.H * factor));
-                return e with { W = nw, H = nh, X = Math.Round(e.X + (e.W - nw) / 2), Y = Math.Round(e.Y + (e.H - nh) / 2) };
+                var nw = Math.Max(1, Math.Round(e.W * factor, 1));
+                var nh = Math.Max(1, Math.Round(e.H * factor, 1));
+                return e with { W = nw, H = nh, X = Math.Round(e.X + (e.W - nw) / 2, 1), Y = Math.Round(e.Y + (e.H - nh) / 2, 1) };
             });
         }
         _live = _live with { Elements = list };
@@ -1339,8 +1340,9 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ── Center on the label (Form Alignment) ─────────────────────────────────────────────────────
     // Centre the selection's (rendered) bounding box on the label, moving every selected element by the
-    // same delta so their relative layout is kept. Whole-mm math; when the gap doesn't divide evenly the
-    // box biases left (H) / top (V) — Floor leaves the spare mm on the right/bottom.
+    // same delta so their relative layout is kept. Rounded to 0.1 mm, the same precision as positioning
+    // (decimal-mm since 2026-06-10). The old whole-mm Floor put a box up to 1 mm off centre, which shows
+    // on small labels: a 10.6 mm line box on a 12 mm cable label landed flush against the top edge.
 
     public void CenterOnLabelH()
     {
@@ -1348,7 +1350,7 @@ public sealed partial class EditorViewModel : ObservableObject
         var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
         var left = sel.Min(e => Bounds(e).XMm);
         var bboxW = sel.Max(e => Bounds(e).XMm + Bounds(e).WMm) - left;
-        var dx = Math.Floor((_live.Canvas.WidthMm - bboxW) / 2.0) - left;
+        var dx = Math.Round((_live.Canvas.WidthMm - bboxW) / 2.0 - left, 1);
         var ids = new HashSet<string>(_selectedIds);
         CommitTransform(e => ids.Contains(e.Id) ? e with { X = e.X + dx } : e);
     }
@@ -1359,7 +1361,7 @@ public sealed partial class EditorViewModel : ObservableObject
         var sel = _selectedIds.Select(id => _live.Elements.First(e => e.Id == id)).ToList();
         var top = sel.Min(e => Bounds(e).YMm);
         var bboxH = sel.Max(e => Bounds(e).YMm + Bounds(e).HMm) - top;
-        var dy = Math.Floor((_live.Canvas.HeightMm - bboxH) / 2.0) - top;
+        var dy = Math.Round((_live.Canvas.HeightMm - bboxH) / 2.0 - top, 1);
         var ids = new HashSet<string>(_selectedIds);
         CommitTransform(e => ids.Contains(e.Id) ? e with { Y = e.Y + dy } : e);
     }
@@ -1951,7 +1953,7 @@ public sealed partial class EditorViewModel : ObservableObject
         if (updated is TextElement { Props.AutoSize: true } t) // auto-size box hugs the new content
         {
             var (wmm, hmm) = _renderer.MeasureTextMm(t.Props, _live.Canvas.Dpi);
-            updated = t with { W = Math.Ceiling(wmm), H = Math.Ceiling(hmm) };
+            updated = t with { W = CeilTenth(wmm), H = CeilTenth(hmm) };
         }
         ReplaceElement(updated);
         _history.Commit(_live);
@@ -2070,6 +2072,10 @@ public sealed partial class EditorViewModel : ObservableObject
     // Positioning is decimal-mm (reverted from whole-mm 2026-06-10): snap to the grid when enabled,
     // otherwise round to 0.1 mm so drags stay clean without forcing whole millimetres.
     private double Snap(double mm) => SnapEnabled ? Math.Round(mm / GridMm) * GridMm : Math.Round(mm, 1);
+
+    /// <summary>Round a measured size up to the next 0.1 mm, so an auto-size box never clips its glyphs
+    /// (was whole-mm until 2026-11-09, which left up to 1 mm of slack and threw off centring).</summary>
+    private static double CeilTenth(double mm) => Math.Ceiling(mm * 10 - 1e-9) / 10;
 
     // ── Snap to the printable guide (left/right printable edges) ─────────────────────────────────
     // The printable inset (e.g. 1 mm) isn't a whole-mm value, so plain Snap() can't land an edge on it.

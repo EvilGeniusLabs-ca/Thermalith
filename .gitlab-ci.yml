@@ -163,6 +163,31 @@ release:github:
         exit 1
       fi
 
+      # VALIDATE EVERYTHING BEFORE TOUCHING GITHUB. This ordering is deliberate and was learned the hard
+      # way (2026-08-08): the notes check used to sit *after* the mirror push, so pressing play on the
+      # interim tag v1.2.0-beta.2 — which has no notes file by design — force-pushed main and published
+      # the tag to the PUBLIC repo, then failed. No release object was created, so the stray tag was
+      # invisible on the Releases page. Worse, main sat at an interim commit until the next real publish
+      # happened to overwrite it. Nothing below this block may reach the network.
+      NOTES="Documentation/releases/${CI_COMMIT_TAG}.md"
+      if [ ! -f "$NOTES" ]; then
+        echo "ERROR: missing release notes: $NOTES"
+        echo "Nothing has been pushed to GitHub — this tag is not publishable."
+        echo "Interim/test tags deliberately have no notes file. If you meant to publish this one,"
+        echo "add $NOTES (see Documentation/releases/TEMPLATE.md), commit, re-tag, and run again."
+        exit 1
+      fi
+      TITLE=$(awk -F':[[:space:]]*' '/^title:/{print $2; exit}' "$NOTES")
+      PRERELEASE=$(awk -F':[[:space:]]*' '/^prerelease:/{print tolower($2); exit}' "$NOTES")
+      awk 'BEGIN{n=0} /^---[[:space:]]*$/{n++; next} n>=2{print}' "$NOTES" > body.md
+      [ -n "$TITLE" ] || TITLE="$CI_COMMIT_TAG"
+      [ -s body.md ] || { echo "ERROR: $NOTES has an empty body (nothing after the frontmatter). Nothing pushed."; exit 1; }
+      PREFLAG=""
+      if [ "$PRERELEASE" = "true" ]; then PREFLAG="--prerelease"; fi
+      ASSETS=$(find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' -o -name '*.dmg' -o -name '*.nupkg' \) 2>/dev/null; find Documentation/Manual/pdf -type f -name '*.pdf' 2>/dev/null; ls src/Niimbot.Net/Profiles/printers.json 2>/dev/null)
+      [ -n "$ASSETS" ] || { echo "ERROR: no build artifacts found to attach. Nothing pushed."; exit 1; }
+
+      # Validation passed — from here on we touch GitHub.
       # One-way source mirror: push this tagged commit (as main) + the tag to GitHub so the repo source
       # is there and the release's auto-generated "Source code (zip/tar.gz)" archives exist. GitLab is the
       # source of truth, so force is intentional. The token-bearing URL is never echoed.
@@ -170,16 +195,6 @@ release:github:
       echo "Mirroring source + ${CI_COMMIT_TAG} to ${GH_REPO}"
       git push --force "$GH_PUSH_URL" "HEAD:refs/heads/main"
       git push --force "$GH_PUSH_URL" "refs/tags/${CI_COMMIT_TAG}"
-
-      NOTES="Documentation/releases/${CI_COMMIT_TAG}.md"
-      [ -f "$NOTES" ] || { echo "Missing release notes: $NOTES"; exit 1; }
-      TITLE=$(awk -F':[[:space:]]*' '/^title:/{print $2; exit}' "$NOTES")
-      PRERELEASE=$(awk -F':[[:space:]]*' '/^prerelease:/{print tolower($2); exit}' "$NOTES")
-      awk 'BEGIN{n=0} /^---[[:space:]]*$/{n++; next} n>=2{print}' "$NOTES" > body.md
-      [ -n "$TITLE" ] || TITLE="$CI_COMMIT_TAG"
-      PREFLAG=""
-      if [ "$PRERELEASE" = "true" ]; then PREFLAG="--prerelease"; fi
-      ASSETS=$(find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' -o -name '*.dmg' -o -name '*.nupkg' \) 2>/dev/null; find Documentation/Manual/pdf -type f -name '*.pdf' 2>/dev/null; ls src/Niimbot.Net/Profiles/printers.json 2>/dev/null)
       echo "Publishing $CI_COMMIT_TAG to $GH_REPO (prerelease=${PRERELEASE:-false})"
       echo "Assets:"; echo "$ASSETS"
       if gh release view "$CI_COMMIT_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
