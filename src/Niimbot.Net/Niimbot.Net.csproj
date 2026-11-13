@@ -17,7 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Linux.Bluetooth" />
     <PackageReference Include="System.IO.Ports" />
+    <PackageReference Include="Tmds.DBus" />
   </ItemGroup>
 
   <ItemGroup>

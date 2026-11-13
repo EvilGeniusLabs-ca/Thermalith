@@ -18,6 +18,7 @@ public enum TransportState
 /// </summary>
 public interface INiimbotTransport : IAsyncDisposable
 {
+    string Address { get; }
     bool IsConnected { get; }
 
     ValueTask ConnectAsync(CancellationToken ct = default);
