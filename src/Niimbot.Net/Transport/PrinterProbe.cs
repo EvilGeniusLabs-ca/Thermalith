@@ -30,24 +30,30 @@ public static class PrinterProbe
     public static async Task<ProbeResult?> ProbeAsync(
         string portName, TimeSpan? timeout = null, CancellationToken ct = default)
     {
+        // TODO: Handle the two types of transport options
+        // Short write timeout so a powered-off printer (port opens, write never drains) fails fast
+        // within the probe deadline instead of blocking the full default write timeout.
+        await using var transport = new SerialTransport(portName, writeTimeoutMs: 400);
+        return await ProbeAsync(transport, timeout, ct).ConfigureAwait(false);
+    }
+
+    public static async Task<ProbeResult?> ProbeAsync(
+        INiimbotTransport transport, TimeSpan? timeout = null, CancellationToken ct = default)
+    {
         var deadline = timeout ?? TimeSpan.FromMilliseconds(800);
-        var work = Task.Run(() => ProbeCoreAsync(portName, deadline, ct), ct);
+        var work = Task.Run(() => ProbeCoreAsync(transport, deadline, ct), ct);
         var finished = await Task.WhenAny(work, Task.Delay(deadline + TimeSpan.FromMilliseconds(500), ct)).ConfigureAwait(false);
         if (finished != work)
         {
-            NiimbotTrace.Log("probe", $"{portName} abandoned — port stuck (Open() blocked past deadline)");
+            NiimbotTrace.Log("probe", $"{transport.Address} timed out");
             return null; // port stuck (e.g. Open() blocked) — abandon it
         }
         return await work.ConfigureAwait(false);
     }
 
-    private static async Task<ProbeResult?> ProbeCoreAsync(string portName, TimeSpan deadline, CancellationToken ct)
+    private static async Task<ProbeResult?> ProbeCoreAsync(INiimbotTransport transport, TimeSpan deadline, CancellationToken ct)
     {
-        NiimbotTrace.Log("probe", $"{portName} — probing (deadline {deadline.TotalMilliseconds:0} ms)");
-
-        // Short write timeout so a powered-off printer (port opens, write never drains) fails fast
-        // within the probe deadline instead of blocking the full default write timeout.
-        await using var transport = new SerialTransport(portName, writeTimeoutMs: 400);
+        NiimbotTrace.Log("probe", $"{transport.Address} — probing (deadline {deadline.TotalMilliseconds:0} ms)");
 
         try
         {
@@ -55,7 +61,7 @@ public static class PrinterProbe
         }
         catch
         {
-            NiimbotTrace.Log("probe", $"{portName} — not a printer (port busy or unopenable)");
+            NiimbotTrace.Log("probe", $"{transport.Address} — not a printer (port busy or unopenable)");
             return null; // port busy or unopenable
         }
 
@@ -69,7 +75,7 @@ public static class PrinterProbe
         try
         {
             await transport.WriteAsync(query.ToBytes(), deadlineCts.Token).ConfigureAwait(false);
-            NiimbotTrace.Log("probe", $"{portName} — sent GetPrinterInfo(PrinterModelId), awaiting reply");
+            NiimbotTrace.Log("probe", $"{transport.Address} — sent GetPrinterInfo(PrinterModelId), awaiting reply");
 
             while (!deadlineCts.Token.IsCancellationRequested)
             {
@@ -82,7 +88,7 @@ public static class PrinterProbe
                 {
                     if (packet.Command != (byte)ResponseCommandId.In_PrinterInfoPrinterCode || packet.Data.Length == 0)
                     {
-                        NiimbotTrace.Log("probe", $"{portName} — ignoring packet cmd 0x{packet.Command:X2} " +
+                        NiimbotTrace.Log("probe", $"{transport.Address} — ignoring packet cmd 0x{packet.Command:X2} " +
                             $"({packet.Data.Length} data bytes), not the model-id reply");
                         continue;
                     }
@@ -91,25 +97,25 @@ public static class PrinterProbe
                         ? packet.Data[0] << 8
                         : (packet.Data[0] << 8) | packet.Data[1];
                     var profile = PrinterProfiles.FromModelId(modelId);
-                    NiimbotTrace.Log("probe", $"{portName} — NIIMBOT model id {modelId} → {profile.ModelName}");
-                    return new ProbeResult(portName, profile.Model, modelId, profile);
+                    NiimbotTrace.Log("probe", $"{transport.Address} — NIIMBOT model id {modelId} → {profile.ModelName}");
+                    return new ProbeResult(transport.Address, profile.Model, modelId, profile);
                 }
             }
 
-            NiimbotTrace.Log("probe", $"{portName} — no model-id reply within {deadline.TotalMilliseconds:0} ms " +
+            NiimbotTrace.Log("probe", $"{transport.Address} — no model-id reply within {deadline.TotalMilliseconds:0} ms " +
                 "(port opened + query sent, but the device stayed silent)");
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
             // deadline hit — not a NIIMBOT (or too slow)
-            NiimbotTrace.Log("probe", $"{portName} — deadline hit ({deadline.TotalMilliseconds:0} ms), no valid reply");
+            NiimbotTrace.Log("probe", $"{transport.Address} — deadline hit ({deadline.TotalMilliseconds:0} ms), no valid reply");
         }
         catch (Exception ex)
         {
             // Port opened but the write/read failed — e.g. the printer is powered off, or the port
             // belongs to some other device. Treat as "no NIIMBOT here" rather than surfacing the
             // TimeoutException to the caller.
-            NiimbotTrace.Log("probe", $"{portName} — probe I/O failed: {ex.GetType().Name}: {ex.Message}");
+            NiimbotTrace.Log("probe", $"{transport.Address} — probe I/O failed: {ex.GetType().Name}: {ex.Message}");
             return null;
         }
 
@@ -120,6 +126,7 @@ public static class PrinterProbe
     public static async Task<IReadOnlyList<ProbeResult>> ProbeAllAsync(
         TimeSpan? perPortTimeout = null, CancellationToken ct = default)
     {
+        // TODO: Handle both types of transport
         var results = new List<ProbeResult>();
         foreach (var port in SerialPortEnumerator.Enumerate())
         {

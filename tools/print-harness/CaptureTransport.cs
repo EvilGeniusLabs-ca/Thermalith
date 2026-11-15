@@ -10,6 +10,7 @@ namespace Thermalith.PrintHarness;
 /// </summary>
 public sealed class CaptureTransport(INiimbotTransport inner, Action<char, ReadOnlyMemory<byte>> sink) : INiimbotTransport
 {
+    public string Address => "";
     public bool IsConnected => inner.IsConnected;
 
     public event EventHandler<TransportState>? StateChanged

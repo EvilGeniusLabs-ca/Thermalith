@@ -32,6 +32,7 @@ public sealed class SerialTransport : INiimbotTransport
         _writeTimeoutMs = writeTimeoutMs;
     }
 
+    public string Address => _portName;
     public bool IsConnected => _port?.IsOpen ?? false;
 
     public event EventHandler<TransportState>? StateChanged;
@@ -94,7 +95,7 @@ public sealed class SerialTransport : INiimbotTransport
     {
         var port = Port;
         if (NiimbotTrace.IsEnabled)
-            NiimbotTrace.Bytes("serial", "→ write", data.Span);
+            NiimbotTrace.Bytes("serial", "> write", data.Span);
         // Synchronous Write on a worker. SerialPort.BaseStream's async methods are unreliable on
         // Windows; the synchronous API honors WriteTimeout and is far more predictable.
         // Catch on the worker thread (a WriteTimeout fires when e.g. the printer is powered off) so
@@ -180,7 +181,7 @@ public sealed class SerialTransport : INiimbotTransport
             }, ct).ConfigureAwait(false);
 
             if (read > 0 && NiimbotTrace.IsEnabled)
-                NiimbotTrace.Bytes("serial", "← read", buffer.Span[..read]);
+                NiimbotTrace.Bytes("serial", "< read", buffer.Span[..read]);
             return read;
         }
         catch (OperationCanceledException)

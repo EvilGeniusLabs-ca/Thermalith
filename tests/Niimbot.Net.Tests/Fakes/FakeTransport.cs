@@ -12,6 +12,8 @@ namespace Niimbot.Net.Tests.Fakes;
 /// </summary>
 public sealed class FakeTransport : INiimbotTransport
 {
+    public string Address => "";
+
     private readonly Channel<byte[]> _incoming = Channel.CreateUnbounded<byte[]>();
     private readonly PacketAccumulator _writeAccumulator = new();
     private byte[] _leftover = [];
