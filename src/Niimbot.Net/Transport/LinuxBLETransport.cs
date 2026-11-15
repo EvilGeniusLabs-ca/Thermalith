@@ -15,6 +15,9 @@ public sealed class LinuxBLETransport : INiimbotTransport
     private const string GattServiceID = "e7810a71-73ae-499d-8c15-faa9aef0c3f2";
     private const string GattCharID = "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f";
 
+    // How long to wait for BlueZ to finish GATT service discovery after connecting
+    private static readonly TimeSpan ServicesResolvedTimeout = TimeSpan.FromSeconds(10);
+
     // BlueZ write options: "command" = write-without-response. The default ("request") waits for an
     // over-the-air ACK per packet, which caps throughput at ~15 packets/s (~30 s per label).
     private static readonly Dictionary<string, object> WriteCommand = new() { ["type"] = "command" };
@@ -81,6 +84,11 @@ public sealed class LinuxBLETransport : INiimbotTransport
             }
 
             await _bleDevice.ConnectAsync().ConfigureAwait(false);
+
+            // BlueZ discovers the GATT services in the background after connecting; looking the service
+            // up before that finishes returns null. Noticeable on the first connect after bluetoothd
+            // restarts, when its GATT cache is empty. Throws TimeoutException if it never resolves.
+            await _bleDevice.WaitForPropertyValueAsync("ServicesResolved", value: true, ServicesResolvedTimeout).ConfigureAwait(false);
 
             // Retrieve the GATT characteristic, used to send/receive data
             var service = await _bleDevice.GetServiceAsync(GattServiceID).ConfigureAwait(false);
