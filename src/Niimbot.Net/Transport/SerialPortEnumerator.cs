@@ -18,7 +18,9 @@ public static class SerialPortEnumerator
     public static IReadOnlyList<SerialPortInfo> Enumerate()
     {
         var raw = SerialPort.GetPortNames();
-        var names = OperatingSystem.IsMacOS() ? FilterMacPorts(raw) : raw;
+        var names = OperatingSystem.IsMacOS() ? FilterMacPorts(raw)
+                  : OperatingSystem.IsLinux() ? FilterLinuxPorts(raw)
+                  : raw;
         Array.Sort(names, StringComparer.OrdinalIgnoreCase);
         if (NiimbotTrace.IsEnabled)
             NiimbotTrace.Log("ports",
@@ -46,4 +48,14 @@ public static class SerialPortEnumerator
         }
         return kept.ToArray();
     }
+
+    /// <summary>
+    /// Linux reports every tty with a device behind it, including on-board UARTs (<c>/dev/ttyS*</c>,
+    /// <c>/dev/ttyAMA*</c>). On a Raspberry Pi one of those carries the Bluetooth controller, so opening
+    /// it to probe could disrupt Bluetooth. Keep only USB serial nodes: <c>ttyACM*</c> (USB CDC, how
+    /// NIIMBOT printers enumerate) and <c>ttyUSB*</c> (USB-serial bridges).
+    /// </summary>
+    private static string[] FilterLinuxPorts(string[] names) =>
+        Array.FindAll(names, n => n.StartsWith("/dev/ttyACM", StringComparison.Ordinal)
+                               || n.StartsWith("/dev/ttyUSB", StringComparison.Ordinal));
 }
