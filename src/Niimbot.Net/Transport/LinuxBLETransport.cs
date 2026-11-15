@@ -14,7 +14,18 @@ public sealed class LinuxBLETransport : INiimbotTransport
     private const string GattServiceID = "e7810a71-73ae-499d-8c15-faa9aef0c3f2";
     private const string GattCharID = "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f";
 
+    // BlueZ write options: "command" = write-without-response. The default ("request") waits for an
+    // over-the-air ACK per packet, which caps throughput at ~15 packets/s (~30 s per label).
+    private static readonly Dictionary<string, object> WriteCommand = new() { ["type"] = "command" };
+
     private readonly int _readTimeoutMs;
+
+    // Write pacing. Without the per-packet ACK nothing stops us outrunning the printer's receive
+    // buffer, so pause briefly after every few writes. 0 for either disables pacing.
+    private readonly int _pauseEveryWrites;
+    private readonly int _pauseMs;
+    private int _writesSincePause;
+
     private Device? _bleDevice;
     private GattCharacteristic? _gattChar;
     private readonly Queue<byte[]> _readBuffer = [];
@@ -32,10 +43,16 @@ public sealed class LinuxBLETransport : INiimbotTransport
         return addresses;
     }
 
-    public LinuxBLETransport(string address, int readTimeoutMs = 5000)
+    /// <param name="address">BLE MAC address of the printer.</param>
+    /// <param name="readTimeoutMs">How long <see cref="ReadAsync"/> waits before reporting an idle line.</param>
+    /// <param name="pauseEveryWrites">Pause after this many writes (0 disables pacing).</param>
+    /// <param name="pauseMs">Length of each pause in milliseconds (0 disables pacing).</param>
+    public LinuxBLETransport(string address, int readTimeoutMs = 5000, int pauseEveryWrites = 4, int pauseMs = 20)
     {
         Address = address;
         _readTimeoutMs = readTimeoutMs;
+        _pauseEveryWrites = Math.Max(0, pauseEveryWrites);
+        _pauseMs = Math.Max(0, pauseMs);
     }
 
     public async ValueTask ConnectAsync(CancellationToken ct = default)
@@ -106,13 +123,22 @@ public sealed class LinuxBLETransport : INiimbotTransport
             if (_gattChar == null)
                 throw new InvalidOperationException("BLE connection has not been established and GATT is not setup.");
 
-            if (MemoryMarshal.TryGetArray(data, out var segment) && segment.Array is not null)
-                await _gattChar.WriteValueAsync(segment.Array, new Dictionary<string, object>());
-            else
-            {
-                await _gattChar.WriteValueAsync(data.ToArray(), new Dictionary<string, object>());
-            }
-        });
+            // Reuse the backing array only when it is exactly the data; a slice must be copied, or
+            // the bytes either side of it would be sent too.
+            var bytes = MemoryMarshal.TryGetArray(data, out var segment) && segment.Array is not null
+                        && segment.Offset == 0 && segment.Count == segment.Array.Length
+                ? segment.Array
+                : data.ToArray();
+
+            await _gattChar.WriteValueAsync(bytes, WriteCommand).ConfigureAwait(false);
+        }).ConfigureAwait(false);
+
+        // Pace the stream so the printer's buffer can keep up.
+        if (_pauseEveryWrites > 0 && _pauseMs > 0 && ++_writesSincePause >= _pauseEveryWrites)
+        {
+            _writesSincePause = 0;
+            await Task.Delay(_pauseMs, ct).ConfigureAwait(false);
+        }
     }
 
     public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken ct = default)
