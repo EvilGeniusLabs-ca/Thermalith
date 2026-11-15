@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text;
 using Niimbot.Net.Encoding;
 using SkiaSharp;
@@ -54,13 +55,7 @@ public sealed class LabelRenderer
         var (bmp, w, h) = Composite(label);
         using (bmp)
         {
-            var gray = new byte[w * h];
-            for (var y = 0; y < h; y++)
-                for (var x = 0; x < w; x++)
-                {
-                    var c = bmp.GetPixel(x, y);
-                    gray[y * w + x] = (byte)((c.Red * 299 + c.Green * 587 + c.Blue * 114) / 1000);
-                }
+            var gray = ReadLuminance(bmp, w, h);
             return OrientGray(gray, w, h, options.ApplyOrientation ? label.Canvas.OrientationDeg : 0);
         }
     }
@@ -734,25 +729,27 @@ public sealed class LabelRenderer
             tc.DrawBitmap(src, dest, p);
         }
 
-        var gray = new byte[dw * dh];
-        for (var py = 0; py < dh; py++)
-            for (var px = 0; px < dw; px++)
-            {
-                var c = target.GetPixel(px, py);
-                var lum = (byte)((c.Red * 299 + c.Green * 587 + c.Blue * 114) / 1000);
-                if (im.Invert) lum = (byte)(255 - lum);
-                gray[py * dw + px] = lum;
-            }
+        var gray = ReadLuminance(target, dw, dh);
+        if (im.Invert)
+            for (var i = 0; i < gray.Length; i++)
+                gray[i] = (byte)(255 - gray[i]);
 
         var mask = Dithering.Reduce(gray, dw, dh, im.Dither, im.Threshold);
 
         // Only ink (black) pixels composite; non-ink pixels are transparent so the image doesn't paint
         // an opaque white box over lower z-order content. On a thermal label white = bare substrate, so
         // leaving it clear is visually identical for a standalone image but lets elements layer through.
+        // Written straight into the pixel memory (one native call, not one SetPixel per pixel).
+        // Unpremul BGRA: black = 00 00 00 FF, SKColors.Empty = all zero.
         using var bilevel = new SKBitmap(dw, dh, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+        var stride = bilevel.RowBytes;
+        var pixels = new byte[stride * dh];
         for (var py = 0; py < dh; py++)
             for (var px = 0; px < dw; px++)
-                bilevel.SetPixel(px, py, mask[py * dw + px] ? SKColors.Black : SKColors.Empty);
+                if (mask[py * dw + px])
+                    pixels[py * stride + px * 4 + 3] = 0xFF;
+        Marshal.Copy(pixels, 0, bilevel.GetPixels(), pixels.Length);
+        bilevel.NotifyPixelsChanged();
 
         // Drawn 1:1 at integer offset → stays bi-level (unless the element is rotated, which the
         // stage-4 threshold re-binarizes anyway).
@@ -934,15 +931,47 @@ public sealed class LabelRenderer
 
     private static bool[] Threshold(SKBitmap bmp, int w, int h, int threshold)
     {
+        var lum = ReadLuminance(bmp, w, h);
         var burn = new bool[w * h];
+        for (var i = 0; i < burn.Length; i++)
+            burn[i] = lum[i] < threshold;
+        return burn;
+    }
+
+    /// <summary>
+    /// Luminance (0.299R + 0.587G + 0.114B) of every pixel, read straight from the bitmap's memory.
+    /// <see cref="SKBitmap.GetPixel"/> is a native call per pixel — about half a million for a 50×80 mm
+    /// label at 300 dpi — which dominated render time on low-end hardware (≈2 s on a Raspberry Pi
+    /// Zero 2 W). Identical values: for an opaque BGRA bitmap the stored bytes are exactly the colour
+    /// GetPixel returns. Any other format falls back to GetPixel.
+    /// </summary>
+    private static byte[] ReadLuminance(SKBitmap bmp, int w, int h)
+    {
+        var lum = new byte[w * h];
+
+        if (bmp.ColorType != SKColorType.Bgra8888 || bmp.AlphaType != SKAlphaType.Opaque)
+        {
+            for (var y = 0; y < h; y++)
+                for (var x = 0; x < w; x++)
+                {
+                    var c = bmp.GetPixel(x, y);
+                    lum[y * w + x] = (byte)((c.Red * 299 + c.Green * 587 + c.Blue * 114) / 1000);
+                }
+            return lum;
+        }
+
+        var pixels = bmp.GetPixelSpan();
+        var stride = bmp.RowBytes;
         for (var y = 0; y < h; y++)
+        {
+            var row = pixels.Slice(y * stride, w * 4);
             for (var x = 0; x < w; x++)
             {
-                var c = bmp.GetPixel(x, y);
-                var lum = (c.Red * 299 + c.Green * 587 + c.Blue * 114) / 1000;
-                burn[y * w + x] = lum < threshold;
+                int b = row[x * 4], g = row[x * 4 + 1], r = row[x * 4 + 2];
+                lum[y * w + x] = (byte)((r * 299 + g * 587 + b * 114) / 1000);
             }
-        return burn;
+        }
+        return lum;
     }
 
     private static MonochromeBitmap Orient(bool[] burn, int w, int h, int orientationDeg)
