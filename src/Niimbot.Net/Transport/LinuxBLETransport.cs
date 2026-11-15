@@ -2,6 +2,7 @@
 using Linux.Bluetooth.Extensions;
 using Niimbot.Net.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
 
 namespace Niimbot.Net.Transport;
 
@@ -28,7 +29,9 @@ public sealed class LinuxBLETransport : INiimbotTransport
 
     private Device? _bleDevice;
     private GattCharacteristic? _gattChar;
-    private readonly Queue<byte[]> _readBuffer = [];
+    // Notifications from BlueZ arrive on D-Bus threads while ReadAsync drains them on the read pump,
+    // so this must be thread-safe (a plain Queue<T> can lose or corrupt entries under that race).
+    private readonly Channel<byte[]> _readBuffer = Channel.CreateUnbounded<byte[]>();
 
     public static async Task<IReadOnlyList<string>> ListDevices()
     {
@@ -63,37 +66,44 @@ public sealed class LinuxBLETransport : INiimbotTransport
         NiimbotTrace.Log("LinuxBLE", $"open {Address}");
         StateChanged?.Invoke(this, TransportState.Connecting);
 
-        using var adapter = (await BlueZManager.GetAdaptersAsync()).First();
-        _bleDevice = await adapter.GetDeviceAsync(Address);
+        // Drop anything left over from a previous connection
+        while (_readBuffer.Reader.TryRead(out _)) { }
 
-        if (_bleDevice == null)
+        try
         {
-            NiimbotTrace.Log("LinuxBLE", $"open FAILED {Address}: No device found for address");
-            StateChanged?.Invoke(this, TransportState.Faulted);
-            throw new InvalidOperationException("Unable to lookup GATT characterisic (is this a printer?)");
+            using var adapter = (await BlueZManager.GetAdaptersAsync()).First();
+            _bleDevice = await adapter.GetDeviceAsync(Address);
+
+            if (_bleDevice == null)
+            {
+                NiimbotTrace.Log("LinuxBLE", $"open FAILED {Address}: No device found for address");
+                throw new InvalidOperationException($"No Bluetooth device found for address {Address}");
+            }
+
+            await _bleDevice.ConnectAsync().ConfigureAwait(false);
+
+            // Retrieve the GATT characteristic, used to send/receive data
+            var service = await _bleDevice.GetServiceAsync(GattServiceID).ConfigureAwait(false);
+            _gattChar = service == null ? null : await service.GetCharacteristicAsync(GattCharID).ConfigureAwait(false);
+
+            // TODO: This can fail; maybe retry
+            if (_gattChar == null)
+            {
+                NiimbotTrace.Log("LinuxBLE", $"open FAILED {Address}: Unable to lookup GATT characterisic (is this a printer?)");
+                throw new InvalidOperationException("Unable to lookup GATT characterisic (is this a printer?)");
+            }
+
+            // Subscribe to responses. Must be undone in ReleaseAsync: the subscription outlives a
+            // device disconnect, so a forgotten handler keeps receiving (and tracing) every later reply.
+            _gattChar.Value += OnValueAsync;
+            await _gattChar.StartNotifyAsync().ConfigureAwait(false);
         }
-
-        await _bleDevice.ConnectAsync().ConfigureAwait(false);
-
-        // Retrieve the GATT characteristic, used to send/receive data
-        var service = await _bleDevice.GetServiceAsync(GattServiceID).ConfigureAwait(false);
-        _gattChar = await service.GetCharacteristicAsync(GattCharID).ConfigureAwait(false);
-
-        // TODO: This can fail; maybe retry & then Disconnect
-        if (_gattChar == null)
+        catch
         {
-            NiimbotTrace.Log("LinuxBLE", $"open FAILED {Address}: Unable to lookup GATT characterisic (is this a printer?)");
+            await ReleaseAsync().ConfigureAwait(false);
             StateChanged?.Invoke(this, TransportState.Faulted);
-            throw new InvalidOperationException("Unable to lookup GATT characterisic (is this a printer?)");
+            throw;
         }
-
-        // Subscribe to responses
-        _gattChar.Value += async (sender, eventArgs) =>
-        {
-            NiimbotTrace.Bytes("LinuxBLE", "< received", eventArgs.Value);
-            _readBuffer.Enqueue(eventArgs.Value);
-        };
-        await _gattChar.StartNotifyAsync().ConfigureAwait(false);
 
         IsConnected = true;
         NiimbotTrace.Log("LinuxBLE", $"open OK {Address}");
@@ -102,15 +112,47 @@ public sealed class LinuxBLETransport : INiimbotTransport
 
     public async ValueTask DisconnectAsync(CancellationToken ct = default)
     {
-        if (!IsConnected || _bleDevice == null)
+        if (_bleDevice == null && _gattChar == null)
             return;
 
         NiimbotTrace.Log("LinuxBLE", $"disconnecting {Address}");
 
-        await _bleDevice.DisconnectAsync().ConfigureAwait(false);
-        IsConnected = false;
+        await ReleaseAsync().ConfigureAwait(false);
         StateChanged?.Invoke(this, TransportState.Disconnected);
         NiimbotTrace.Log("LinuxBLE", $"disconnected {Address}");
+    }
+
+    private Task OnValueAsync(GattCharacteristic sender, GattCharacteristicValueEventArgs eventArgs)
+    {
+        NiimbotTrace.Bytes("LinuxBLE", "< received", eventArgs.Value);
+        _readBuffer.Writer.TryWrite(eventArgs.Value); // Unbounded, so this always succeeds
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Unsubscribe from notifications, disconnect and dispose the BlueZ objects. Safe to call on a
+    /// partially opened connection; each step is best-effort so one failure doesn't skip the rest.
+    /// </summary>
+    private async Task ReleaseAsync()
+    {
+        IsConnected = false;
+
+        if (_gattChar is { } gattChar)
+        {
+            _gattChar = null;
+            gattChar.Value -= OnValueAsync;
+            try { await gattChar.StopNotifyAsync().ConfigureAwait(false); }
+            catch (Exception ex) { NiimbotTrace.Log("LinuxBLE", $"StopNotify failed: {ex.Message}"); }
+            (gattChar as IDisposable)?.Dispose();
+        }
+
+        if (_bleDevice is { } device)
+        {
+            _bleDevice = null;
+            try { await device.DisconnectAsync().ConfigureAwait(false); }
+            catch (Exception ex) { NiimbotTrace.Log("LinuxBLE", $"Disconnect failed: {ex.Message}"); }
+            (device as IDisposable)?.Dispose();
+        }
     }
 
     public async ValueTask WriteAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
@@ -143,32 +185,28 @@ public sealed class LinuxBLETransport : INiimbotTransport
 
     public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken ct = default)
     {
-        // Do it in a separate task to avoid blocking the notification handler
-        return await Task.Run(async () =>
+        var reader = _readBuffer.Reader;
+
+        // Wait (without blocking a thread) for the next notification, up to the read timeout
+        if (!reader.TryRead(out var nextResponse))
         {
-            var waited = 0;
-            while (true)
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(_readTimeoutMs);
+            try
             {
-                if (ct.IsCancellationRequested)
+                if (!await reader.WaitToReadAsync(timeout.Token).ConfigureAwait(false) || !reader.TryRead(out nextResponse))
                     return 0;
-                if (_readBuffer.Count > 0)
-                    break;
-                if (waited >= _readTimeoutMs)
-                    return 0; // idle line
-                Thread.Sleep(15);
-                waited += 15;
             }
+            catch (OperationCanceledException)
+            {
+                return 0; // idle line (timeout) or caller cancelled, as before
+            }
+        }
 
-            NiimbotTrace.Log("LinuxBLE", $"Read queue - {_readBuffer.Count}");
+        NiimbotTrace.Log("LinuxBLE", $"Read queue - {reader.Count + 1}");
 
-            var nextResponse = _readBuffer.Dequeue();
-            if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer, out var segment) && segment.Array is not null)
-                nextResponse.CopyTo(segment.Array);
-            else
-                nextResponse.CopyTo(buffer.Span);
-
-            return nextResponse.Length;
-        });
+        nextResponse.CopyTo(buffer.Span);
+        return nextResponse.Length;
     }
 
     public async ValueTask DisposeAsync() => await DisconnectAsync().ConfigureAwait(false);
